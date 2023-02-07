@@ -9,19 +9,20 @@ logger = logging.getLogger(__name__)
 
 
 class satellite:
-    def __init__(self, mongodb: mongo.MongoDB, sat: str = "", series: str ="") -> None:
+    def __init__(self, mongodb: mongo.MongoDB, sat: str = "", series: str = "") -> None:
         self.sat: str = sat
         self.series: str = series
         self.mongodb: mongo.MongoDB = mongodb
 
-        time: npt.ArrayLike = np.empty(0)
-        pos: npt.ArrayLike = np.empty(0)
-        vel: npt.ArrayLike = np.empty(0)
-        residual: npt.ArrayLike = np.empty(0)
+        self.time: npt.ArrayLike = np.empty(0)
+        self.pos: npt.ArrayLike = np.empty(0)
+        self.vel: npt.ArrayLike = np.empty(0)
+        self.residual: npt.ArrayLike = np.empty(0)
 
     def get_postfit(self):
         data = self.mongodb.get_data(collection='Measurements', state=None, sat=[self.sat], site=[''], series=self.series,
                                      keys=["PseudoPos0-Postfit", "PseudoPos1-Postfit", "PseudoPos2-Postfit"])
+        self.time = np.asarray(data[0]['t'], dtype='datetime64[us]')
         self.residual = np.empty((3, len(data[0]['t'])))
         self.residual[0] = data[0]['PseudoPos0-Postfit']
         self.residual[1] = data[0]['PseudoPos1-Postfit']
@@ -37,14 +38,21 @@ class satellite:
         self.pos = np.asarray(data[0]['x'])
         self.vel = np.asarray(data_rate[0]['x'])
 
-
-
     def get_rms(self):
         rms = np.zeros(4)
         rms [:3] = np.sqrt(np.mean(self.residual**2, axis=1))
         res3d = np.sqrt(np.sum(self.residual**2, axis=0))
         rms [3] = np.sqrt(np.mean(res3d**2))
         return rms
+
+    def rac(self):
+        r = self.pos / np.linalg.norm(self.pos, axis=1)[:, np.newaxis]
+        c = np.cross(self.pos, self.vel)
+        c = c / np.linalg.norm(c, axis=1)[:, np.newaxis]
+        a = np.cross(c, self.pos)
+        a = a / np.linalg.norm(a, axis=1)[:, np.newaxis]
+        print(r)
+
 
 
 if __name__=="__main__":
@@ -56,6 +64,7 @@ if __name__=="__main__":
             rms = satG01.get_rms()
             print(f"{db_name} {sat}   {np.array2string(rms[:3], precision=6, floatmode='fixed')}  => {rms[3]:.6f}")
             satG01.get_state()
+            satG01.rac()
 
 
 
