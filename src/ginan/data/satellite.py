@@ -18,6 +18,7 @@ class satellite:
         self.pos: npt.ArrayLike = np.empty(0)
         self.vel: npt.ArrayLike = np.empty(0)
         self.residual: npt.ArrayLike = np.empty(0)
+        self.rac: npt.ArrayLike = np.empty(0)
 
     def get_postfit(self):
         data = self.mongodb.get_data(collection='Measurements', state=None, sat=[self.sat], site=[''],
@@ -41,32 +42,25 @@ class satellite:
         self.pos = np.asarray(data[0]['x'])
         self.vel = np.asarray(data_rate[0]['x'])
 
-    def get_rms(self):
+    def get_rms(self, use_rac=False):
+        data = self.residual if not use_rac else self.rac
         rms = np.zeros(4)
-        rms[:3] = np.sqrt(np.mean(self.residual ** 2, axis=0))
-        res3d = np.sqrt(np.sum(self.residual ** 2, axis=1))
+        rms[:3] = np.sqrt(np.mean(data ** 2, axis=0))
+        res3d = np.sqrt(np.sum(data ** 2, axis=1))
         rms[3] = np.sqrt(np.mean(res3d ** 2))
         return rms
 
-    def rac(self):
+    def get_rac(self):
         r = self.pos / np.linalg.norm(self.pos, axis=1)[:, np.newaxis]
         c = np.cross(self.pos, self.vel)
         c = c / np.linalg.norm(c, axis=1)[:, np.newaxis]
         a = np.cross(c, self.pos)
         a = a / np.linalg.norm(a, axis=1)[:, np.newaxis]
-        r = (r * self.residual).sum(axis=1)
-        a = (a * self.residual).sum(axis=1)
-        c = (c * self.residual).sum(axis=1)
-        return r, a, c
+        self.rac = np.empty_like(self.residual)
+        self.rac[:, 0] = (r * self.residual).sum(axis=1)
+        self.rac[:, 1] = (a * self.residual).sum(axis=1)
+        self.rac[:, 2] = (c * self.residual).sum(axis=1)
+        return self.get_rms(use_rac=True)
 
 
-if __name__ == "__main__":
-    for db_name in ["IGS_a", "IGS_b", "IGS_c"]:
-        for sat in ["G01", "G02"]:
-            db = mongo.MongoDB(url="127.0.0.1", data_base=db_name)
-            satG01 = satellite(db, sat=sat)
-            satG01.get_postfit()
-            rms = satG01.get_rms()
-            print(f"{db_name} {sat}   {np.array2string(rms[:3], precision=6, floatmode='fixed')}  => {rms[3]:.6f}")
-            satG01.get_state()
-            r,a,c = satG01.rac()
+

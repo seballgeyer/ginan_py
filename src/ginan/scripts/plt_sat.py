@@ -6,44 +6,64 @@ import numpy as np
 from ginan.data.satellite import satellite
 from ginan.dbconnector import mongo
 
-plt.style.use(['seaborn-ticks', 'seaborn-paper'])
+
 def read(args):
     db = mongo.MongoDB(url=args.db, data_base=args.coll)
-    satG01 = satellite(db, sat=args.sat)
-    satG01.get_postfit()
-    rms = satG01.get_rms()
-    print(f"{args.coll} {arg.sat}   {np.array2string(rms[:3], precision=6, floatmode='fixed')}  => {rms[3]:.6f}")
-    satG01.get_state()
-    return satG01
+    sat = satellite(db, sat=args.sat)
+    sat.get_postfit()
+    sat.get_state()
+    rms = sat.get_rms()
+    print(f"{args.coll} {arg.sat}   {np.array2string(rms[:3], precision=6, floatmode='fixed')}   ", end="")
+    if args.to_rac:
+        rms_rac = sat.get_rac()
+        print(f"{np.array2string(rms_rac[:3], precision=6, floatmode='fixed')}", end=" " )
+    print(f"=> {rms[3]:.6f}")
+    sat.get_state()
+    return sat
 
-def plot(args, satG01):
-    fig, ax = plt.subplots(nrows=3)
-    if (args.to_rac):
-        r = satG01.rac()
-        ylabel = ["r", "a", "c"]
-    else:
-        r = satG01.residual.transpose()
-        ylabel = ["x", "y", "z"]
+def plot(args, sat):
+    with plt.style.context('seaborn-v0_8-ticks'):
+        fig, ax = plt.subplots(nrows=3)
+        if args.to_rac:
+            r = sat.rac.transpose()
+            y_label = ["r", "a", "c"]
+        else:
+            r = sat.residual.transpose()
+            y_label = ["x", "y", "z"]
 
-    for a, d in zip(ax, r):
-        a.plot(satG01.time, d)
-    for a, l in zip(ax, ylabel):
-        a.set_ylabel(l)
-    plt.savefig(f"plt_{args.coll}_{args.sat}.pdf", bbox_inches='tight')
+        for a, d in zip(ax, r):
+            a.plot(sat.time, d)
+        for a, l in zip(ax, y_label):
+            a.set_ylabel(l)
+        plt.savefig(f"plt_{args.coll}_{args.sat}.pdf", bbox_inches='tight')
 
-def main(arg):
+def main_residuals(arg):
     orbit = read(arg)
     plot(arg, orbit)
 
+def main_states(arg):
+    print("not implemented yet")
+
 if __name__ == "__main__":
+    plt.style.use(['seaborn-v0_8-ticks'])
     parser = argparse.ArgumentParser(
         prog=__file__,
         description='Plot satellite related fittings',
-        epilog='Text at the bottom of help')
-    parser.add_argument('--db', default='127.0.0.1', type=str)
-    parser.add_argument('--coll', type=str, required=True)
-    parser.add_argument('-s', '--sat', type=str, required=True)
-    parser.add_argument('-r', '--residual', action='store_true', default=False)
-    parser.add_argument('--to_rac', action='store_true', default=False)
+        epilog='Text at the bottom of help',
+        formatter_class = argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument('--db', default='127.0.0.1', type=str, help="Mongo database url [default 127.0.0.1]")
+    parser.add_argument('--coll', type=str, required=True, help="Mongo collection to plot")
+    parser.add_argument('-s', '--sat', type=str, required=True, help="Satellite name")
+
+    subparser = parser.add_subparsers(help="sub-command help")
+
+    parser_residual_option = subparser.add_parser("res", help="plotting residual")
+    parser_residual_option.add_argument('--to_rac', action='store_true', default=False, help="plot in R, A, C")
+    parser_residual_option.set_defaults(func=main_residuals)
+
+    parser_state_option = subparser.add_parser("state", help="plotting states")
+    parser_state_option.set_defaults(func=main_states)
+
     arg = parser.parse_args()
-    main(arg)
+    arg.func(arg)
