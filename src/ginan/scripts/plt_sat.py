@@ -42,6 +42,7 @@ def main_residuals(arg):
     plot(arg, orbit)
 
 def main_states(arg):
+    print(arg)
     print("not implemented yet")
 
 if __name__ == "__main__":
@@ -63,6 +64,7 @@ if __name__ == "__main__":
     parser_residual_option.set_defaults(func=main_residuals)
 
     parser_state_option = subparser.add_parser("state", help="plotting states")
+    parser_state_option.add_argument("state", help="which state to plot?", type=str, nargs="+")
     parser_state_option.set_defaults(func=main_states)
 
     arg = parser.parse_args()
