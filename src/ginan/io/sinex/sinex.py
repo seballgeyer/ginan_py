@@ -8,7 +8,7 @@ from numpy.lib.recfunctions import drop_fields
 
 
 dtype={
-    'SATELLITE_IDENTIFIER':
+    'SATELLITE/IDENTIFIER':
         np.dtype([
             ('_0', 'U1'),
             ('svn', 'U4'),
@@ -24,14 +24,14 @@ dtype={
 }
 
 sep={
-    'SATELLITE_IDENTIFIER':[ 1, 4, 1, 9,1,  6,1,  15,1,  41]
+    'SATELLITE/IDENTIFIER':[ 1, 4, 1, 9,1,  6,1,  15,1,  41]
 }
 
 def trim_string(s):
     return s.strip()
 
 conv={
-    'SATELLITE_IDENTIFIER':{1:trim_string, 3:trim_string, 7:trim_string, 9:trim_string}
+    'SATELLITE/IDENTIFIER':{1:trim_string, 3:trim_string, 7:trim_string, 9:trim_string}
 }
 class Sinex():
     def __init__(self) -> None:
@@ -48,7 +48,7 @@ class Sinex():
         current_block = None
         for line in contents:
             if line.startswith("+"):
-                label = line[1:].strip().replace("/","_")
+                label = line[1:].strip()
                 current_block = []
             elif line.startswith("-"):
                 if current_block is not None and label in dtype:
