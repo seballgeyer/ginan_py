@@ -8,6 +8,9 @@ from ginan.io.grace import gracetime_converter
 from ginan.io.grace.sca import GraceSCA
 
 class TestGrace(unittest.TestCase):
+    def setUp(self) -> None:
+        print("In method", self._testMethodName)
+
     def test_checkingTime(self):
         time = gracetime_converter(694267200)
         self.assertEqual(time, np.datetime64('2022-01-01T00:00:00'))
