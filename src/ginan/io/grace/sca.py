@@ -23,22 +23,19 @@ class GraceSCA:
     def __init__(self):
         self.data = 0
         self.yaml_dict = 0
+
     def read(self, file_or_string: Union[str,StringIO]) -> None:
         if isinstance(file_or_string, str):
             with open(file_or_string) as f:
                 contents = f.read()
         else:
             contents = file_or_string.read()
-
         yaml_lines = contents.split("# End of YAML header")[0]
         data_lines = contents.split("# End of YAML header")[1].strip()
         self.yaml_dict = yaml.safe_load(yaml_lines)
         self.data = np.loadtxt(StringIO(data_lines), dtype=sca_dtype, converters={0: gracetime_converter, 8:binary_to_int})
 
 
-if __name__ == "__main__":
-    g = GraceSCA()
-    g.read("/home/ubuntu/ginan_py/scratch/SCA1B_2022-01-01_C_04.txt")
 
 
 

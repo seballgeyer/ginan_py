@@ -35,6 +35,10 @@ def plot(args, sat):
             a.plot(sat.time, d)
         for a, l in zip(ax, y_label):
             a.set_ylabel(l)
+        for d in r:
+            print(np.sqrt(np.mean(np.square(d))))
+        res3d2 = np.square(r).sum(axis=0)
+        print("3d RMS", np.sqrt(np.mean(res3d2)))
         plt.savefig(f"plt_{args.coll}_{args.sat}.pdf", bbox_inches='tight')
 
 def main_residuals(arg):

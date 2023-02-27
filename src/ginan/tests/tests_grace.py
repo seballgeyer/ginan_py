@@ -31,6 +31,7 @@ class TestGrace(unittest.TestCase):
                               )
         data_sca = GraceSCA()
         data_sca.read(file_or_string=input_data)
+        self.assertEqual(data_sca.yaml_dict["header"]["dimensions"]["num_records"], 86400)
         self.assertEqual(data_sca.data[2]['gps_time'], np.datetime64('2022-01-01T00:00:02'))
         self.assertEqual(data_sca.data[2]['GFO_id'], 'C')
         self.assertEqual(data_sca.data[2]['quaternioni'], 0.4809815362327415)
