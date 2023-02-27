@@ -13,6 +13,6 @@ def snx_date_np(s: str) -> np.datetime64:
 def snx_np_date(dt: np.datetime64) -> str:
     year = dt.astype('datetime64[Y]').astype(int) + 1970
     year_start = np.datetime64(f"{year}-01-01T00:00:00")
-    days_since_year_start = (dt - year_start).astype(int) // (24 * 60 * 60 * 10**9) + 1
-    seconds_since_day_start = (dt - year_start).astype(int) // (10**9) % (24 * 60 * 60)
+    days_since_year_start = int(np.ceil((dt - year_start).astype(int) / 86400))
+    seconds_since_day_start = int((dt - year_start).astype(int)-(days_since_year_start-1)*86400)
     return f"{year:04d}:{days_since_year_start:03d}:{seconds_since_day_start:05d}"
