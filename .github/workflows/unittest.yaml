@@ -19,4 +19,4 @@ jobs:
       - name: PythonPath
         run: echo "PYTHONPATH=src/" >> $GITHUB_ENV
       - name: Run Test
-        run: python -m unittest discover tests
+        run: python -m unittest discover -s src/ginan/tests
