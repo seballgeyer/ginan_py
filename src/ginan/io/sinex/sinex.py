@@ -1,13 +1,14 @@
 
 from io import StringIO
 from typing import Union
+import logging
 
 import numpy as np
 from numpy.lib.recfunctions import drop_fields, join_by
 
 from ginan.io.sinex.definitions import read_func
 
-
+logger = logging.getLogger(__name__)
 
 
 class Sinex():
@@ -25,7 +26,6 @@ class Sinex():
         block_name = None
         block_data = {}
         for line in f:
-            print(line)
             if line.startswith("+"):
                 if block_name:
                     self.blocks[block_name] = block_data
@@ -36,21 +36,28 @@ class Sinex():
                 self.blocks[block_name] = block_data
                 block_name = None
             else:
-                if block_name in read_func:
-                    func = read_func[block_name]
-                    block_data.update(func(f))
-                    self.blocks[block_name] = block_data
-                    block_name = None
-                else:
-                    print(f"no parser for block {block_name}")
+                if block_name:
+                    if block_name in read_func:
+                        func = read_func[block_name]
+                        block_data.update(func(f))
+                        self.blocks[block_name] = block_data
+                        block_name = None
+                    else:
+                        logger.info(f"no parser for block {block_name}")
+                        func = read_func["None"]
+                        block_name = None
 
     def merge(self):
         result = {}
         for subdic_name, subdict_data in self.blocks.items():
-            for svn, subsubdcit  in subdict_data.items():
-                if svn not in result:
-                    result[svn] = {}
-                result[svn][subdic_name] = subsubdcit
+            #todo: there is a None block created somewhere.
+            if subdic_name:
+                name = subdic_name.split("/")[-1].lower()
+                for svn, subsubdict  in subdict_data.items():
+                    if svn not in result:
+                        result[svn] = {}
+                    # subsubdict.pop("comment")
+                    result[svn][name] = subsubdict
         return result
 
 import yaml
@@ -66,4 +73,5 @@ if __name__ == "__main__":
     d = s.merge()
     # import pprint
     pprint.pprint(d)
-    # print(yaml.safe_load(yaml.dump(d)))
+
+    print(yaml.dump(d))

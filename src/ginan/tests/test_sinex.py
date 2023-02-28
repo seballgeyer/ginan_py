@@ -34,6 +34,7 @@ testdataset="""
  G006 1980:117:00000 1991:066:00000 G09
  G008 1983:195:00000 1993:125:00000 G11
  G009 1984:165:00000 1994:172:00000 G13
+ G009 1994:173:00000 1994:300:00000 G14
 *
 -SATELLITE/PRN
 *
@@ -108,7 +109,7 @@ class TestSinex(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.sinex =Sinex()
         cls.sinex.read(StringIO(testdataset))
-
+        cls.d = cls.sinex.merge()
         pass
     #
     # @classmethod
@@ -126,8 +127,10 @@ class TestSinex(unittest.TestCase):
         self.assertEqual(output,'2010:058:25610')
 
     def test_sinexMass(self) -> None:
-        self.assertEqual(self.sinex.blocks['SATELLITE/MASS']['G005']['mass'],455.000)
-        self.assertEqual(self.sinex.blocks['SATELLITE/MASS']['G001']['startDate'],  np.datetime64('1978-02-22T00:00:00'))
+        print(self.sinex.blocks['SATELLITE/MASS']['G005'])
+        first_key = list(self.sinex.blocks['SATELLITE/MASS']['G005'].keys())[0]
+        self.assertEqual(self.sinex.blocks['SATELLITE/MASS']['G005'][first_key]['mass'],455.000)
+        self.assertEqual(list(self.sinex.blocks['SATELLITE/MASS']['G001'].keys())[0],  np.datetime64('1978-02-22T00:00:00'))
 
 
     def test_sinexTxPower(self) -> None:
@@ -136,4 +139,12 @@ class TestSinex(unittest.TestCase):
         self.assertEqual(self.sinex.blocks['SATELLITE/TX_POWER']['G048']['power'],145.000)
         self.assertEqual(self.sinex.blocks['SATELLITE/TX_POWER']['G046']['startDate'], np.datetime64('1999-10-07T00:00:00'))
         self.assertTrue(np.isnan(self.sinex.blocks['SATELLITE/TX_POWER']['G046']['endDate']))
+
+    def test_sinexSvnPrn(self) -> None:
+        self.assertEqual(len(self.sinex.blocks['SATELLITE/PRN']['G009']),2)
+
+    def test_merged(self) -> None:
+        print(self.d)
+        import yaml
+        print(yaml.dump(self.d))
 
