@@ -1,9 +1,10 @@
+import datetime
 import unittest
 from io import StringIO
 
 import numpy as np
 
-from ginan.io.sinex import snx_np_date, snx_date_np
+from ginan.io.sinex import snx_np_date, snx_date_np, snx_str_datetime
 from ginan.io.sinex.sinex import  Sinex
 
 
@@ -116,15 +117,21 @@ class TestSinex(unittest.TestCase):
     # def tearDown(cls) -> None:
     #     pass
 
-    def test_sinexStrDateConvertor(self) -> None:
+    def test_sinexStrNpDateConvertor(self) -> None:
         input_str = "2010:058:25610"
         out = snx_date_np(input_str)
         self.assertEqual(out, np.datetime64('2010-02-27T07:06:50'))
 
-    def test_sinexDateStrConvertor(self) -> None:
+    def test_sinexNpDateStrConvertor(self) -> None:
         input = np.datetime64('2010-02-27T07:06:50')
         output = snx_np_date(input)
         self.assertEqual(output,'2010:058:25610')
+
+    def test_sinexStrDatetimeConverter(self) -> None:
+        input_str = "2010:058:25610"
+        out = snx_str_datetime(input_str)
+        self.assertEqual(out, datetime.datetime(2010,2,27,7,6,50))
+
 
     def test_sinexMass(self) -> None:
         first_key = list(self.sinex.blocks['SATELLITE/MASS']['G005'].keys())[0]
