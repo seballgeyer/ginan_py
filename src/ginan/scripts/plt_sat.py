@@ -16,13 +16,14 @@ def read(args):
     print(f"{args.coll} {arg.sat}   {np.array2string(rms[:3], precision=6, floatmode='fixed')}   ", end="")
     if args.to_rac:
         rms_rac = sat.get_rac()
-        print(f"{np.array2string(rms_rac[:3], precision=6, floatmode='fixed')}", end=" " )
+        print(f"{np.array2string(rms_rac[:3], precision=6, floatmode='fixed')}", end=" ")
     print(f"=> {rms[3]:.6f}")
     sat.get_state()
     return sat
 
+
 def plot(args, sat):
-    with plt.style.context('seaborn-v0_8-ticks'):
+    with plt.style.context("seaborn-v0_8-ticks"):
         fig, ax = plt.subplots(nrows=3)
         if args.to_rac:
             r = sat.rac.transpose()
@@ -39,32 +40,35 @@ def plot(args, sat):
             print(np.sqrt(np.mean(np.square(d))))
         res3d2 = np.square(r).sum(axis=0)
         print("3d RMS", np.sqrt(np.mean(res3d2)))
-        plt.savefig(f"plt_{args.coll}_{args.sat}.pdf", bbox_inches='tight')
+        plt.savefig(f"plt_{args.coll}_{args.sat}.pdf", bbox_inches="tight")
+
 
 def main_residuals(arg):
     orbit = read(arg)
     plot(arg, orbit)
 
+
 def main_states(arg):
     print(arg)
     print("not implemented yet")
 
+
 if __name__ == "__main__":
-    plt.style.use(['seaborn-v0_8-ticks'])
+    plt.style.use(["seaborn-v0_8-ticks"])
     parser = argparse.ArgumentParser(
         prog=__file__,
-        description='Plot satellite related fittings',
-        epilog='Text at the bottom of help',
-        formatter_class = argparse.RawDescriptionHelpFormatter
+        description="Plot satellite related fittings",
+        epilog="Text at the bottom of help",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument('--db', default='127.0.0.1', type=str, help="Mongo database url [default 127.0.0.1]")
-    parser.add_argument('--coll', type=str, required=True, help="Mongo collection to plot")
-    parser.add_argument('-s', '--sat', type=str, required=True, help="Satellite name")
+    parser.add_argument("--db", default="127.0.0.1", type=str, help="Mongo database url [default 127.0.0.1]")
+    parser.add_argument("--coll", type=str, required=True, help="Mongo collection to plot")
+    parser.add_argument("-s", "--sat", type=str, required=True, help="Satellite name")
 
     subparser = parser.add_subparsers(help="sub-command help")
 
     parser_residual_option = subparser.add_parser("res", help="plotting residual")
-    parser_residual_option.add_argument('--to_rac', action='store_true', default=False, help="plot in R, A, C")
+    parser_residual_option.add_argument("--to_rac", action="store_true", default=False, help="plot in R, A, C")
     parser_residual_option.set_defaults(func=main_residuals)
 
     parser_state_option = subparser.add_parser("state", help="plotting states")

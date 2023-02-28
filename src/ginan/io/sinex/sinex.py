@@ -1,4 +1,3 @@
-
 from io import StringIO
 from typing import Union
 import logging
@@ -11,11 +10,11 @@ from ginan.io.sinex.definitions import read_func
 logger = logging.getLogger(__name__)
 
 
-class Sinex():
+class Sinex:
     def __init__(self) -> None:
         self.blocks = {}
 
-    def read(self, file_or_string: Union[str,StringIO]) -> None:
+    def read(self, file_or_string: Union[str, StringIO]) -> None:
         if isinstance(file_or_string, str):
             with open(file_or_string) as f:
                 self.read_file(f)
@@ -50,15 +49,16 @@ class Sinex():
     def merge(self):
         result = {}
         for subdic_name, subdict_data in self.blocks.items():
-            #todo: there is a None block created somewhere.
+            # todo: there is a None block created somewhere.
             if subdic_name:
                 name = subdic_name.split("/")[-1].lower()
-                for svn, subsubdict  in subdict_data.items():
+                for svn, subsubdict in subdict_data.items():
                     if svn not in result:
                         result[svn] = {}
                     # subsubdict.pop("comment")
                     result[svn][name] = subsubdict
         return result
+
 
 import yaml
 
@@ -67,6 +67,7 @@ if __name__ == "__main__":
     s = Sinex()
     s.read("scratch/igs_satellite_metadata_2203_plus.snx")
     import pprint
+
     for s1 in s.blocks:
         print(s1)
         pprint.pprint(s.blocks[s1])

@@ -5,11 +5,10 @@ from io import StringIO
 import numpy as np
 
 from ginan.io.sinex import snx_np_date, snx_date_np, snx_str_datetime
-from ginan.io.sinex.sinex import  Sinex
+from ginan.io.sinex.sinex import Sinex
 
 
-
-testdataset="""
+testdataset = """
 +SATELLITE/IDENTIFIER
 *
 *SVN_ COSPAR ID SatCat Block__________ Comment__________________________________
@@ -105,13 +104,15 @@ testdataset="""
 -SATELLITE/YAW_BIAS_RATE
 """
 
+
 class TestSinex(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.sinex =Sinex()
+        cls.sinex = Sinex()
         cls.sinex.read(StringIO(testdataset))
         cls.d = cls.sinex.merge()
         pass
+
     #
     # @classmethod
     # def tearDown(cls) -> None:
@@ -120,38 +121,37 @@ class TestSinex(unittest.TestCase):
     def test_sinexStrNpDateConvertor(self) -> None:
         input_str = "2010:058:25610"
         out = snx_date_np(input_str)
-        self.assertEqual(out, np.datetime64('2010-02-27T07:06:50'))
+        self.assertEqual(out, np.datetime64("2010-02-27T07:06:50"))
 
     def test_sinexNpDateStrConvertor(self) -> None:
-        input = np.datetime64('2010-02-27T07:06:50')
+        input = np.datetime64("2010-02-27T07:06:50")
         output = snx_np_date(input)
-        self.assertEqual(output,'2010:058:25610')
+        self.assertEqual(output, "2010:058:25610")
 
     def test_sinexStrDatetimeConverter(self) -> None:
         input_str = "2010:058:25610"
         out = snx_str_datetime(input_str)
-        self.assertEqual(out, datetime.datetime(2010,2,27,7,6,50))
-
+        self.assertEqual(out, datetime.datetime(2010, 2, 27, 7, 6, 50))
 
     def test_sinexMass(self) -> None:
-        first_key = list(self.sinex.blocks['SATELLITE/MASS']['G005'].keys())[0]
-        self.assertEqual(self.sinex.blocks['SATELLITE/MASS']['G005'][first_key]['mass'],455.000)
-        self.assertEqual(list(self.sinex.blocks['SATELLITE/MASS']['G001'].keys())[0],  np.datetime64('1978-02-22T00:00:00'))
-
+        first_key = list(self.sinex.blocks["SATELLITE/MASS"]["G005"].keys())[0]
+        self.assertEqual(self.sinex.blocks["SATELLITE/MASS"]["G005"][first_key]["mass"], 455.000)
+        self.assertEqual(
+            list(self.sinex.blocks["SATELLITE/MASS"]["G001"].keys())[0], np.datetime64("1978-02-22T00:00:00")
+        )
 
     def test_sinexTxPower(self) -> None:
-        first_key = list(self.sinex.blocks['SATELLITE/TX_POWER']['G048'].keys())[0]
-        self.assertEqual(self.sinex.blocks['SATELLITE/TX_POWER']['G048'][first_key]['power'],145.000)
-        first_key = list(self.sinex.blocks['SATELLITE/TX_POWER']['G046'].keys())[0]
-        self.assertEqual(self.sinex.blocks['SATELLITE/TX_POWER']['G046'][first_key]['power'], 60)
-        self.assertEqual(first_key, np.datetime64('1999-10-07T00:00:00'))
-        self.assertIsNone(self.sinex.blocks['SATELLITE/TX_POWER']['G046'][first_key]['endDate'])
+        first_key = list(self.sinex.blocks["SATELLITE/TX_POWER"]["G048"].keys())[0]
+        self.assertEqual(self.sinex.blocks["SATELLITE/TX_POWER"]["G048"][first_key]["power"], 145.000)
+        first_key = list(self.sinex.blocks["SATELLITE/TX_POWER"]["G046"].keys())[0]
+        self.assertEqual(self.sinex.blocks["SATELLITE/TX_POWER"]["G046"][first_key]["power"], 60)
+        self.assertEqual(first_key, np.datetime64("1999-10-07T00:00:00"))
+        self.assertIsNone(self.sinex.blocks["SATELLITE/TX_POWER"]["G046"][first_key]["endDate"])
 
     def test_sinexSvnPrn(self) -> None:
-        self.assertEqual(len(self.sinex.blocks['SATELLITE/PRN']['G009']),2)
+        self.assertEqual(len(self.sinex.blocks["SATELLITE/PRN"]["G009"]), 2)
 
     # def test_merged(self) -> None:
     #     print(self.d)
     #     import yaml
     #     print(yaml.dump(self.d))
-
