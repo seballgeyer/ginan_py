@@ -127,24 +127,24 @@ class TestSinex(unittest.TestCase):
         self.assertEqual(output,'2010:058:25610')
 
     def test_sinexMass(self) -> None:
-        print(self.sinex.blocks['SATELLITE/MASS']['G005'])
         first_key = list(self.sinex.blocks['SATELLITE/MASS']['G005'].keys())[0]
         self.assertEqual(self.sinex.blocks['SATELLITE/MASS']['G005'][first_key]['mass'],455.000)
         self.assertEqual(list(self.sinex.blocks['SATELLITE/MASS']['G001'].keys())[0],  np.datetime64('1978-02-22T00:00:00'))
 
 
     def test_sinexTxPower(self) -> None:
-        print(self.sinex.blocks)
-        self.assertEqual(self.sinex.blocks['SATELLITE/TX_POWER']['G046']['power'], 60)
-        self.assertEqual(self.sinex.blocks['SATELLITE/TX_POWER']['G048']['power'],145.000)
-        self.assertEqual(self.sinex.blocks['SATELLITE/TX_POWER']['G046']['startDate'], np.datetime64('1999-10-07T00:00:00'))
-        self.assertTrue(np.isnan(self.sinex.blocks['SATELLITE/TX_POWER']['G046']['endDate']))
+        first_key = list(self.sinex.blocks['SATELLITE/TX_POWER']['G048'].keys())[0]
+        self.assertEqual(self.sinex.blocks['SATELLITE/TX_POWER']['G048'][first_key]['power'],145.000)
+        first_key = list(self.sinex.blocks['SATELLITE/TX_POWER']['G046'].keys())[0]
+        self.assertEqual(self.sinex.blocks['SATELLITE/TX_POWER']['G046'][first_key]['power'], 60)
+        self.assertEqual(first_key, np.datetime64('1999-10-07T00:00:00'))
+        self.assertIsNone(self.sinex.blocks['SATELLITE/TX_POWER']['G046'][first_key]['endDate'])
 
     def test_sinexSvnPrn(self) -> None:
         self.assertEqual(len(self.sinex.blocks['SATELLITE/PRN']['G009']),2)
 
-    def test_merged(self) -> None:
-        print(self.d)
-        import yaml
-        print(yaml.dump(self.d))
+    # def test_merged(self) -> None:
+    #     print(self.d)
+    #     import yaml
+    #     print(yaml.dump(self.d))
 
