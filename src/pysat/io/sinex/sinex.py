@@ -5,7 +5,7 @@ import logging
 import numpy as np
 from numpy.lib.recfunctions import drop_fields, join_by
 
-from ginan.io.sinex.definitions import read_func
+from pysat.io.sinex.definitions import read_func
 
 logger = logging.getLogger(__name__)
 

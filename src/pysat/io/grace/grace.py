@@ -3,7 +3,7 @@ import datetime
 import numpy as np
 from typing import Union
 
-from ginan.data.satellite import satellite
+from pysat.data.satellite import satellite
 
 
 class grace(satellite):

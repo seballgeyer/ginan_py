@@ -3,8 +3,8 @@ import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ginan.data.satellite import satellite
-from ginan.dbconnector import mongo
+from pysat.data.satellite import satellite
+from pysat.dbconnector import mongo
 
 
 def read(args):

@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import numpy.typing as npt
 
-from ginan.dbconnector import mongo
+from pysat.dbconnector import mongo
 
 logger = logging.getLogger(__name__)
 

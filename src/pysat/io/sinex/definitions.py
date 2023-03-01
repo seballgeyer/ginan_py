@@ -1,6 +1,6 @@
 import numpy as np
 
-from ginan.io.sinex.utils import trim_string, snx_date_np, snx_str_datetime
+from pysat.io.sinex.utils import trim_string, snx_date_np, snx_str_datetime
 
 
 def _read_sat_identifier(f):

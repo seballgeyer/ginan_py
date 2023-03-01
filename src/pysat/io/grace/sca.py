@@ -3,7 +3,7 @@ import numpy as np
 from io import StringIO
 from typing import Union
 
-from ginan.io.grace import gracetime_converter, binary_to_int
+from pysat.io.grace import gracetime_converter, binary_to_int
 
 
 sca_dtype = np.dtype(
