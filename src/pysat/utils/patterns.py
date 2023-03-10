@@ -1,9 +1,18 @@
 def match_patterns(patterns, value):
     for pattern in patterns:
-        if matches_pattern(pattern, value):
-            return True
+        if is_valid_pattern(pattern):
+            if matches_pattern(pattern, value):
+                return True
+        else:
+            print(f"{pattern} invalid")
+            return False
     return False
 
+
+def is_valid_pattern(pattern):
+    if pattern.count("*") > 1:
+        return False
+    return True
 
 
 def matches_pattern(pattern, value):
@@ -26,6 +35,12 @@ def matches_question_mark_pattern(pattern, value):
 
 
 def matches_asterisk_pattern(pattern, value):
+    """
+    @todo right now it will work only with one asterisk.
+    :param pattern:
+    :param value:
+    :return:
+    """
     pattern_parts = pattern.split("*")
     if len(pattern_parts) == 1 and value == pattern:
         return True
