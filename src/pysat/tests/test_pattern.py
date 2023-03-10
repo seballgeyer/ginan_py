@@ -37,6 +37,18 @@ class TestPattern(unittest.TestCase):
         self.assertEqual(len(matched_values), 3)  # add assertion here
         self.assertListEqual(matched_values, ["G01", "G02", "G03"])
 
+    def test_match2questionmark(self) -> None:
+        """
+        test matching pattern 2 question mark
+        Given a list of values and a pattern, find the values that match the pattern
+        :return:
+        """
+        list_val = ["G01", "G02", "G03", "G25", "E01", "E02", "E14"]
+        pattern = ["?0?"]
+        matched_values = [value for value in list_val if match_patterns(pattern, value)]
+        self.assertEqual(len(matched_values), 5)  # add assertion here
+        self.assertListEqual(matched_values, ["G01", "G02", "G03", "E01", "E02"])
+
 
 if __name__ == "__main__":
     unittest.main()
