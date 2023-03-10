@@ -1,4 +1,5 @@
 import logging
+from typing import Union
 
 from pymongo.mongo_client import MongoClient
 
@@ -10,7 +11,7 @@ class MongoDB:
     Main class to connect to Mongo
     """
 
-    def __init__(self, url: str | None = None, data_base: str = "") -> None:
+    def __init__(self, url: Union[str, None] = None, data_base: str = "") -> None:
         self.mongo_url: str | None = url
         self.mongo_db: str = data_base
         self.mongo_client: MongoClient | None = None
