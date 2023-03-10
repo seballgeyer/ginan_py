@@ -24,7 +24,8 @@ def plot_measurements(args):
     print(db.mongo_content)
     # if args.sat not in db.mongo_content["Sat"]:
     # raise "error"
-    dd = db.get_data("Measurements", sat=sats, site=sites, state=None, series="", keys={args.field[0]: args.field[0]})
+    keys = {k: k for k in args.field}
+    dd = db.get_data("Measurements", sat=sats, site=sites, state=None, series="", keys=keys)
     data = []
     print(len(dd))
     # for d in dd:

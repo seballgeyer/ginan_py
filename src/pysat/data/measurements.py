@@ -23,4 +23,4 @@ class measurements:
 
     def stats(self):
         for key in self.data:
-            print(f"{self.id}, {key} {self.data[key].mean()}")
+            print(f"{self.id}, {key} {self.data[key].mean(): .4e} sigma  {self.data[key].std(): .4e}")
