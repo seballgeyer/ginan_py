@@ -27,7 +27,7 @@ class TestPattern(unittest.TestCase):
 
     def test_match1questionmark(self) -> None:
         """
-        test matching pattern
+        test matching pattern question mark
         Given a list of values and a pattern, find the values that match the pattern
         :return:
         """
