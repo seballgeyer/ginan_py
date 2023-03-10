@@ -55,5 +55,6 @@ class MongoDB:
         )
         for key in keys:
             agg_pipeline[-1]["$group"][key] = {"$push": f"${key}"}
+        print(agg_pipeline)
         cursor = self.mongo_client[self.mongo_db][collection].aggregate(agg_pipeline)
         return list(cursor)
