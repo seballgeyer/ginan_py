@@ -49,3 +49,10 @@ def matches_asterisk_pattern(pattern, value):
     if pattern_parts[-1] == "":
         return value.startswith(pattern_parts[0])
     return value.startswith(pattern_parts[0]) and value.endswith(pattern_parts[-1])
+
+
+def generate_list(pattern, list):
+    if pattern:
+        return [value for value in list if match_patterns(pattern, value)]
+    else:
+        return [""]

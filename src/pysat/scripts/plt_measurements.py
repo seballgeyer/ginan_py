@@ -6,7 +6,7 @@ import numpy as np
 
 from pysat.data.measurements import measurements
 from pysat.dbconnector import mongo
-from pysat.utils.patterns import match_patterns
+from pysat.utils.patterns import match_patterns, generate_list
 import sys
 
 
@@ -32,9 +32,8 @@ def plot_measurements(args):
     # print(db.mongo_content["Site"])
     # print(db.mongo_content["Sat"])
 
-    sites = [value for value in db.mongo_content["Site"] if match_patterns(args.site, value)]
-
-    sats = [value for value in db.mongo_content["Sat"] if match_patterns(args.sat, value)]
+    sites = generate_list(args.site, db.mongo_content["Site"])
+    sats = generate_list(args.sat, db.mongo_content["Sat"])
     # sites = match_patterns(args.site, db.mongo_content["Site"])
     # print(sites, sats)
     # print(args)
