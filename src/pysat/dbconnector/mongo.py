@@ -11,10 +11,10 @@ class MongoDB:
     Main class to connect to Mongo
     """
 
-    def __init__(self, url: Union[str, None] = None, data_base: str = "") -> None:
+    def __init__(self, url: Union[str, None] = None, data_base: str = "", port: int = 27017) -> None:
         self.mongo_url: str | None = url
         self.mongo_db: str = data_base
-
+        self.mongo_port: int = port
         self.mongo_client: MongoClient | None = None
         self.mongo_content: dict = {}
         self.list_collections: list = []
@@ -24,11 +24,13 @@ class MongoDB:
             self.get_content()
 
     def connect(self) -> None:
-        self.mongo_client = MongoClient(host=self.mongo_url)
-        print(self.mongo_client)
+        self.mongo_client = MongoClient(host=self.mongo_url, port=self.mongo_port)
+        print(self.mongo_client.list_database_names())
+
+        # print(self.mongo_client)
 
     def get_content(self) -> None:
-        print(self.mongo_client)
+        # print(self.mongo_client)
         for cursor in self.mongo_client[self.mongo_db]["Content"].find():
             self.mongo_content[cursor["type"]] = cursor["Values"]
 

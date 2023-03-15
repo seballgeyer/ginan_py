@@ -27,7 +27,7 @@ logger.addHandler(stdout_handler)
 
 
 def plot_measurements(args):
-    db = mongo.MongoDB(url=args.db, data_base=args.coll)
+    db = mongo.MongoDB(url=args.db, data_base=args.coll, port=args.port)
     logger.info(arg.site)
     # print(db.mongo_content["Site"])
     # print(db.mongo_content["Sat"])
@@ -77,6 +77,7 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--db", default="127.0.0.1", type=str, help="Mongo database url [default 127.0.0.1]")
+    parser.add_argument("--port", type=int, default=27017, help="Mongo port")
     parser.add_argument("--coll", type=str, required=True, help="Mongo collection to plot")
     parser.add_argument("--sat", type=str, required=True, nargs="+", help="Satellite name")
     parser.add_argument("--site", type=str, required=True, nargs="+", help="Site name")

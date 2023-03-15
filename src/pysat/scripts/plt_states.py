@@ -28,7 +28,9 @@ logger.addHandler(stdout_handler)
 
 
 def plot_states(args):
-    db = mongo.MongoDB(url=args.db, data_base=args.coll)
+    db = mongo.MongoDB(url=args.db, data_base=args.coll, port=args.port)
+    print(args)
+    print(db.mongo_content["Sat"])
     if args.site:
         sites = [value for value in db.mongo_content["Site"] if match_patterns(args.site, value)]
     else:
@@ -70,9 +72,10 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--db", default="127.0.0.1", type=str, help="Mongo database url [default 127.0.0.1]")
+    parser.add_argument("--port", type=int, default=27017, help="Mongo port")
     parser.add_argument("--coll", type=str, required=True, help="Mongo collection to plot")
     parser.add_argument("--sat", type=str, required=False, nargs="+", default=None, help="Satellite name")
-    parser.add_argument("--site", type=str, required=False, nargs="+", help="Site name")
+    parser.add_argument("--site", type=str, required=False, nargs="+", default=None, help="Site name")
     parser.add_argument("--state", type=str, required=True, help="State name")
     parser.add_argument("--field", type=str, required=True, nargs="+")
 
