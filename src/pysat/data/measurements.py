@@ -1,7 +1,12 @@
+import logging
+
 import numpy.typing as npt
 import numpy as np
 
 import matplotlib.pyplot as plt
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class measurements:
@@ -17,10 +22,16 @@ class measurements:
         if len(self.data) == 0:
             raise ValueError("no data")
 
+    def demean(self):
+        for key in self.data:
+            mean = self.data[key].mean(axis=0)
+            logger.info(f"Removing mean of data {self.id}: {np.array2string(mean)}")
+            self.data[key] -= mean
+
     def plot(self, ax: plt.Axes):
         for key in self.data:
             ax.plot(self.t, self.data[key])
 
     def stats(self):
         for key in self.data:
-            print(f"{self.id}, {key} {self.data[key].mean(): .4e} sigma  {self.data[key].std(): .4e}")
+            logger.info(f"{self.id}, {key} {self.data[key].mean(): .4e} sigma  {self.data[key].std(): .4e}")

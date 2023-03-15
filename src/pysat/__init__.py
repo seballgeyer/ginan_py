@@ -9,7 +9,7 @@ logging.captureWarnings(True)
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s> %(message)s", "%Y-%m-%dT%H:%M:%S")
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.INFO)
 stdout_handler = logging.StreamHandler(sys.stdout)
 stdout_handler.setFormatter(formatter)
 

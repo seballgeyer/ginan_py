@@ -14,6 +14,7 @@ class MongoDB:
     def __init__(self, url: Union[str, None] = None, data_base: str = "") -> None:
         self.mongo_url: str | None = url
         self.mongo_db: str = data_base
+
         self.mongo_client: MongoClient | None = None
         self.mongo_content: dict = {}
         self.list_collections: list = []

@@ -1,4 +1,6 @@
 import argparse
+import logging
+import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,40 +9,55 @@ from pysat.data.satellite import satellite
 from pysat.dbconnector import mongo
 
 
+class CustomFormatter(logging.Formatter):
+    def format(self, record):
+        if record.levelno == logging.INFO:
+            return record.getMessage()
+        else:
+            return f"{record.levelname} > {record.getMessage()}"
+
+
+logger = logging.getLogger("main")
+formatter = CustomFormatter()
+logger.setLevel(logging.DEBUG)
+stdout_handler = logging.StreamHandler(sys.stdout)
+stdout_handler.setFormatter(formatter)
+logger.addHandler(stdout_handler)
+
+
 def read(args):
     db = mongo.MongoDB(url=args.db, data_base=args.coll)
     sat = satellite(db, sat=args.sat)
     sat.get_postfit()
     sat.get_state()
     rms = sat.get_rms()
-    print(f"{args.coll} {arg.sat}   {np.array2string(rms[:3], precision=6, floatmode='fixed')}   ", end="")
+    logger.info(f"{args.coll} {arg.sat}   {np.array2string(rms[:3], precision=6, floatmode='fixed')}   ", end="")
     if args.to_rac:
         rms_rac = sat.get_rac()
-        print(f"{np.array2string(rms_rac[:3], precision=6, floatmode='fixed')}", end=" ")
-    print(f"=> {rms[3]:.6f}")
+        logger.info(f"{np.array2string(rms_rac[:3], precision=6, floatmode='fixed')}", end=" ")
+    logger.info(f"=> {rms[3]:.6f}")
     sat.get_state()
     return sat
 
 
 def plot(args, sat):
-    with plt.style.context("seaborn-v0_8-ticks"):
-        fig, ax = plt.subplots(nrows=3)
-        if args.to_rac:
-            r = sat.rac.transpose()
-            y_label = ["r", "a", "c"]
-        else:
-            r = sat.residual.transpose()
-            y_label = ["x", "y", "z"]
+    fig, ax = plt.subplots(nrows=3)
+    if args.to_rac:
+        r = sat.rac.transpose()
+        y_label = ["r", "a", "c"]
+    else:
+        r = sat.residual.transpose()
+        y_label = ["x", "y", "z"]
 
-        for a, d in zip(ax, r):
-            a.plot(sat.time, d)
-        for a, l in zip(ax, y_label):
-            a.set_ylabel(l)
-        for d in r:
-            print(np.sqrt(np.mean(np.square(d))))
-        res3d2 = np.square(r).sum(axis=0)
-        print("3d RMS", np.sqrt(np.mean(res3d2)))
-        plt.savefig(f"plt_{args.coll}_{args.sat}.pdf", bbox_inches="tight")
+    for a, d in zip(ax, r):
+        a.plot(sat.time, d)
+    for a, l in zip(ax, y_label):
+        a.set_ylabel(l)
+    for d in r:
+        print(np.sqrt(np.mean(np.square(d))))
+    res3d2 = np.square(r).sum(axis=0)
+    print("3d RMS", np.sqrt(np.mean(res3d2)))
+    plt.savefig(f"plt_{args.coll}_{args.sat}.pdf", bbox_inches="tight")
 
 
 def main_residuals(arg):
