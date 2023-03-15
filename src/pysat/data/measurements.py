@@ -22,6 +22,18 @@ class measurements:
         if len(self.data) == 0:
             raise ValueError("no data")
 
+    def __sub__(self, other):
+        if self.id["sat"] != other.id["sat"] or self.id["site"] != other.id["site"]:
+            raise Exception(
+                f"differencing Apples with oranges:"
+                f" sat: {self.id['sat']} <> {other.id['sat']}"
+                f" site: {self.id['site']} <> {other.id['site']}"
+            )
+        results = self
+        for key in self.data:
+            results.data[key] = self.data[key] - other.data[key]
+        return results
+
     def demean(self):
         for key in self.data:
             mean = self.data[key].mean(axis=0)
@@ -34,4 +46,9 @@ class measurements:
 
     def stats(self):
         for key in self.data:
-            logger.info(f"{self.id}, {key} {self.data[key].mean(): .4e} sigma  {self.data[key].std(): .4e}")
+            rms = np.sqrt((self.data[key] ** 2).mean())
+            logger.info(
+                f"{self.id}, {key} {self.data[key].mean(): .4e}"
+                f" sigma  {self.data[key].std(): .4e}"
+                f" RMS {rms:.4e}"
+            )
