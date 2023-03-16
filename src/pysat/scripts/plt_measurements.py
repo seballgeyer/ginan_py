@@ -4,7 +4,7 @@ import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pysat.data.measurements import measurements
+from pysat.data.measurements import Measurements
 from pysat.dbconnector import mongo
 from pysat.utils.patterns import match_patterns, generate_list
 import sys
@@ -53,7 +53,7 @@ def plot_measurements(args):
     data = []
     for d in dd:
         try:
-            data.append(measurements(d))
+            data.append(Measurements(d))
         except ValueError as e:
             logger.warning(f"{d['_id']} doesn't have values")
 

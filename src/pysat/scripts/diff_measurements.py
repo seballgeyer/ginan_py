@@ -4,7 +4,7 @@ import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pysat.data.measurements import measurements
+from pysat.data.measurements import Measurements
 from pysat.dbconnector import mongo
 from pysat.utils.patterns import match_patterns, generate_list
 from pysat.utils.common import find_common
@@ -41,7 +41,7 @@ def plot_measurements(args):
         data.append([])
         for d in dd:
             try:
-                data[-1].append(measurements(d))
+                data[-1].append(Measurements(d))
                 logger.info(f"Find {data[-1][-1].id}")
             except ValueError as e:
                 logger.warning(d["_id"], "doesn't have values")

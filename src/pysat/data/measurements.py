@@ -9,11 +9,11 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class measurements:
+class Measurements:
     def __init__(self, d: dict):
         self.sat: str = d["_id"]["sat"]
         self.id = d["_id"]
-        self.t: npt.ArrayLike = d["t"]
+        self.t: npt.ArrayLike = np.asarray(d["t"])
         self.data: dict = {}
         for key in d:
             if key not in ["t", "_id"]:
@@ -30,8 +30,11 @@ class measurements:
                 f" site: {self.id['site']} <> {other.id['site']}"
             )
         results = self
-        for key in self.data:
-            results.data[key] = self.data[key] - other.data[key]
+        common, in_self, in_t = np.intersect1d(self.t, other.t, return_indices=True)
+        in_self = np.where(in_self)[0].astype(int)
+        in_t = np.where(in_t)[0].astype(int)
+        results.t = self.t[in_self]
+        results.data = {key: self.data[key][in_self] - other.data[key][in_t] for key in self.data}
         return results
 
     def demean(self):
