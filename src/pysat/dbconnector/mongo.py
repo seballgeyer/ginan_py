@@ -50,7 +50,7 @@ class MongoDB:
         logger.debug("getting data")
         agg_pipeline = [{"$match": {"Sat": {"$in": sat}, "Site": {"$in": site}, "Series": {"$in": [series]}}}]
         if state is not None:
-            agg_pipeline[-1]["$match"]["State"] = state
+            agg_pipeline[-1]["$match"]["State"] = {"$in": state}
         agg_pipeline.append({"$sort": {"Epoch": 1}})
         agg_pipeline.append(
             {

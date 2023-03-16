@@ -45,7 +45,7 @@ class Measurements:
 
     Attributes:
         sat (str): The name of the satellite that the measurements were taken from.
-        measurement_id: An identifier for the measurements.
+        id: An identifier for the measurements.
         epoch: A NumPy array of the times at which the measurements were taken.
         data (dict): A dictionary of NumPy arrays containing the measurement data.
 
@@ -69,7 +69,7 @@ class Measurements:
         :return None
         """
         self.sat: str = data_dict["_id"]["sat"]
-        self.measurement_id = data_dict["_id"]
+        self.id = data_dict["_id"]
         self.epoch: npt.ArrayLike = np.asarray(data_dict["t"])
         self.data: dict = {}
         for key in data_dict:
@@ -89,11 +89,11 @@ class Measurements:
         :returns: A new Measurements object representing the element-wise difference between this object and the other.
         """
         keys_to_compare = ["sat", "site"]
-        if any(self.measurement_id[key] != other.measurement_id[key] for key in keys_to_compare):
+        if any(self.id[key] != other.id[key] for key in keys_to_compare):
             diffs = ", ".join(
                 [
                     "%(key)s: %(self_id)s <> %(other_id)s"
-                    % {"key": key, "self_id": self.measurement_id[key], "other_id": other.measurement_id[key]}
+                    % {"key": key, "self_id": self.id[key], "other_id": other.id[key]}
                     for key in keys_to_compare
                 ]
             )
@@ -129,7 +129,7 @@ class Measurements:
         """
         for key in self.data:
             mean = self.data[key].mean(axis=0)
-            logger.info(f"Removing mean of data {self.measurement_id}: {np.array2string(mean)}")
+            logger.info(f"Removing mean of data {self.id}: {np.array2string(mean)}")
             self.data[key] -= mean
 
     def plot(self, axis: plt.Axes):
@@ -151,10 +151,8 @@ class Measurements:
         """
         Print statistics for the data stored in this Measurements object.
         """
+        string = f"{self.id}"
         for key in self.data:
             rms = np.sqrt((self.data[key] ** 2).mean())
-            logger.info(
-                f"{self.measurement_id}, {key} {self.data[key].mean(): .4e}"
-                f" sigma  {self.data[key].std(): .4e}"
-                f" RMS {rms:.4e}"
-            )
+            string += f"\n\t{key} {self.data[key].mean(): .4e} sigma  {self.data[key].std(): .4e} RMS {rms:.4e}"
+        logger.info(string)

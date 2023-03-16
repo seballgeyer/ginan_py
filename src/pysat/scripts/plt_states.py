@@ -42,7 +42,7 @@ def plot_states(args):
     for d in dd:
         try:
             data.append(Measurements(d))
-            logger.info(f"Find {data[-1].measurement_id}")
+            logger.info(f"Find {data[-1].id}")
         except ValueError as e:
             logger.warning(d["_id"], "doesn't have values")
 

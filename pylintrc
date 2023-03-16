@@ -1,5 +1,5 @@
 [FORMAT]
 max-line-length=120
-
+good-names=id
 [MASTER]
 disable=logging-fstring-interpolation

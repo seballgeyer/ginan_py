@@ -58,7 +58,7 @@ def plot_measurements(args):
             logger.warning(f"{d['_id']} doesn't have values")
 
     for d in data:
-        print("*", d.measurement_id)
+        print("*", d.id)
 
     fig, ax = plt.subplots()
     for d in data:

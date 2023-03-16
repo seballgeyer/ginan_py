@@ -10,10 +10,10 @@ the databases, fetching the measurements, finding the common measurements, and p
 uses the `pymongo` library to interact with the MongoDB databases and the `matplotlib` library to generate the plot.
 
 Example usage:
-    python measurements.py --db1=mydb1 --coll1=mycoll1 --port1=27017 \
-                           --db2=mydb2 --coll2=mycoll2 --port2=27017 \
-                           --site=SITE1 SITE2 --sat=SAT1 SAT2 --field=field1 field2 \
-                           --measurement=meas1 meas2 --log-file=measurements.log
+    python ginan_mq.py --db1=mydb1 --coll1=mycoll1 --port1=27017 \
+                               --db2=mydb2 --coll2=mycoll2 --port2=27017 \
+                               --site=SITE1 SITE2 --sat=SAT1 SAT2 --field=field1 field2 \
+                               --state=state1  --log-file=measurements.log
 """
 import argparse
 import logging
@@ -80,15 +80,18 @@ def get_measurements(
     """
     if keys is None:
         raise ValueError("Keys Not defined")
-    sites = generate_list(site, data_base.mongo_content["Site"])
-    sats = generate_list(sat, data_base.mongo_content["Sat"])
-    measurements_data = data_base.get_data("Measurements", sat=sats, site=sites, state=state, series=series, keys=keys)
+    site_list = generate_list(site, data_base.mongo_content["Site"])
+    sat_list = generate_list(sat, data_base.mongo_content["Sat"])
+    collection = "Measurements" if state is None else "States"
+    measurements_data = data_base.get_data(
+        collection, sat=sat_list, site=site_list, state=state, series=series, keys=keys
+    )
 
     measurements = []
     for data in measurements_data:
         try:
             measurements.append(Measurements(data))
-            logger.info(f"Found measurement {measurements[-1].measurement_id}")
+            logger.info(f"Found measurement {measurements[-1].id}")
         except ValueError:
             logger.warning(f"Measurement with ID {data['_id']} does not have values")
     return measurements
@@ -113,15 +116,14 @@ def log_diff_measurements(
         logger.warning(f"Measurement with ID {data2[diff].id} not found in first database")
 
 
-def plot_diff_measurements(common, data1, data2):
+def make_diff(common, data1, data2):
     """
-    Plots the differences between two sets of measurements.
+    Generate the diffrences between 2 list of Measurements objects
 
     :param common: List of tuples of indices of measurements that are common to both data1 and data2.
     :param data1: List of Measurements objects from the first data source.
     :param data2: List of Measurements objects from the second data source.
-
-    :return: None
+    :return: the list of the diffrences
     """
     diff = []
     for idx0, idx1 in common:
@@ -129,13 +131,31 @@ def plot_diff_measurements(common, data1, data2):
             diff.append(data1[idx0] - data2[idx1])
         except ValueError as value_error:
             logger.warning(f"Value error occurred: {value_error}")
+    return diff
+
+
+def plot_diff_measurements(diff):
+    """
+    Plots the differences between two sets of measurements.
+
+    :param diff: List of Measurements differences objects.
+
+    :return: None
+    """
 
     _fig, axis = plt.subplots()
     for data in diff:
         data.plot(axis)
-        data.stats()
-
     plt.show()
+
+
+def write_stats(diff):
+    """
+    write statistics related to a list of measurements objects
+    :param diff: list of Measruement objects
+    :return:
+    """
+    [data.stats() for data in diff]
 
 
 def get_measurements_thread(data_base, queue_store, **kwargs):
@@ -157,27 +177,36 @@ def connect_databases(args):
     Connects to the MongoDB databases using the provided arguments.
 
     :param args: An argparse.Namespace object that contains the command-line arguments.
-
-    :return: A tuple of dictionary with the measurements objects..
+    :return: A tuple of dictionaries with the measurements objects.
     """
     keys = {k: k for k in args.field}
-    with mongo.MongoDB(url=args.db1, data_base=args.coll1, port=args.port1) as db1, mongo.MongoDB(
-        url=args.db2, data_base=args.coll2, port=args.port2
-    ) as db2:
-        kwargs = {"sat": args.sat, "site": args.site, "state": None, "series": "", "keys": keys}
+    queues = []
+    threads = []
+    data = []
+    num_dbs = 2 if args.coll2 else 1
+    for i in range(num_dbs):
+        db_args = getattr(args, f"db{i+1}")
+        coll_args = getattr(args, f"coll{i+1}")
+        port_args = getattr(args, f"port{i+1}")
+        db = mongo.MongoDB(url=db_args, data_base=coll_args, port=port_args)
+        db.connect()
+        db.get_content()
+        queue_ = queue.Queue()
+        queues.append(queue_)
 
-        queue1 = queue.Queue()
-        thread1 = threading.Thread(target=get_measurements_thread, args=(db1, queue1), kwargs=kwargs)
-        thread1.start()
+        thread = threading.Thread(
+            target=get_measurements_thread,
+            args=(db, queue_),
+            kwargs={"sat": args.sat, "site": args.site, "state": args.state, "series": "", "keys": keys},
+        )
+        threads.append(thread)
+        thread.start()
 
-        queue2 = queue.Queue()
-        thread2 = threading.Thread(target=get_measurements_thread, args=(db2, queue2), kwargs=kwargs)
-        thread2.start()
+    for i in range(num_dbs):
+        threads[i].join()
+        data.append(queues[i].get())
 
-        data1 = queue1.get()
-        data2 = queue2.get()
-
-    return data1, data2
+    return tuple(data)
 
 
 def plot_measurements(args):
@@ -189,12 +218,16 @@ def plot_measurements(args):
     :return None
     """
     # create database connections
-    data1, data2 = connect_databases(args)
-    print("done")
-    print(data2)
-    common, diff1, diff2 = find_common(data1, data2)
-    log_diff_measurements(diff1, diff2, data1, data2)
-    plot_diff_measurements(common, data1, data2)
+    data = connect_databases(args)
+    if len(data) == 2:
+        common, diff1, diff2 = find_common(data[0], data[1])
+        log_diff_measurements(diff1, diff2, data[0], data[1])
+        diff = make_diff(common, data[0], data[1])
+    else:
+        diff = data[0]
+
+    plot_diff_measurements(diff)
+    write_stats(diff)
 
 
 def main():
@@ -207,11 +240,12 @@ def main():
     The user can specify the databases and collections to connect to, as well as the satellites, sites, and fields to
     plot.
 
-    Usage: python script.py [--db1 <database_url>] [--db2 <database_url>] [--port1 <port_number>]
-                            [--port2 <port_number>]
-                             --coll1 <collection_name> --coll2 <collection_name>
-                             --site <site_name> --sat <satellite_name>
-                             --field <field_name> [<field_name> ...]
+    Usage: python ginan_mq.py [--db1 <database_url>] [--port1 <port_number>]
+                                    [--db2 <database_url>] [--port2 <port_number>]
+                                     --coll1 <collection_name> --coll2 <collection_name>
+                                     --site <site_name> --sat <satellite_name>
+                                     --field <field_name> [<field_name> ...]
+                                    [--state <state_name>]
 
     :param None
     :return None
@@ -228,14 +262,14 @@ def main():
 
     parser.add_argument("--db2", default="127.0.0.1", type=str, help="Mongo database url [default 127.0.0.1]")
     parser.add_argument("--port2", type=int, default=27017, help="Mongo port")
-    parser.add_argument("--coll2", type=str, required=True, help="Mongo collection to plot")
+    parser.add_argument("--coll2", type=str, required=False, help="Mongo collection to plot")
 
     parser.add_argument("--sat", type=str, required=False, nargs="+", default=None, help="Satellite name")
     parser.add_argument("--site", type=str, required=False, nargs="+", default=None, help="Site name")
     parser.add_argument("--field", type=str, required=True, nargs="+")
+    parser.add_argument("--state", type=str, nargs=1, default=None)
 
     args = parser.parse_args()
-
     try:
         plot_measurements(args)
     except ValueError as error_value:
