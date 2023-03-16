@@ -19,9 +19,13 @@ class MongoDB:
         self.mongo_content: dict = {}
         self.list_collections: list = []
 
-        if self.mongo_url:
-            self.connect()
-            self.get_content()
+    def __enter__(self):
+        self.connect()
+        self.get_content()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.mongo_client.close()
 
     def connect(self) -> None:
         self.mongo_client = MongoClient(host=self.mongo_url, port=self.mongo_port)

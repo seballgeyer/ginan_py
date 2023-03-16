@@ -1,22 +1,50 @@
-import logging
+"""
+This script fetches measurements data from two MongoDB collections and generates a plot of their differences.
+
+The script provides a command-line interface that allows users to specify the databases and collections to use, as well
+as the measurements and fields to plot. The script fetches the data from the specified databases, finds the common
+measurements between the two collections, and generates a plot of the differences between the measurements.
+
+The script consists of several functions that handle different aspects of the data processing, including connecting to
+the databases, fetching the measurements, finding the common measurements, and plotting the differences. The script
+uses the `pymongo` library to interact with the MongoDB databases and the `matplotlib` library to generate the plot.
+
+Example usage:
+    python measurements.py --db1=mydb1 --coll1=mycoll1 --port1=27017 \
+                           --db2=mydb2 --coll2=mycoll2 --port2=27017 \
+                           --site=SITE1 SITE2 --sat=SAT1 SAT2 --field=field1 field2 \
+                           --measurement=meas1 meas2 --log-file=measurements.log
+"""
 import argparse
+import logging
+import sys
+from typing import Union, List
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 from pysat.data.measurements import Measurements
 from pysat.dbconnector import mongo
-from pysat.utils.patterns import match_patterns, generate_list
 from pysat.utils.common import find_common
-import sys
+from pysat.utils.patterns import generate_list
 
 
 class CustomFormatter(logging.Formatter):
+    """
+    Custom logging formatter that overrides the default formatter's format method
+    to only display the log message for INFO logs and display the log level and message
+    for other logs.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
+
     def format(self, record):
         if record.levelno == logging.INFO:
             return record.getMessage()
-        else:
-            return f"{record.levelname} > {record.getMessage()}"
+        return f"{record.levelname} > {record.getMessage()}"
 
 
 logger = logging.getLogger("main")
@@ -27,37 +55,77 @@ stdout_handler.setFormatter(formatter)
 logger.addHandler(stdout_handler)
 
 
-def plot_measurements(args):
-    db1 = mongo.MongoDB(url=args.db1, data_base=args.coll1, port=args.port1)
-    db2 = mongo.MongoDB(url=args.db2, data_base=args.coll2, port=args.port2)
+def get_measurements(
+    db: mongo.MongoDB,
+    sat: Union[str, None] = None,
+    site: Union[str, None] = None,
+    state: Union[str, None] = None,
+    series: str = "",
+    keys: Union[dict, None] = None,
+) -> List[Measurements]:
+    """
+    Retrieves measurements from a given MongoDB collection.
 
-    data = []
-    for i, db in enumerate([db1, db2]):
-        sites = generate_list(args.site, db.mongo_content["Site"])
-        sats = generate_list(args.sat, db.mongo_content["Sat"])
+    :param db: An instance of MongoDB.
+    :param sat: The name of the satellite for which to retrieve measurements. If None, all satellites are considered.
+    :param site: The name of the site for which to retrieve measurements. If None, all sites are considered.
+    :param state: The state of the measurement. If None, all states are considered.
+    :param series: The series of the measurement. If None, all series are considered.
+    :param keys: A dictionary of fields to include in the output document. If empty, all fields are included.
 
-        keys = {k: k for k in args.field}
-        dd = db.get_data("Measurements", sat=sats, site=sites, state=None, series="", keys=keys)
-        data.append([])
-        for d in dd:
-            try:
-                data[-1].append(Measurements(d))
-                logger.info(f"Find {data[-1][-1].id}")
-            except ValueError as e:
-                logger.warning(d["_id"], "doesn't have values")
+    :return: A list of Measurements objects.
+    """
+    if keys is None:
+        raise ValueError("Keys Not defined")
+    sites = generate_list(site, db.mongo_content["Site"])
+    sats = generate_list(sat, db.mongo_content["Sat"])
+    measurements_data = db.get_data("Measurements", sat=sats, site=sites, state=state, series=series, keys=keys)
 
-    common, diff1, diff2 = find_common(data[0], data[1])
-    for d in diff1:
-        logger.warning(f"{data[0][d].id} not in second db")
-    for d in diff2:
-        logger.warning(f"{data[1][d].id} not in first db")
-
-    diff = []
-    for i, (idx0, idx1) in enumerate(common):
+    measurements = []
+    for data in measurements_data:
         try:
-            diff.append(data[0][idx0] - data[1][idx1])
+            measurements.append(Measurements(data))
+            logger.info(f"Found measurement {measurements[-1].measurement_id}")
+        except ValueError:
+            logger.warning(f"Measurement with ID {data['_id']} does not have values")
+    return measurements
+
+
+def log_diff_measurements(
+    diff1: List[int], diff2: List[int], data1: List[Measurements], data2: List[Measurements]
+) -> None:
+    """
+    Logs the differences between two measurements datasets.
+
+    :param diff1: List of indices for measurements in data1 that were not found in data2.
+    :param diff2: List of indices for measurements in data2 that were not found in data1.
+    :param data1: List of Measurements objects from database 1.
+    :param data2: List of Measurements objects from database 2.
+
+    :return: None
+    """
+    for d in diff1:
+        logger.warning(f"Measurement with ID {data1[d].id} not found in second database")
+    for d in diff2:
+        logger.warning(f"Measurement with ID {data2[d].id} not found in first database")
+
+
+def plot_diff_measurements(common, data1, data2):
+    """
+    Plots the differences between two sets of measurements.
+
+    :param common: List of tuples of indices of measurements that are common to both data1 and data2.
+    :param data1: List of Measurements objects from the first data source.
+    :param data2: List of Measurements objects from the second data source.
+
+    :return: None
+    """
+    diff = []
+    for idx0, idx1 in common:
+        try:
+            diff.append(data1[idx0] - data2[idx1])
         except Exception as e:
-            logger.warning(f"error appeared {e}")
+            logger.warning(f"Error occurred: {e}")
 
     fig, ax = plt.subplots()
     for d in diff:
@@ -67,7 +135,45 @@ def plot_measurements(args):
     plt.show()
 
 
-if __name__ == "__main__":
+def plot_measurements(args):
+    """
+    Fetches measurements data from two MongoDB collections and generates a plot of their differences.
+
+    :param args: argparse.Namespace object that contains the command-line arguments.
+
+    :return None
+    """
+    keys = {k: k for k in args.field}
+    with mongo.MongoDB(url=args.db1, data_base=args.coll1, port=args.port1) as db1:
+        data1 = get_measurements(db1, args.sat, args.site, None, "", keys)
+
+    with mongo.MongoDB(url=args.db2, data_base=args.coll2, port=args.port2) as db2:
+        data2 = get_measurements(db2, args.sat, args.site, None, "", keys)
+
+    common, diff1, diff2 = find_common(data1, data2)
+    log_diff_measurements(diff1, diff2, data1, data2)
+    plot_diff_measurements(common, data1, data2)
+
+
+def main():
+    """
+    Entry point for the script. Parses command line arguments and calls the appropriate function based on the user's
+    input.
+
+    The script takes two MongoDB collections as input and generates a plot of the measurements related fittings between
+    them.
+    The user can specify the databases and collections to connect to, as well as the satellites, sites, and fields to
+    plot.
+
+    Usage: python script.py [--db1 <database_url>] [--db2 <database_url>] [--port1 <port_number>]
+                            [--port2 <port_number>]
+                             --coll1 <collection_name> --coll2 <collection_name>
+                             --site <site_name> --sat <satellite_name>
+                             --field <field_name> [<field_name> ...]
+
+    :param None
+    :return None
+    """
     parser = argparse.ArgumentParser(
         prog=__file__,
         description="Plot measurements related fittings",
@@ -86,6 +192,14 @@ if __name__ == "__main__":
     parser.add_argument("--site", type=str, required=False, nargs="+", default=None, help="Site name")
     parser.add_argument("--field", type=str, required=True, nargs="+")
 
-    arg = parser.parse_args()
-    plot_measurements(arg)
-    # arg.func(arg)
+    args = parser.parse_args()
+
+    try:
+        plot_measurements(args)
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
