@@ -51,7 +51,7 @@ class CustomFormatter(logging.Formatter):
 
 logger = logging.getLogger("main")
 formatter = CustomFormatter()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 stdout_handler = logging.StreamHandler(sys.stdout)
 stdout_handler.setFormatter(formatter)
 logger.addHandler(stdout_handler)
@@ -91,7 +91,7 @@ def get_measurements(
     for data in measurements_data:
         try:
             measurements.append(Measurements(data))
-            logger.info(f"Found measurement {measurements[-1].id}")
+            logger.debug(f"Found measurement {measurements[-1].id}")
         except ValueError:
             logger.warning(f"Measurement with ID {data['_id']} does not have values")
     return measurements

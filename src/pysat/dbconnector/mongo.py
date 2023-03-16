@@ -29,7 +29,7 @@ class MongoDB:
 
     def connect(self) -> None:
         self.mongo_client = MongoClient(host=self.mongo_url, port=self.mongo_port)
-        print(self.mongo_client.list_database_names())
+        logger.debug(self.mongo_client.list_database_names())
 
         # print(self.mongo_client)
 
@@ -62,6 +62,6 @@ class MongoDB:
         )
         for key in keys:
             agg_pipeline[-1]["$group"][key] = {"$push": f"${key}"}
-        print(agg_pipeline)
+        logger.debug(agg_pipeline)
         cursor = self.mongo_client[self.mongo_db][collection].aggregate(agg_pipeline)
         return list(cursor)
