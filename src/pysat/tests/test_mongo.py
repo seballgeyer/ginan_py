@@ -38,6 +38,8 @@ class TestMongo(unittest.TestCase):
         )
 
         cls.connector = dbmongo.MongoDB("127.0.0.1", "test_database")
+        cls.connector.connect()
+        cls.connector.get_content()
 
     @classmethod
     def tearDownClass(cls) -> None:

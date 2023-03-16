@@ -5,7 +5,7 @@ from pysat.utils.common import find_common
 
 class MyClass:
     def __init__(self, id, other_attribute):
-        self.id = id
+        self.measurement_id = id
         self.other_attribute = other_attribute
 
 
