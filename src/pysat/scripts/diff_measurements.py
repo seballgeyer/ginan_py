@@ -18,7 +18,9 @@ Example usage:
 import argparse
 import logging
 import sys
-from typing import Union, List
+import threading
+import queue
+from typing import List, Optional
 
 import matplotlib.pyplot as plt
 
@@ -56,17 +58,18 @@ logger.addHandler(stdout_handler)
 
 
 def get_measurements(
-    db: mongo.MongoDB,
-    sat: Union[str, None] = None,
-    site: Union[str, None] = None,
-    state: Union[str, None] = None,
+    data_base: mongo.MongoDB,
+    *,
+    sat: Optional[str] = None,
+    site: Optional[str] = None,
+    state: Optional[str] = None,
     series: str = "",
-    keys: Union[dict, None] = None,
+    keys: Optional[dict] = None,
 ) -> List[Measurements]:
     """
     Retrieves measurements from a given MongoDB collection.
 
-    :param db: An instance of MongoDB.
+    :param data_base: An instance of MongoDB.
     :param sat: The name of the satellite for which to retrieve measurements. If None, all satellites are considered.
     :param site: The name of the site for which to retrieve measurements. If None, all sites are considered.
     :param state: The state of the measurement. If None, all states are considered.
@@ -77,9 +80,9 @@ def get_measurements(
     """
     if keys is None:
         raise ValueError("Keys Not defined")
-    sites = generate_list(site, db.mongo_content["Site"])
-    sats = generate_list(sat, db.mongo_content["Sat"])
-    measurements_data = db.get_data("Measurements", sat=sats, site=sites, state=state, series=series, keys=keys)
+    sites = generate_list(site, data_base.mongo_content["Site"])
+    sats = generate_list(sat, data_base.mongo_content["Sat"])
+    measurements_data = data_base.get_data("Measurements", sat=sats, site=sites, state=state, series=series, keys=keys)
 
     measurements = []
     for data in measurements_data:
@@ -104,10 +107,10 @@ def log_diff_measurements(
 
     :return: None
     """
-    for d in diff1:
-        logger.warning(f"Measurement with ID {data1[d].id} not found in second database")
-    for d in diff2:
-        logger.warning(f"Measurement with ID {data2[d].id} not found in first database")
+    for diff in diff1:
+        logger.warning(f"Measurement with ID {data1[diff].id} not found in second database")
+    for diff in diff2:
+        logger.warning(f"Measurement with ID {data2[diff].id} not found in first database")
 
 
 def plot_diff_measurements(common, data1, data2):
@@ -124,15 +127,57 @@ def plot_diff_measurements(common, data1, data2):
     for idx0, idx1 in common:
         try:
             diff.append(data1[idx0] - data2[idx1])
-        except Exception as e:
-            logger.warning(f"Error occurred: {e}")
+        except ValueError as value_error:
+            logger.warning(f"Value error occurred: {value_error}")
 
-    fig, ax = plt.subplots()
-    for d in diff:
-        d.plot(ax)
-        d.stats()
+    _fig, axis = plt.subplots()
+    for data in diff:
+        data.plot(axis)
+        data.stats()
 
     plt.show()
+
+
+def get_measurements_thread(data_base, queue_store, **kwargs):
+    """
+    Gets measurement data from a MongoDB database and puts it into a queue.
+
+    :param data_base: A MongoDB connection object.
+    :param queue_store: A queue to store the fetched data.
+    :param kwargs: Keyword arguments passed to the `get_measurements` function.
+
+    :return: None
+    """
+    data = get_measurements(data_base, **kwargs)
+    queue_store.put(data)
+
+
+def connect_databases(args):
+    """
+    Connects to the MongoDB databases using the provided arguments.
+
+    :param args: An argparse.Namespace object that contains the command-line arguments.
+
+    :return: A tuple of dictionary with the measurements objects..
+    """
+    keys = {k: k for k in args.field}
+    with mongo.MongoDB(url=args.db1, data_base=args.coll1, port=args.port1) as db1, mongo.MongoDB(
+        url=args.db2, data_base=args.coll2, port=args.port2
+    ) as db2:
+        kwargs = {"sat": args.sat, "site": args.site, "state": None, "series": "", "keys": keys}
+
+        queue1 = queue.Queue()
+        thread1 = threading.Thread(target=get_measurements_thread, args=(db1, queue1), kwargs=kwargs)
+        thread1.start()
+
+        queue2 = queue.Queue()
+        thread2 = threading.Thread(target=get_measurements_thread, args=(db2, queue2), kwargs=kwargs)
+        thread2.start()
+
+        data1 = queue1.get()
+        data2 = queue2.get()
+
+    return data1, data2
 
 
 def plot_measurements(args):
@@ -143,13 +188,10 @@ def plot_measurements(args):
 
     :return None
     """
-    keys = {k: k for k in args.field}
-    with mongo.MongoDB(url=args.db1, data_base=args.coll1, port=args.port1) as db1:
-        data1 = get_measurements(db1, args.sat, args.site, None, "", keys)
-
-    with mongo.MongoDB(url=args.db2, data_base=args.coll2, port=args.port2) as db2:
-        data2 = get_measurements(db2, args.sat, args.site, None, "", keys)
-
+    # create database connections
+    data1, data2 = connect_databases(args)
+    print("done")
+    print(data2)
     common, diff1, diff2 = find_common(data1, data2)
     log_diff_measurements(diff1, diff2, data1, data2)
     plot_diff_measurements(common, data1, data2)
@@ -196,8 +238,11 @@ def main():
 
     try:
         plot_measurements(args)
-    except Exception as e:
-        logger.error(f"An error occurred: {e}")
+    except ValueError as error_value:
+        logger.exception(f"Value error: {error_value}")
+        sys.exit(1)
+    except Exception as error:
+        logger.exception(f"An error occurred: {error}")
         sys.exit(1)
 
 
