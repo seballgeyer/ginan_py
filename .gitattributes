@@ -1,0 +1,2 @@
+_version.py export-subst
+src/pysat/_version.py export-subst
