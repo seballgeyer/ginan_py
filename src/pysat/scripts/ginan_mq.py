@@ -219,15 +219,20 @@ def plot_measurements(args):
     """
     # create database connections
     data = connect_databases(args)
-    if len(data) == 2:
-        common, diff1, diff2 = find_common(data[0], data[1])
-        log_diff_measurements(diff1, diff2, data[0], data[1])
-        diff = make_diff(common, data[0], data[1])
+    if args.diff:
+        if len(data) == 2:
+            common, diff1, diff2 = find_common(data[0], data[1])
+            log_diff_measurements(diff1, diff2, data[0], data[1])
+            diff = make_diff(common, data[0], data[1])
+        else:
+            raise ValueError("Diff set up but don't have 2 datas")
     else:
-        diff = data[0]
-
-    plot_diff_measurements(diff)
+        diff = []
+        for single_data in data:
+            diff.extend(single_data)
+    print(len(diff))
     write_stats(diff)
+    plot_diff_measurements(diff)
 
 
 def main():
@@ -269,6 +274,7 @@ def main():
     parser.add_argument("--field", type=str, required=True, nargs="+")
     parser.add_argument("--state", type=str, nargs=1, default=None)
 
+    parser.add_argument("--diff", default=False, action="store_true")
     args = parser.parse_args()
     try:
         plot_measurements(args)
