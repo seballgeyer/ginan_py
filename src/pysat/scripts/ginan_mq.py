@@ -134,7 +134,7 @@ def make_diff(common, data1, data2):
     return diff
 
 
-def plot_diff_measurements(diff):
+def plot_diff_measurements(diff, output_type):
     """
     Plots the differences between two sets of measurements.
 
@@ -146,7 +146,10 @@ def plot_diff_measurements(diff):
     _fig, axis = plt.subplots()
     for data in diff:
         data.plot(axis)
-    plt.show()
+    if output_type is True:
+        plt.show()
+    else:
+        plt.savefig(output_type, bbox_inches="tight")
 
 
 def write_stats(diff):
@@ -230,9 +233,9 @@ def plot_measurements(args):
         diff = []
         for single_data in data:
             diff.extend(single_data)
-    print(len(diff))
     write_stats(diff)
-    plot_diff_measurements(diff)
+    if args.output is not False:
+        plot_diff_measurements(diff, args.output)
 
 
 def main():
@@ -275,7 +278,11 @@ def main():
     parser.add_argument("--state", type=str, nargs=1, default=None)
 
     parser.add_argument("--diff", default=False, action="store_true")
+
+    parser.add_argument("--output", nargs="?", const=True, default=False, help="output plot into a file or xdisplay")
+
     args = parser.parse_args()
+
     try:
         plot_measurements(args)
     except ValueError as error_value:
