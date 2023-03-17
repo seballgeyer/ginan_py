@@ -147,7 +147,7 @@ class Measurements:
                 axis.plot(self.epoch, value, label=key)
         axis.legend()
 
-    def stats(self):
+    def get_stats(self):
         """
         Print statistics for the data stored in this Measurements object.
         """

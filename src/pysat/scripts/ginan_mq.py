@@ -10,8 +10,8 @@ the databases, fetching the measurements, finding the common measurements, and p
 uses the `pymongo` library to interact with the MongoDB databases and the `matplotlib` library to generate the plot.
 
 Example usage:
-    python ginan_mq.py --db1=mydb1 --coll1=mycoll1 --port1=27017 \
-                               --db2=mydb2 --coll2=mycoll2 --port2=27017 \
+    python ginan_mq.py --db1=mydb1 --dbname1=mycoll1 --port1=27017 \
+                               --db2=mydb2 --dbname2=mycoll2 --port2=27017 \
                                --site=SITE1 SITE2 --sat=SAT1 SAT2 --field=field1 field2 \
                                --state=state1  --log-file=measurements.log
 """
@@ -158,7 +158,8 @@ def write_stats(diff):
     :param diff: list of Measruement objects
     :return:
     """
-    [data.stats() for data in diff]
+    for data in diff:
+        data.get_stats()
 
 
 def get_measurements_thread(data_base, queue_store, **kwargs):
@@ -186,20 +187,20 @@ def connect_databases(args):
     queues = []
     threads = []
     data = []
-    num_dbs = 2 if args.coll2 else 1
+    num_dbs = 2 if args.dbname2 else 1
     for i in range(num_dbs):
         db_args = getattr(args, f"db{i+1}")
-        coll_args = getattr(args, f"coll{i+1}")
+        coll_args = getattr(args, f"dbname{i+1}")
         port_args = getattr(args, f"port{i+1}")
-        db = mongo.MongoDB(url=db_args, data_base=coll_args, port=port_args)
-        db.connect()
-        db.get_content()
+        mongo_db = mongo.MongoDB(url=db_args, data_base=coll_args, port=port_args)
+        mongo_db.connect()
+        mongo_db.get_content()
         queue_ = queue.Queue()
         queues.append(queue_)
 
         thread = threading.Thread(
             target=get_measurements_thread,
-            args=(db, queue_),
+            args=(mongo_db, queue_),
             kwargs={"sat": args.sat, "site": args.site, "state": args.state, "series": "", "keys": keys},
         )
         threads.append(thread)
@@ -266,11 +267,11 @@ def main():
     )
     parser.add_argument("--db1", default="127.0.0.1", type=str, help="Mongo database url [default 127.0.0.1]")
     parser.add_argument("--port1", type=int, default=27017, help="Mongo port")
-    parser.add_argument("--coll1", type=str, required=True, help="Mongo collection to plot")
+    parser.add_argument("--dbname1", type=str, required=True, help="Mongo collection to plot")
 
     parser.add_argument("--db2", default="127.0.0.1", type=str, help="Mongo database url [default 127.0.0.1]")
     parser.add_argument("--port2", type=int, default=27017, help="Mongo port")
-    parser.add_argument("--coll2", type=str, required=False, help="Mongo collection to plot")
+    parser.add_argument("--dbname2", type=str, required=False, help="Mongo collection to plot")
 
     parser.add_argument("--sat", type=str, required=False, nargs="+", default=None, help="Satellite name")
     parser.add_argument("--site", type=str, required=False, nargs="+", default=None, help="Site name")
@@ -288,9 +289,9 @@ def main():
     except ValueError as error_value:
         logger.exception(f"Value error: {error_value}")
         sys.exit(1)
-    except Exception as error:
-        logger.exception(f"An error occurred: {error}")
-        sys.exit(1)
+    # except Exception as error:
+    #     logger.exception(f"An error occurred: {error}")
+    #     sys.exit(1)
 
 
 if __name__ == "__main__":
