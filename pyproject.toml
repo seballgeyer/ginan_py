@@ -1,3 +1,8 @@
+
+[build-system]
+requires = ["setuptools", "versioneer[toml]", "tomli; python_version < '3.11'"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "pysat"
 description = "pysat"
@@ -13,13 +18,6 @@ dependencies = [
 ]
 dynamic = ["version"]
 
-
-[options]
-package_dir="src"
-exclude="tests/"
-packages="find"
-
-
 [project.scripts]
 "ginan_mq" = "pysat.scripts.ginan_mq:main"
 
@@ -34,9 +32,15 @@ dev = [
 #    'tensorflow'
 ]
 
-[build-system]
-requires = ["setuptools", "versioneer[toml]", "tomli; python_version < '3.11'"]
-build-backend = "setuptools.build_meta"
+
+[options]
+package_dir="src"
+exclude="tests/"
+packages="find"
+
+
+
+
 
 
 [tool.versioneer]

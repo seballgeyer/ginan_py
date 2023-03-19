@@ -24,6 +24,7 @@ from typing import List, Optional
 
 import matplotlib.pyplot as plt
 
+import pysat
 from pysat.data.measurements import Measurements
 from pysat.dbconnector import mongo
 from pysat.utils.common import find_common
@@ -262,7 +263,7 @@ def main():
     parser = argparse.ArgumentParser(
         prog=__file__,
         description="Plot measurements related fittings",
-        epilog="Text at the bottom of help",
+        epilog=f"(c) Sebastien Allgeyer {pysat.__version__}",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--db1", default="127.0.0.1", type=str, help="Mongo database url [default 127.0.0.1]")
