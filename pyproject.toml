@@ -1,0 +1,56 @@
+
+[build-system]
+requires = ["setuptools", "versioneer[toml]", "tomli; python_version < '3.11'"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "satEDA"
+description = "satEDA"
+authors = [
+    { name = "Sebastien Allgeyer", email = "sebastien.allgeyer@gmail.com" }
+]
+dependencies = [
+    "numpy",
+    "scipy",
+    "pymongo",
+    "matplotlib",
+    "PyYAML"
+]
+dynamic = ["version"]
+
+[project.scripts]
+"ginan_mq" = "sateda.scripts.ginan_mq:main"
+
+[project.optional-dependencies]
+tests = [
+  'coverage>=5.0.3',
+  'pytest',
+  'pytest-benchmark[histogram]>=3.2.1',
+]
+dev = [
+#    'sklearn',
+#    'tensorflow'
+]
+
+
+[options]
+package_dir="src"
+exclude="tests/"
+packages="find"
+
+
+
+
+
+
+[tool.versioneer]
+VCS = "git"
+style = "pep440"
+versionfile_source = "_version.py"
+parentdir_prefix = ""
+
+[tool.pytest.ini_options]
+addopts = "--cov --cov-report html --cov-report term-missing --cov-fail-under 95 --import-mode=importlib"
+
+[tool.coverage.run]
+source = ["src"]

@@ -1,0 +1,8 @@
+/build
+.idea
+scratch/
+source/
+dist/
+.coverage
+
+*.pyc
