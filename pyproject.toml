@@ -4,8 +4,8 @@ requires = ["setuptools", "versioneer[toml]", "tomli; python_version < '3.11'"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pysat"
-description = "pysat"
+name = "satEDA"
+description = "satEDA"
 authors = [
     { name = "Sebastien Allgeyer", email = "sebastien.allgeyer@gmail.com" }
 ]
@@ -19,7 +19,7 @@ dependencies = [
 dynamic = ["version"]
 
 [project.scripts]
-"ginan_mq" = "pysat.scripts.ginan_mq:main"
+"ginan_mq" = "sateda.scripts.ginan_mq:main"
 
 [project.optional-dependencies]
 tests = [
