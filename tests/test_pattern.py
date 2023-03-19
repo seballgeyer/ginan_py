@@ -5,7 +5,7 @@ Unittest file for patterns
 """
 import unittest
 
-from pysat.utils.patterns import match_patterns
+from sateda.utils.patterns import match_patterns
 
 
 class TestPattern(unittest.TestCase):

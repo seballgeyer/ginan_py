@@ -4,8 +4,8 @@ from io import StringIO
 
 import numpy as np
 
-from pysat.io.sinex import snx_np_date, snx_date_np, snx_str_datetime
-from pysat.io.sinex.sinex import Sinex
+from sateda.io.sinex import snx_np_date, snx_date_np, snx_str_datetime
+from sateda.io.sinex.sinex import Sinex
 
 
 testdataset = """

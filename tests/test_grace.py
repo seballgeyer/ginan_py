@@ -4,8 +4,8 @@ from io import StringIO
 import numpy as np
 
 
-from pysat.io.grace import gracetime_converter
-from pysat.io.grace.sca import GraceSCA
+from sateda.io.grace import gracetime_converter
+from sateda.io.grace.sca import GraceSCA
 
 
 class TestGrace(unittest.TestCase):

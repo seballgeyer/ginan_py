@@ -1,6 +1,6 @@
 import unittest
 
-from pysat.utils.common import find_common
+from sateda.utils.common import find_common
 
 
 class MyClass:

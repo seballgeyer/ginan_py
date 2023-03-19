@@ -6,7 +6,7 @@ import unittest
 from pymongo import MongoClient
 
 
-import pysat.dbconnector.mongo as dbmongo
+import sateda.dbconnector.mongo as dbmongo
 
 
 class TestMongo(unittest.TestCase):
