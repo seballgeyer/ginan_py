@@ -173,6 +173,7 @@ def get_measurements_thread(data_base, queue_store, **kwargs):
 
     :return: None
     """
+    print(kwargs)
     data = get_measurements(data_base, **kwargs)
     queue_store.put(data)
 
@@ -184,15 +185,16 @@ def connect_databases(args):
     :param args: An argparse.Namespace object that contains the command-line arguments.
     :return: A tuple of dictionaries with the measurements objects.
     """
-    keys = {k: k for k in args.field}
+    print(args['field'])
+    keys = {k: k for k in args['field']}
     queues = []
     threads = []
     data = []
-    num_dbs = 2 if args.dbname2 else 1
+    num_dbs = 2 if args['dbname2'] else 1
     for i in range(num_dbs):
-        db_args = getattr(args, f"db{i+1}")
-        coll_args = getattr(args, f"dbname{i+1}")
-        port_args = getattr(args, f"port{i+1}")
+        db_args = args[ f"db{i+1}"]
+        coll_args = args[f"dbname{i+1}"]
+        port_args = args[f"port{i+1}"]
         mongo_db = mongo.MongoDB(url=db_args, data_base=coll_args, port=port_args)
         mongo_db.connect()
         mongo_db.get_content()
@@ -202,7 +204,7 @@ def connect_databases(args):
         thread = threading.Thread(
             target=get_measurements_thread,
             args=(mongo_db, queue_),
-            kwargs={"sat": args.sat, "site": args.site, "state": args.state, "series": "", "keys": keys},
+            kwargs={"sat": args['sat'], "site": args['site'], "state": args['state'], "series": "", "keys": keys},
         )
         threads.append(thread)
         thread.start()
@@ -224,7 +226,7 @@ def plot_measurements(args):
     """
     # create database connections
     data = connect_databases(args)
-    if args.diff:
+    if args['diff']:
         if len(data) == 2:
             common, diff1, diff2 = find_common(data[0], data[1])
             log_diff_measurements(diff1, diff2, data[0], data[1])
@@ -234,10 +236,11 @@ def plot_measurements(args):
     else:
         diff = []
         for single_data in data:
+            print(single_data)
             diff.extend(single_data)
     write_stats(diff)
-    if args.output is not False:
-        plot_diff_measurements(diff, args.output)
+    if args['output'] is not False:
+        plot_diff_measurements(diff, args['output'])
 
 
 def main():
@@ -286,7 +289,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        plot_measurements(args)
+        plot_measurements(vars(args))
     except ValueError as error_value:
         logger.exception(f"Value error: {error_value}")
         sys.exit(1)
