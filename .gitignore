@@ -6,4 +6,4 @@ dist/
 .coverage
 
 *.pyc
-scratch_notebooks
+scratch_notebooks/
