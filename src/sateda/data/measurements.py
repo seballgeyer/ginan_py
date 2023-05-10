@@ -56,7 +56,26 @@ class Measurements:
         stats(self): Computes and logs statistics on the measurement data.
     """
 
-    def __init__(self, data_dict: dict):
+    def __init__(self, sat: str = "", identifier: dict = None, epoch: npt.ArrayLike = np.array([]), data: dict = None):
+        """
+        Initializes a Measurements object.
+
+        :param sat: A string representing the ID of the satellite. Default is an empty string.
+        :param identifier: A dictionary representing the ID of the measurements. The dictionary should contain a key "sat" with
+                  the same value as the sat parameter, and may contain other ID fields. Default is an empty dictionary.
+        :param epoch: A numpy array representing the time of the measurements in seconds since the Unix epoch. Default
+                      is an empty numpy array.
+        :param data: A dictionary representing the data fields of the measurements. The keys of the dictionary should be
+                     strings representing the names of the data fields, and the values should be numpy arrays representing
+                     the data for each field. Default is an empty dictionary.
+        """
+        self.sat = sat
+        self.id = identifier if identifier is None else identifier
+        self.epoch = epoch
+        self.data = {} if data is None else data
+
+    @classmethod
+    def from_dictionary(cls, data_dict: dict) -> "Measurements":
         """
         Initializes a Measurements object.
 
@@ -65,18 +84,16 @@ class Measurements:
                           data for each field. The first field in the dictionary should be "t", which represents the
                           epoch time. The remaining fields can be any other data fields to be stored.
         :raises ValueError: If the data_dict does not contain any data.
-        :return None
+        :return the class
         """
-        self.sat: str = data_dict["_id"]["sat"]
-        self.id = data_dict["_id"]
-        self.epoch: npt.ArrayLike = np.asarray(data_dict["t"])
-        self.data: dict = {}
-        for key in data_dict:
-            if key not in ["t", "_id"]:
-                if len(data_dict[key]) != 0:
-                    self.data[key] = np.asarray(data_dict[key])
-        if len(self.data) == 0:
-            raise ValueError("no data")
+        sat = data_dict["_id"]["sat"]
+        identifier = data_dict["_id"]
+        epoch = np.asarray(data_dict["t"])
+        epoch = np.asarray(data_dict["t"])
+        data = {
+            key: np.asarray(value) for key, value in data_dict.items() if key not in ["t", "_id"] and len(value) != 0
+        }
+        return cls(sat, identifier, epoch, data)
 
     def __sub__(self, other):
         """
@@ -124,7 +141,7 @@ class Measurements:
     def demean(self):
         """
         Remove the mean value from each data field of this Measurements object.
-        :return None
+        :return None.
         """
         for key in self.data:
             mean = self.data[key].mean(axis=0)
