@@ -1,11 +1,12 @@
-{% extends 'base.html'%}
+{% extends 'base.jinja'%}
 {% block header %}
   <h1>{% block title %} {{ plotingpage }} {% endblock %}</h1>
 {% endblock %}
 
 {% block  menuselection %}
     <form method="post">
-      <select name=type method="GET" action="/">
+      {#
+       <select name=type method="GET" action="/">
         {% for key_ in g.db_definitions['plot_type'] %}
           {% if dp is defined and  dp['type']|length and key_ in dp['type']%}
             <option value= "{{key_}}" SELECTED>{{key_}}</option>"
@@ -13,10 +14,10 @@
             <option value= "{{key_}}" >{{key_}}</option>"
           {%endif%}
         {% endfor %}
-      </select>
-
+      </select> 
+    #}
         <select name= series multiple method="GET" action="/">
-          {% for series_ in g.db_definitions['Series'] %}
+          {% for series_ in content['Series'] %}
                 {% if dp is defined and  dp['series']|length and series_ in dp['series']%}
                   <option value= "{{series_}}" SELECTED>{{series_}}</option>"
                 {%else%}
@@ -25,8 +26,9 @@
           {% endfor %}
       </select>
 
+
       <select name=sat multiple method="GET" action="/">
-        {% for sat_ in g.db_definitions['Sat'] %}
+        {% for sat_ in content['Sat'] %}
             {% if dp is defined and  dp['sat']|length and sat_ in dp['sat']%}
             <option value= "{{sat_}}" SELECTED>{{sat_}}</option>"
           {%else%}
@@ -35,7 +37,7 @@
         {% endfor %}
     </select>
     <select name=site multiple method="GET" action="/">
-      {% for site_ in g.db_definitions['Site'] %}
+      {% for site_ in content['Site'] %}
           {% if dp is defined and dp['site']|length and site_ in dp['site']%}
           <option value= "{{site_}}" SELECTED>{{site_}}</option>"
         {%else%}
@@ -45,7 +47,7 @@
       </select>
 
       <select name=key method="GET" action="/">
-        {% for key_ in g.db_definitions['DB_MEAS_KEY'] %}
+        {% for key_ in content['DB_MEAS_KEY'] %}
           {% if dp is defined and  dp['site']|length and key_ in dp['key']%}
           <option value= "{{key_}}" SELECTED>{{key_}}</option>"
         {%else%}

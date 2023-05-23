@@ -21,7 +21,7 @@ def index():
     if request.method == 'POST':
         return handle_post_request()
     else:
-        return render_template('connect.html')
+        return render_template('connect.jinja')
 
 
 def handle_post_request():
@@ -42,7 +42,7 @@ def handle_post_request():
         return handle_load_request(form_data)
     else:
         # Handle other POST requests if needed
-        return render_template('connect.html', db_ip=db_ip, db_port=db_port)
+        return render_template('connect.jinja', db_ip=db_ip, db_port=db_port)
 
 
 def handle_connect_request(form_data):
@@ -66,7 +66,7 @@ def handle_connect_request(form_data):
     client.connect()
     databases = client.get_list_db()
 
-    return render_template('connect.html', db_ip=connect_db_ip, db_port=db_port, databases=databases)
+    return render_template('connect.jinja', db_ip=connect_db_ip, db_port=db_port, databases=databases)
 
 
 def handle_load_request(form_data):
@@ -101,7 +101,7 @@ def handle_load_request(form_data):
         databases.remove(db_name)
         databases.insert(0, db_name)
 
-    return render_template('connect.html', db_ip=connect_db_ip, db_port=db_port, databases=databases, message=message)
+    return render_template('connect.jinja', db_ip=connect_db_ip, db_port=db_port, databases=databases, message=message)
 
 
 #TODO This doesn't work yet.0
