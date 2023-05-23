@@ -2,11 +2,11 @@ import os
 
 from flask import Flask, render_template
 
-from eda.routes import eda_bp
+from .routes import register_routes
 
 app = Flask(__name__, template_folder='templates')  # Specify the templates folder
 
-app.register_blueprint(eda_bp, url_prefix='/eda')
+register_routes(app)
 
 if __name__ == '__main__':
     app.run()

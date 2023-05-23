@@ -2,7 +2,7 @@ import unittest
 from flask import Flask
 from flask_testing import TestCase
 
-from api.eda.routes import eda_bp
+from api.eda.routes.dbConnection import eda_bp
 
 class RouteTestCase(TestCase):
     def create_app(self):
