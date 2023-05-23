@@ -1,5 +1,5 @@
 import logging
-from typing import Union
+from typing import List, Union
 
 from pymongo.mongo_client import MongoClient
 
@@ -38,7 +38,10 @@ class MongoDB:
         for cursor in self.mongo_client[self.mongo_db]["Content"].find():
             self.mongo_content[cursor["type"]] = cursor["Values"]
 
-    def get_list_db(self) -> None:
+    def get_list_db(self) -> List[str]:
+        return self.mongo_client.list_database_names()
+
+    def get_list_collections(self) -> None:
         self.list_collections = []
         if self.mongo_client:
             self.list_collections = list(self.mongo_client[self.mongo_db].list_collection_names())

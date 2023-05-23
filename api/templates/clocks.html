@@ -1,0 +1,54 @@
+{% extends 'base.html'%}
+
+
+{% block header %}
+  <h1>{% block title %} {{ plotingpage }} {% endblock %}</h1>
+{% endblock %}
+
+
+{% block  menuselection %}
+    <form method="post">
+      <select name=type method="GET" action="/">
+        {% for key_ in g.db_definitions['plot_type'] %}
+          {% if dp is defined and  dp['type']|length and key_ in dp['type']%}
+            <option value= "{{key_}}" SELECTED>{{key_}}</option>"
+          {%else%}
+            <option value= "{{key_}}" >{{key_}}</option>"
+          {%endif%}
+        {% endfor %}
+      </select>
+
+        <select name= series1 method="GET" action="/">
+          {% for series_ in g.db_definitions['Series'] %}
+                {% if dp is defined and  dp['series']|length and series_ in dp['series']%}
+                  <option value= "{{series_}}" SELECTED>{{series_}}</option>"
+                {%else%}
+                  <option value= "{{series_}}">{{series_}}</option>"  
+                {%endif%}
+          {% endfor %}
+      </select>
+
+      <select name= series2 method="GET" action="/">
+        {% for series_ in g.db_definitions['Series'] %}
+              {% if dp is defined and  dp['series']|length and series_ in dp['series']%}
+                <option value= "{{series_}}" SELECTED>{{series_}}</option>"
+              {%else%}
+                <option value= "{{series_}}">{{series_}}</option>"  
+              {%endif%}
+        {% endfor %}
+    </select>
+
+      <select name=mode  method="GET" action="/">
+        {% for sat_ in ['SAT', 'SITE'] %}
+            {% if dp is defined and  dp['mode']|length and sat_ in dp['mode']%}
+            <option value= "{{sat_}}" SELECTED>{{sat_}}</option>"
+          {%else%}
+            <option value= "{{sat_}}">{{sat_}}</option>"  
+          {%endif%}        
+        {% endfor %}
+    </select>
+
+      <input type="submit" value="PLOT">
+    </form>
+{% endblock %}
+
