@@ -16,7 +16,7 @@
         {% endfor %}
       </select> 
     #}
-        <select name= series multiple method="GET" action="/">
+        <select name="series" multiple method="GET" style="width: 200px;" action="/">
           {% for series_ in content['Series'] %}
                 {% if dp is defined and  dp['series']|length and series_ in dp['series']%}
                   <option value= "{{series_}}" SELECTED>{{series_}}</option>"
@@ -47,7 +47,7 @@
       </select>
 
       <select name=key method="GET" action="/">
-        {% for key_ in content['DB_MEAS_KEY'] %}
+        {% for key_ in content['Measurements'] %}
           {% if dp is defined and  dp['site']|length and key_ in dp['key']%}
           <option value= "{{key_}}" SELECTED>{{key_}}</option>"
         {%else%}

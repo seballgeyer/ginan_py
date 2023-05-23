@@ -21,7 +21,9 @@ def index():
     if request.method == 'POST':
         return handle_post_request()
     else:
-        return render_template('connect.jinja')
+        db_ip = getattr(session, "mongo_ip", "127.0.0.1")
+        db_port = getattr(session, "mongo_port", "27017")
+        return render_template('connect.jinja', db_ip=db_ip, db_port=db_port)
 
 
 def handle_post_request():
@@ -37,6 +39,7 @@ def handle_post_request():
     db_ip = getattr(session, "mongo_ip", "127.0.0.1")
     db_port = getattr(session, "mongo_port", "27017")
     if 'connect' in form_data:
+        #TODO: need to raise exception (DB connection failed)
         return handle_connect_request(form_data)
     elif 'load' in form_data:
         return handle_load_request(form_data)
