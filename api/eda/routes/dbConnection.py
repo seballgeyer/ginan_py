@@ -95,12 +95,12 @@ def handle_load_request(form_data):
 
     nsat = len(client.mongo_content['Sat'])
     nsite = len(client.mongo_content['Site'])
-    message = f"connect to {db_name}\nhas {nsat} satellites and {nsite} sites"
+    message = f"connected to {db_name}:  has {nsat} satellites and {nsite} sites"
     # Move the selected database to the end of the list (to ensure it is selected.)
     if db_name in databases:
         databases.remove(db_name)
         databases.insert(0, db_name)
-        
+
     return render_template('connect.html', db_ip=connect_db_ip, db_port=db_port, databases=databases, message=message)
 
 
