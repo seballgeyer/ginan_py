@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, session
 from flask import current_app
 from sateda.dbconnector.mongo import MongoDB
+from pymongo.errors import ServerSelectionTimeoutError
 
 # eda_bp = Blueprint('eda', __name__)
 
@@ -65,11 +66,15 @@ def handle_connect_request(form_data):
     db_port = int(form_data.get('db_port', 27017))
 
     current_app.logger.info(f"connecting to {connect_db_ip}")
-    client = MongoDB(url=connect_db_ip, port=db_port)
-    client.connect()
-    databases = client.get_list_db()
+    try:
+        client = MongoDB(url=connect_db_ip, port=db_port)
+        client.connect()
+        databases = client.get_list_db()
+        return render_template('connect.jinja', db_ip=connect_db_ip, db_port=db_port, databases=databases)
+    except ServerSelectionTimeoutError:
+        error_message = f"Connection failed: MongoDB server doesn't exist or is not reachable. {connect_db_ip}:{db_port}"
+        return render_template('connect.jinja', db_ip=connect_db_ip, db_port=db_port, message=error_message)
 
-    return render_template('connect.jinja', db_ip=connect_db_ip, db_port=db_port, databases=databases)
 
 
 def handle_load_request(form_data):
