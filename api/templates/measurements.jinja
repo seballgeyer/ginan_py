@@ -5,9 +5,9 @@
 
 {% block  menuselection %}
     <form method="post">
-      {#
+      
        <select name=type method="GET" action="/">
-        {% for key_ in g.db_definitions['plot_type'] %}
+        {% for key_ in plot_type %}
           {% if dp is defined and  dp['type']|length and key_ in dp['type']%}
             <option value= "{{key_}}" SELECTED>{{key_}}</option>"
           {%else%}
@@ -15,7 +15,7 @@
           {%endif%}
         {% endfor %}
       </select> 
-    #}
+    
         <select name="series" multiple method="GET" style="width: 200px;" action="/">
           {% for series_ in content['Series'] %}
                 {% if dp is defined and  dp['series']|length and series_ in dp['series']%}
@@ -47,7 +47,7 @@
       </select>
 
       <select name=key method="GET" action="/">
-        {% for key_ in content['Measurements'] %}
+        {% for key_ in content['merged_measurement'] %}
           {% if dp is defined and  dp['site']|length and key_ in dp['key']%}
           <option value= "{{key_}}" SELECTED>{{key_}}</option>"
         {%else%}
@@ -55,6 +55,17 @@
       {%endif%}          
         {% endfor %}
       </select>
+
+      <select name=key2 multiple method="GET" action="/">
+        {% for key_ in content['merged_measurement'] %}
+          {% if dp is defined and  dp['site']|length and key_ in dp['key']%}
+          <option value= "{{key_}}" SELECTED>{{key_}}</option>"
+        {%else%}
+          <option value= "{{key_}}">{{key_}}</option>"  
+      {%endif%}          
+        {% endfor %}
+      </select>
+
       <input type="submit" value="PLOT">
     </form>
 {% endblock %}

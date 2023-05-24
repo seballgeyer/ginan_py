@@ -40,9 +40,16 @@ class MongoDB:
         # print(self.mongo_client)
 
     def get_content(self) -> None:
-        # print(self.mongo_client)
+        # logger.info(f"Getting content {self.mongo_url} {self.mongo_port} {self.mongo_db} ")
         for cursor in self.mongo_client[self.mongo_db]["Content"].find():
             self.mongo_content[cursor["type"]] = cursor["Values"]
+            # print(cursor["type"])
+        # print(self.mongo_content)
+        geom  = self.mongo_client[self.mongo_db]["Geometry"].find_one({})
+        self.mongo_content['Geometry'] = []
+        for i in geom:
+            self.mongo_content['Geometry'].append(i)
+        self.mongo_content['merged_measurement'] = self.mongo_content['Geometry'] + self.mongo_content['Measurements']
 
     def get_list_db(self) -> List[str]:
         return self.mongo_client.list_database_names()
@@ -57,7 +64,7 @@ class MongoDB:
         hardcoded... yet.
         """
         logger.debug("getting data")
-        agg_pipeline = [{"$match": {"Sat": {"$in": sat}, "Site": {"$in": site}, "Series": {"$in": [series]}}}]
+        agg_pipeline = [{"$match": {"Sat": {"$in": sat}, "Site": {"$in": site}, "Series": {"$in": series}}}]
         if state is not None:
             agg_pipeline[-1]["$match"]["State"] = {"$in": state}
         agg_pipeline.append({"$sort": {"Epoch": 1}})
@@ -71,6 +78,9 @@ class MongoDB:
         )
         for key in keys:
             agg_pipeline[-1]["$group"][key] = {"$push": f"${key}"}
-        logger.debug(agg_pipeline)
+        logger.info(agg_pipeline)
         cursor = self.mongo_client[self.mongo_db][collection].aggregate(agg_pipeline)
         return list(cursor)
+    
+    def get_config(self) -> dict:
+        return self.mongo_client[self.mongo_db]["Config"].find_one()

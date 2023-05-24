@@ -94,13 +94,15 @@ def handle_load_request(form_data):
     db_name = form_data.get('dataset', '')
     db_port = int(form_data.get('db_port', 27017))
     current_app.logger.info(f"connection to {connect_db_ip}, {db_name}")
-    client = MongoDB(connect_db_ip, data_base=db_name)
+    client = MongoDB(connect_db_ip, port=db_port, data_base=db_name)
     client.connect()
     databases = client.get_list_db()
     client.get_content()
     session["mongo_ip"] = connect_db_ip
     session["mongo_db"] = db_name
-
+    session["mongo_port"] = db_port
+    for k in client.mongo_content.items():
+        print(k)
     nsat = len(client.mongo_content['Sat'])
     nsite = len(client.mongo_content['Site'])
     message = f"connected to {db_name}:  has {nsat} satellites and {nsite} sites"

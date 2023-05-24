@@ -8,12 +8,12 @@
 
 <div class="container-fluid">
   <div class="row">
-    <div class="col-md-3">
+    <div class="col-md-2">
       {% include 'sidebar.jinja' %}
     </div>
 
     <div class="col-md-9">
-      <main class="px-md-4">
+      <main class="px-md-1">
         <div class="chartjs-size-monitor">
           <!-- Chart size monitor code here -->
         </div>
@@ -34,7 +34,8 @@
           {{ message }}
         {% endif %}
 
-        <h2>Section title</h2>
+        {% block data %}
+        {% endblock %}
       </main>
     </div>
   </div>
