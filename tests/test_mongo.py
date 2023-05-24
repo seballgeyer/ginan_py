@@ -58,6 +58,13 @@ class TestMongo(unittest.TestCase):
         self.assertEqual(len(self.connector.mongo_content["Measurements"]), 7)
         self.assertTrue("L125" in self.connector.mongo_content["Measurements"], "Didn't find L125 in the test dataset")
 
+    def test_connection_error(self) -> None:
+        """
+        Check if a connection error is raised correctly
+        """
+        connector = dbmongo.MongoDB("dummy.host", "test")
+        with self.assertRaises(ConnectionError):
+            connector.connect()
 
 if __name__ == "__main__":
     unittest.main()
