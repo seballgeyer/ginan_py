@@ -4,7 +4,7 @@ Testing set for mongo connections
 import unittest
 
 from pymongo import MongoClient
-
+from pymongo.errors import ServerSelectionTimeoutError
 
 import sateda.dbconnector.mongo as dbmongo
 
@@ -62,9 +62,8 @@ class TestMongo(unittest.TestCase):
         """
         Check if a connection error is raised correctly
         """
-        connector = dbmongo.MongoDB("dummy.host", "test")
-        with self.assertRaises(ConnectionError):
-            connector.connect()
+        with self.assertRaises(ServerSelectionTimeoutError):
+            dbmongo.MongoDB("dummy.host", "test").connect()
 
 if __name__ == "__main__":
     unittest.main()

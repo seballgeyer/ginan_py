@@ -2,6 +2,7 @@ import logging
 from typing import List, Union
 
 from pymongo.mongo_client import MongoClient
+from pymongo.errors import ServerSelectionTimeoutError
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +29,13 @@ class MongoDB:
         self.mongo_client.close()
 
     def connect(self) -> None:
-        self.mongo_client = MongoClient(host=self.mongo_url, port=self.mongo_port)
-        logger.debug(self.mongo_client.list_database_names())
+        try:
+            self.mongo_client = MongoClient(host=self.mongo_url, port=self.mongo_port)
+            logger.debug(self.mongo_client.list_database_names())
+        except ServerSelectionTimeoutError as err:
+            raise ServerSelectionTimeoutError("Failed to connect to MongoDB server Timeout") from err
+        except ConnectionError as err:
+            raise ConnectionError("Failed to connect to MongoDB server") from err
 
         # print(self.mongo_client)
 
