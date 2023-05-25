@@ -86,6 +86,7 @@ class Measurements:
         :raises ValueError: If the data_dict does not contain any data.
         :return the class
         """
+        print("hahaha")
         sat = data_dict["_id"]["sat"]
         identifier = data_dict["_id"]
         epoch = np.asarray(data_dict["t"])
@@ -163,6 +164,7 @@ class Measurements:
                 axis.plot(self.epoch, value, label=key)
         axis.legend()
 
+      
     def get_stats(self):
         """
         Print statistics for the data stored in this Measurements object.

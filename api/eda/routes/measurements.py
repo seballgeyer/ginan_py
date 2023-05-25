@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, session
 from flask import current_app
 from sateda.dbconnector.mongo import MongoDB
+from sateda.data.measurements import Measurements
 import numpy as np
 # eda_bp = Blueprint('eda', __name__)
 
@@ -51,13 +52,21 @@ def handle_post_request():
         result = client.get_data("Measurements", None, site, sat, series, yaxis+[xaxis])
     if len(result) == 0:
         return render_template("measurements.jinja", content=client.mongo_content, plot_type=plotType, message="Nothing to plot")
+
+    data = [(Measurements.from_dictionary(d)) for d in result]
+    # print(len(data), type(data[0]))
     trace = []
     mode = "lines"
     table = {}
-    for data in result:
+    for _data in data:
+        # print("  ****** ", _data.data)
         for _yaxis in yaxis:
-            trace.append(go.Scatter(x=data[xaxis], y=data[_yaxis], mode=mode, name='TEST'))
-            table[' '.join(data['_id'].values())]= {"mean": np.array(data[_yaxis]).mean() }
+            trace.append(go.Scatter(x=_data.epoch, y=_data.data[_yaxis], mode=mode, name=f"{_data.id}",
+                                    hovertemplate = "%{x|%Y-%m-%d %H:%M:%S}<br>" +
+                                                    "%{y:.4e%}<br>" +
+                                                    f"{_data.id}"
+                                    ))
+            table[f"{_data.id}"]= {"mean": np.array(_data.data[_yaxis]).mean() }
             print(table)
     fig = go.Figure(data=trace)
     fig.update_layout(showlegend=True)
