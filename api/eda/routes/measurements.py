@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, session
 from flask import current_app
 from sateda.dbconnector.mongo import MongoDB
-
+import numpy as np
 # eda_bp = Blueprint('eda', __name__)
 
 measurements_bp = Blueprint('measurements', __name__)
@@ -53,12 +53,17 @@ def handle_post_request():
         return render_template("measurements.jinja", content=client.mongo_content, plot_type=plotType, message="Nothing to plot")
     trace = []
     mode = "lines"
+    table = {}
     for data in result:
         for _yaxis in yaxis:
             trace.append(go.Scatter(x=data[xaxis], y=data[_yaxis], mode=mode, name='TEST'))
+            table[' '.join(data['_id'].values())]= {"mean": np.array(data[_yaxis]).mean() }
+            print(table)
     fig = go.Figure(data=trace)
     fig.update_layout(showlegend=True)
-    return render_template("measurements.jinja", content=client.mongo_content, plot_type=plotType, graphJSON=pio.to_html(fig), mode="plotly")
+    return render_template("measurements.jinja", content=client.mongo_content,
+                            plot_type=plotType, graphJSON=pio.to_html(fig), mode="plotly", 
+                            table_data= table, table_headers=['RMS', 'mean'])
 
 
 def init():

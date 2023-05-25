@@ -34,8 +34,31 @@
           {{ message }}
         {% endif %}
 
-        {% block data %}
-        {% endblock %}
+        {% if table_data %}
+          <h2>Statistics</h2>
+           <div class="table-responsive">
+              <table class="table table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>Observation</th>
+                        {% for header in table_headers %}
+                            <th>{{ header }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for obs, data in table_data.items() %}
+                        <tr>
+                            <td>{{ obs }}</td>
+                            {% for header in table_headers %}
+                                <td>{{ data.get(header, '') }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        {% endif %}
       </main>
     </div>
   </div>
