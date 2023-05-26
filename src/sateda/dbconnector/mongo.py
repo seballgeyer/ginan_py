@@ -45,11 +45,14 @@ class MongoDB:
             self.mongo_content[cursor["type"]] = cursor["Values"]
             # print(cursor["type"])
         # print(self.mongo_content)
-        geom  = self.mongo_client[self.mongo_db]["Geometry"].find_one({})
         self.mongo_content['Geometry'] = []
-        for i in geom:
-            self.mongo_content['Geometry'].append(i)
-        self.mongo_content['merged_measurement'] = self.mongo_content['Geometry'] + self.mongo_content['Measurements']
+        if geom is None:
+            logger.debug("Geometry not available")
+        else:
+            geom  = self.mongo_client[self.mongo_db]["Geometry"].find_one({})
+            for i in geom:
+                self.mongo_content['Geometry'].append(i)
+            self.mongo_content['merged_measurement'] = self.mongo_content['Geometry'] + self.mongo_content['Measurements']
 
     def get_list_db(self) -> List[str]:
         return self.mongo_client.list_database_names()
