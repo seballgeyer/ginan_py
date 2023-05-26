@@ -57,7 +57,7 @@ def handle_post_request():
         result = client.get_data("Measurements", None, site, sat, series, yaxis+[xaxis])
     if len(result) == 0:
         return render_template("measurements.jinja", content=client.mongo_content, plot_type=plotType, message="Nothing to plot")
-
+    print(len(result))
     data = MeasurementArray.from_mongolist(result)
     data.find_minmax()
     data.adjust_slice(minutes_min=exclude, minutes_max=None)

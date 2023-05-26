@@ -91,7 +91,8 @@ class Measurements:
         sat = data_dict["_id"]["sat"]
         identifier = data_dict["_id"]
         epoch = np.asarray(data_dict["t"])
-        epoch = np.asarray(data_dict["t"])
+        if max([len(value) for key, value in data_dict.items() if key not in ["t", "_id", "Epoch"]]) == 0:
+            raise ValueError("No interesting data")
         data = {
             key: np.asarray(value) for key, value in data_dict.items() if key not in ["t", "_id"] and len(value) != 0
         }
@@ -180,13 +181,11 @@ class Measurements:
         if tmin is None:
             first_index = 0
         else:
-            print(self.epoch >= tmin)
             first_index = np.argmax(self.epoch >= tmin)
         if tmax is None:
             last_index = len(self.epoch)-1
         else:
             last_index = np.argmin(self.epoch <= tmax)-1
-        print("index ", first_index, last_index+1)
         self.subset = slice(first_index, last_index+1)
 
 
@@ -204,7 +203,10 @@ class MeasurementArray:
     def from_mongolist(cls, data_lst: list) -> "MeasurementArray":
         object = cls()
         for data in data_lst:
-            object.append(Measurements.from_dictionary(data))
+            try:
+                object.append(Measurements.from_dictionary(data))
+            except:
+                logger.debug("skyping this one")
         return object
 
     def find_minmax(self):
