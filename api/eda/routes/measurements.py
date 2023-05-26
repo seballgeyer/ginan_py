@@ -1,8 +1,12 @@
-from flask import Blueprint, render_template, request, session
-from flask import current_app
-from sateda.dbconnector.mongo import MongoDB
-from sateda.data.measurements import Measurements, MeasurementArray
 import numpy as np
+import plotly.graph_objs as go
+import plotly.io as pio
+
+from flask import Blueprint, current_app, render_template, request, session
+
+from sateda.data.measurements import MeasurementArray, Measurements
+from sateda.dbconnector.mongo import MongoDB
+
 # eda_bp = Blueprint('eda', __name__)
 
 measurements_bp = Blueprint('measurements', __name__)
@@ -15,11 +19,6 @@ def measurements():
     else:
         return init()
 
-
-import plotly.graph_objs as go
-import plotly
-import plotly.io as pio
-import json
 
 pio.templates["draft"] = go.layout.Template(
     layout_annotations=[
