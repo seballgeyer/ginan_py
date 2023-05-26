@@ -66,6 +66,10 @@
         {% endfor %}
       </select>
 
+      <div>
+          <label for="exclude">Exclude the first (min):</label>
+          <input type="text" id="exclude" name="exclude" value="{{ exclude }}">
+      </div>
       <input type="submit" value="PLOT">
     </form>
 {% endblock %}

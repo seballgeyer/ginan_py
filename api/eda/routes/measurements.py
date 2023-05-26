@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, session
 from flask import current_app
 from sateda.dbconnector.mongo import MongoDB
-from sateda.data.measurements import Measurements
+from sateda.data.measurements import Measurements, MeasurementArray
 import numpy as np
 # eda_bp = Blueprint('eda', __name__)
 
@@ -14,7 +14,8 @@ def measurements():
         return handle_post_request()
     else:
         return init()
-    
+
+
 import plotly.graph_objs as go
 import plotly
 import plotly.io as pio
@@ -46,28 +47,32 @@ def handle_post_request():
     site = form_data.getlist('site')
     xaxis = form_data.get('key')
     yaxis = form_data.getlist('key2')
-    current_app.logger.info(f"GET {plotType}, {series}, {sat}, {site}, {xaxis}, {yaxis}, {yaxis+[xaxis]}")
+    exclude = form_data.get('exclude')
+    if exclude == "":
+        exlcude = 0
+    else:
+        exclude = int(exclude)
+    current_app.logger.info(f"GET {plotType}, {series}, {sat}, {site}, {xaxis}, {yaxis}, {yaxis+[xaxis]}, exclude {exclude} mintues")
     current_app.logger.info("Getting Connection")
     with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
         result = client.get_data("Measurements", None, site, sat, series, yaxis+[xaxis])
     if len(result) == 0:
         return render_template("measurements.jinja", content=client.mongo_content, plot_type=plotType, message="Nothing to plot")
 
-    data = [(Measurements.from_dictionary(d)) for d in result]
-    # print(len(data), type(data[0]))
+    data = MeasurementArray.from_mongolist(result)
+    data.find_minmax()
+    data.adjust_slice(minutes_min=exclude, minutes_max=None)
     trace = []
     mode = "lines"
     table = {}
     for _data in data:
-        # print("  ****** ", _data.data)
         for _yaxis in yaxis:
-            trace.append(go.Scatter(x=_data.epoch, y=_data.data[_yaxis], mode=mode, name=f"{_data.id}",
+            trace.append(go.Scatter(x=_data.epoch[_data.subset], y=_data.data[_yaxis][_data.subset], mode=mode, name=f"{_data.id}",
                                     hovertemplate = "%{x|%Y-%m-%d %H:%M:%S}<br>" +
                                                     "%{y:.4e%}<br>" +
                                                     f"{_data.id}"
                                     ))
-            table[f"{_data.id}"]= {"mean": np.array(_data.data[_yaxis]).mean() }
-            print(table)
+            table[f"{_data.id}"]= {"mean": np.array(_data.data[_yaxis][_data.subset]).mean() }
     fig = go.Figure(data=trace)
     fig.update_layout(showlegend=True)
     return render_template("measurements.jinja", content=client.mongo_content,
@@ -84,4 +89,4 @@ def init():
     client = MongoDB(url=connect_db_ip, port=db_port, data_base=db_name)
     client.connect()
     client.get_content()
-    return render_template("measurements.jinja", content=client.mongo_content, plot_type=plotType)
+    return render_template("measurements.jinja", content=client.mongo_content, plot_type=plotType, exlcude=0)

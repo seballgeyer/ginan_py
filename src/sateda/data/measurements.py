@@ -25,6 +25,7 @@ Exceptions:
     ValueError: Raised when the input dictionary to the `Measurements` class constructor does not contain any data.
 
 """
+import datetime
 import logging
 
 import matplotlib.pyplot as plt
@@ -73,6 +74,7 @@ class Measurements:
         self.id = identifier if identifier is None else identifier
         self.epoch = epoch
         self.data = {} if data is None else data
+        self.subset = slice(None, None, None)
 
     @classmethod
     def from_dictionary(cls, data_dict: dict) -> "Measurements":
@@ -86,7 +88,6 @@ class Measurements:
         :raises ValueError: If the data_dict does not contain any data.
         :return the class
         """
-        print("hahaha")
         sat = data_dict["_id"]["sat"]
         identifier = data_dict["_id"]
         epoch = np.asarray(data_dict["t"])
@@ -174,3 +175,62 @@ class Measurements:
             rms = np.sqrt((self.data[key] ** 2).mean())
             string += f"\n\t{key} {self.data[key].mean(): .4e} sigma  {self.data[key].std(): .4e} RMS {rms:.4e}"
         logger.info(string)
+
+    def select_range(self, tmin=None, tmax=None):
+        if tmin is None:
+            first_index = 0
+        else:
+            print(self.epoch >= tmin)
+            first_index = np.argmax(self.epoch >= tmin)
+        if tmax is None:
+            last_index = len(self.epoch)-1
+        else:
+            last_index = np.argmin(self.epoch <= tmax)-1
+        print("index ", first_index, last_index+1)
+        self.subset = slice(first_index, last_index+1)
+
+
+
+class MeasurementArray:
+    def __init__(self) -> None:
+        self.arr = []
+        self.tmin = None
+        self.tmax = None
+
+    def __iter__(self):
+        return iter(self.arr)
+        
+    @classmethod
+    def from_mongolist(cls, data_lst: list) -> "MeasurementArray":
+        object = cls()
+        for data in data_lst:
+            object.append(Measurements.from_dictionary(data))
+        return object
+
+    def find_minmax(self):
+        try:
+            self.tmin = min(obj.epoch[0] for obj in self.arr)
+            self.tmax = max(obj.epoch[-1] for obj in self.arr)
+        except:
+            self.tmin = None
+            self.tmax = None
+
+
+    def adjust_slice(self, minutes_min=None, minutes_max=None) -> None:
+        tmin = None
+        tmax = None
+        if minutes_min:
+            tmin = self.tmin + datetime.timedelta(minutes=minutes_min)
+        if minutes_max:
+            tmax = self.tmax - datetime.timedelta(minutes=tmax)
+        print("adjusting ", tmin, tmax)
+        for data in self.arr:
+            data.select_range(tmin=tmin, tmax=tmax)
+
+
+    def append(self, foo_obj: Measurements) -> None:
+        """
+        Append a new time serie to the stack and update the minimum and maximum if required.
+        """
+        self.arr.append(foo_obj)
+
