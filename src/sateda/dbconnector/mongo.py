@@ -46,10 +46,10 @@ class MongoDB:
             # print(cursor["type"])
         # print(self.mongo_content)
         self.mongo_content['Geometry'] = []
+        geom  = self.mongo_client[self.mongo_db]["Geometry"].find_one({})
         if geom is None:
             logger.debug("Geometry not available")
         else:
-            geom  = self.mongo_client[self.mongo_db]["Geometry"].find_one({})
             for i in geom:
                 self.mongo_content['Geometry'].append(i)
             self.mongo_content['merged_measurement'] = self.mongo_content['Geometry'] + self.mongo_content['Measurements']
