@@ -4,66 +4,67 @@
 
 <body>
 
-{% include 'navbar.jinja' %}
+    {% include 'navbar.jinja' %}
 
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-md-3">
-      {% include 'sidebar.jinja' %}
-    </div>
-
-    <div class="col-md-9">
-      <main class="px-md-4">
-
-    <h1>Connect to Database</h1>
-
-    <form method="POST">
-        {{ csrf_token }} <!-- Include CSRF token for form security -->
-
-        <div>
-            <label for="db_ip">Connect DB IP:</label>
-            <input type="text" id="db_ip" name="db_ip" value="{{ db_ip }}">
-            <label for="db_port"> Port:</label>
-            <input type="number" id="db_port" name="db_port" default=27017 value="{{ db_port }}">
-        </div>
-        <div>Optional
-            <div>
-                <label for="db_username">Username:</label>
-                <input type="text" id="db_username" name="db_username" value="{{ db_username }}">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3">
+                {% include 'sidebar.jinja' %}
             </div>
-            <div>
-                <label for="db_password">Password:</label>
-                <input type="password" id="db_password" name="db_password" value="{{ db_password }}">
+
+            <div class="col-md-9">
+                <main class="px-md-4">
+
+                    <h1>Connect to Database</h1>
+
+                    <form method="POST">
+                        {{ csrf_token }} <!-- Include CSRF token for form security -->
+
+                        <div>
+                            <label for="db_ip">Connect DB IP:</label>
+                            <input type="text" id="db_ip" name="db_ip" value="{{ db_ip }}">
+                            <label for="db_port"> Port:</label>
+                            <input type="number" id="db_port" name="db_port" default=27017 value="{{ db_port }}">
+                        </div>
+                        <div>Optional
+                            <div>
+                                <label for="db_username">Username:</label>
+                                <input type="text" id="db_username" name="db_username" value="{{ db_username }}">
+                            </div>
+                            <div>
+                                <label for="db_password">Password:</label>
+                                <input type="password" id="db_password" name="db_password" value="{{ db_password }}">
+                            </div>
+                        </div>
+                        <div>
+                            <button type="submit" name="connect">Connect to DB</button>
+                        </div>
+
+                        {% if databases %}
+                        <div>
+                            <label for="dataset">Select Dataset in DB:</label>
+                            <select name="dataset" id="dataset">
+                                {% for database in databases %}
+                                <option value="{{ database }}">{{ database }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <button type="submit" name="load">Load DB</button>
+                        </div>
+                        {% endif %}
+                    </form>
+                    {% if message %}
+                    <div>
+                        {{ message }}
+                    </div>
+                    {% endif %}
+                </main>
             </div>
         </div>
-        <div>
-            <button type="submit" name="connect">Connect to DB</button>
-        </div>
-
-        {% if databases %}
-        <div>
-            <label for="dataset">Select Dataset in DB:</label>
-            <select name="dataset" id="dataset">
-                {% for database in databases %}
-                <option value="{{ database }}">{{ database }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div>
-            <button type="submit" name="load">Load DB</button>
-        </div>
-        {% endif %}
-    </form>
-    {% if message %}
-        <div> 
-            {{ message }}
-        </div>
-    {% endif %}
-     </main>
     </div>
-  </div>
-</div>
 
 </body>
+
 </html>

@@ -1,18 +1,18 @@
 {% extends 'base.jinja'%}
 
 {% block data %}
-        <h2>Configuration Dump</h2>
+<h2>Configuration Dump</h2>
 
 <ul>
   {% for key, value in config.items() %}
-    <li><strong>{{ key }}</strong>: 
-      {% if value is mapping %}
-        {% set nested_dict = value %}
-        {% include 'nested_dict.jinja'%}
-      {% else %}
-        {{ value }}
-      {% endif %}
-    </li>
+  <li><strong>{{ key }}</strong>:
+    {% if value is mapping %}
+    {% set nested_dict = value %}
+    {% include 'nested_dict.jinja'%}
+    {% else %}
+    {{ value }}
+    {% endif %}
+  </li>
   {% endfor %}
 </ul>
 

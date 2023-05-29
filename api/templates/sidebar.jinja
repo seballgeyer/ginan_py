@@ -1,27 +1,26 @@
-
-  <nav id="sidebarMenu" class="col-md-2 col-lg-1 d-md-block bg-light sidebar collapse">
-    <div class="position-sticky pt-3 sidebar-sticky">
-      <ul class="nav flex-column">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">
-            {{ g.mongo_name }} / {{ g.db_name }}
-          </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('measurements.measurements')}}">Measurements</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" > States </a> 
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" > Clock </a> 
-        </li>
-        <li class=""nav-item">
-          <a class="nav-link" href="#" > Position analysis </a> 
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('config.config')}}">Config</a>
-        </li>
-      </ul>
-    </div>
-  </nav>
+<nav id="sidebarMenu" class="col-md-2 col-lg-1 d-md-block bg-light sidebar collapse">
+  <div class="position-sticky pt-3 sidebar-sticky">
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="#">
+          {{ g.mongo_name }} / {{ g.db_name }}
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('measurements.measurements')}}">Measurements</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('states.states')}}"> States </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#"> Clock </a>
+      </li>
+      <li class="" nav-item">
+        <a class="nav-link" href="#"> Position analysis </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('config.config')}}">Config</a>
+      </li>
+    </ul>
+  </div>
+</nav>
