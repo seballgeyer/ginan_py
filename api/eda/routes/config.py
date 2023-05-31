@@ -10,5 +10,7 @@ config_bp = Blueprint('config', __name__)
 def config():
     with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
         config = client.get_config()
+    print(len(config))
+    print(config)
     config["_id"] = str(config["_id"])
     return render_template("config.jinja",config=config)

@@ -1,6 +1,7 @@
 {% extends 'base.jinja'%}
-{% block header %}
-<h1>{% block title %} {{ plotingpage }} {% endblock %}</h1>
+
+{% block title%}
+States
 {% endblock %}
 
 {% block menuselection %}
@@ -47,7 +48,7 @@
   </select>
 
   <select name=key method="GET" action="/">
-    {% for key_ in content['merged_measurement'] %}
+    {% for key_ in content['State'] %}
     {% if dp is defined and dp['site']|length and key_ in dp['key']%}
     <option value="{{key_}}" SELECTED>{{key_}}</option>"
     {%else%}
@@ -57,7 +58,7 @@
   </select>
 
   <select name=key2 multiple method="GET" action="/">
-    {% for key_ in content['merged_measurement'] %}
+    {% for key_ in content['states_fields'] %}
     {% if dp is defined and dp['site']|length and key_ in dp['key']%}
     <option value="{{key_}}" SELECTED>{{key_}}</option>"
     {%else%}

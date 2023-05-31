@@ -53,6 +53,7 @@ class MongoDB:
             for i in geom:
                 self.mongo_content['Geometry'].append(i)
             self.mongo_content['merged_measurement'] = self.mongo_content['Geometry'] + self.mongo_content['Measurements']
+        self.mongo_content['states_fields'] = ['x', 'dx', 'P']
 
     def get_list_db(self) -> List[str]:
         return self.mongo_client.list_database_names()

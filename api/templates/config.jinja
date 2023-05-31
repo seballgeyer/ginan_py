@@ -1,8 +1,10 @@
 {% extends 'base.jinja'%}
 
-{% block data %}
-<h2>Configuration Dump</h2>
+{% block title%}
+Configuration Dump
+{% endblock%}
 
+{% block data %}
 <ul>
   {% for key, value in config.items() %}
   <li><strong>{{ key }}</strong>:
@@ -15,5 +17,4 @@
   </li>
   {% endfor %}
 </ul>
-
 {% endblock %}

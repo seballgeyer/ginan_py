@@ -1,10 +1,9 @@
 import numpy as np
 import plotly.graph_objs as go
 import plotly.io as pio
-
 from flask import Blueprint, current_app, render_template, request, session
 
-from sateda.data.measurements import MeasurementArray, Measurements
+from sateda.data.measurements import MeasurementArray
 from sateda.dbconnector.mongo import MongoDB
 
 # eda_bp = Blueprint('eda', __name__)
@@ -12,17 +11,42 @@ from sateda.dbconnector.mongo import MongoDB
 states_bp = Blueprint('states', __name__)
 plotType = ["Scatter", "Line"]
 
+pio.templates["draft"] = go.layout.Template(
+    layout_annotations=[
+        dict(
+            name="draft watermark",
+            text="DRAFT",
+            textangle=-30,
+            opacity=0.1,
+            font=dict(color="black", size=10),
+            xref="paper",
+            yref="paper",
+            x=0.5,
+            y=0.5,
+            showarrow=False,
+        )
+    ]
+)
+
 @states_bp.route('/states', methods=['GET', 'POST'])
-def states():
+def states() -> str:
+    """
+    Overall handeling of the page.
+
+    :return str: HTML code
+    """
     if request.method == 'POST':
         return handle_post_request()
     else:
         return init()
-    
-def handle_post_request():
-    return
 
-def init():
+
+def init() -> str:
+    """
+    init Generate the empty page 
+
+    :return str: HTML Code
+    """
     connect_db_ip = session["mongo_ip"]
     db_name = session["mongo_db"]
     db_port = session["mongo_port"]
@@ -32,4 +56,58 @@ def init():
     client.connect()
     client.get_content()
     return render_template("states.jinja", content=client.mongo_content, plot_type=plotType, exlcude=0)
-    
+
+
+def handle_post_request() -> str :
+    """
+    handle_post_request Code to process the POST request and generate the HTML code 
+
+    :return str: webpage code
+    """
+    form_data = request.form
+    plotType = form_data.get('type')
+    series = form_data.getlist('series')
+    sat = form_data.getlist('sat')
+    site = form_data.getlist('site')
+    state = form_data.getlist('key')
+    xaxis = 'Epoch'
+    yaxis = form_data.getlist('key2')
+    exclude = form_data.get('exclude')
+    if exclude == "":
+        exlcude = 0
+    else:
+        exclude = int(exclude)
+
+    current_app.logger.info(f"GET {plotType}, {series}, {sat}, {site}, {state}, {xaxis}, {yaxis}, "
+                            "{yaxis+[xaxis]}, exclude {exclude} mintues")
+    with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
+        result = client.get_data("States", state, site, sat, series, yaxis+[xaxis])
+    if len(result) == 0:
+        return render_template("states.jinja", content=client.mongo_content, plot_type=plotType, 
+                               message="Nothing to plot")
+    print(len(result))
+    data = MeasurementArray.from_mongolist(result)
+    data.find_minmax()
+    data.adjust_slice(minutes_min=exclude, minutes_max=None)
+    trace = []
+    mode = "lines"
+    table = {}
+    for _data in data:
+        for _yaxis in yaxis:
+            for i in range(_data.data[_yaxis].shape[1]):
+                _data.id['state'] = _yaxis
+                _data.id['ax'] = i
+                trace.append(go.Scatter(x=_data.epoch[_data.subset], y=_data.data[_yaxis][_data.subset, i], 
+                                        mode=mode, 
+                                        name=f"{_data.id}",
+                                        hovertemplate = "%{x|%Y-%m-%d %H:%M:%S}<br>" +
+                                                        "%{y:.4e%}<br>" +
+                                                        f"{_data.id}"
+                                        ))
+                table[f"{_data.id}"]= {"mean": np.array(_data.data[_yaxis][i][_data.subset]).mean() }
+    fig = go.Figure(data=trace)
+    fig.update_layout(showlegend=True)
+    return render_template("states.jinja", content=client.mongo_content,
+                            plot_type=plotType, graphJSON=pio.to_html(fig), mode="plotly",
+                            table_data= table, table_headers=['RMS', 'mean'])
+
