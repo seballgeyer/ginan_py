@@ -48,7 +48,7 @@ def handle_post_request():
     yaxis = form_data.getlist('key2')
     exclude = form_data.get('exclude')
     if exclude == "":
-        exlcude = 0
+        exclude = 0
     else:
         exclude = int(exclude)
     current_app.logger.info(f"GET {plot}, {series}, {sat}, {site}, {xaxis}, {yaxis}, {yaxis+[xaxis]}, exclude {exclude} mintues")
@@ -80,12 +80,8 @@ def handle_post_request():
 
 
 def init():
-    connect_db_ip = session["mongo_ip"]
-    db_name = session["mongo_db"]
-    db_port = session["mongo_port"]
-    print(connect_db_ip, db_name)
-    #TODO Later, database content, can be loaded in the session
-    client = MongoDB(url=connect_db_ip, port=db_port, data_base=db_name)
-    client.connect()
-    client.get_content()
-    return render_template("measurements.jinja", content=client.mongo_content, plot_type=plotType, exlcude=0)
+    with MongoDB(url=session["mongo_ip"], port=session["mongo_port"], data_base=session["mongo_db"]) as client:
+        client.connect()
+        client.get_content()
+        mongo_content = client.mongo_content
+    return render_template("measurements.jinja", content=mongo_content, plot_type=plotType, exlcude=0)

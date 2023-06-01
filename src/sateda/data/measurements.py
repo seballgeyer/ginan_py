@@ -90,11 +90,13 @@ class Measurements:
         """
         sat = data_dict["_id"]["sat"]
         identifier = data_dict["_id"]
-        epoch = np.asarray(data_dict["t"])
+        epoch = np.array([np.datetime64(t) for t in data_dict["t"]])
+        print("****")
+        print(epoch)
         if max([len(value) for key, value in data_dict.items() if key not in ["t", "_id", "Epoch"]]) == 0:
             raise ValueError("No interesting data")
         data = {
-            key: np.asarray(value) for key, value in data_dict.items() if key not in ["t", "_id"] and len(value) != 0
+            key: np.asarray(value) for key, value in data_dict.items() if key not in ["t", "_id", "Epoch"] and len(value) != 0
         }
         return cls(sat, identifier, epoch, data)  
     
@@ -165,6 +167,37 @@ class Measurements:
             logger.info(f"Removing mean of data {self.id}: {np.array2string(mean)}")
             self.data[key] -= mean
 
+    def polyfit(self, degree=1):
+        """
+        Compute the polynomial fit to all data in self.data dictionary and return the coefficient and the fit
+        :param degree: degree of the polynomial fit
+        :return: dictionary of coefficient and fit
+        """
+        fit = {}
+        epoch_ = (self.epoch - self.epoch[0]).astype('timedelta64[s]').astype('float64')
+        print(epoch_)
+        for key in self.data:
+            fit[key] = np.polyfit(epoch_, self.data[key], degree)
+        return fit
+    
+    def detrend(self, degree=1):
+        """
+        Remove the polynomial fit from all data in self.data dictionary
+        :param degree: degree of the polynomial fit
+        :return: None
+        """
+        fit = self.polyfit(degree)
+        print(fit)
+        epoch_ = (self.epoch - self.epoch[0]).astype('timedelta64[s]').astype('float64')
+        print(epoch_)
+        for key in self.data:
+            if self.data[key].ndim == 1:
+                self.data[key] -= np.polyval(fit[key], epoch_)        
+            else:
+                for i in range(self.data[key].shape[1]):
+                    self.data[key][:,i] -= np.polyval(fit[key][:,i], epoch_)        
+
+    
     def plot(self, axis: plt.Axes):
         """
         Plot the data stored in this Measurements object.
@@ -180,6 +213,7 @@ class Measurements:
                 axis.plot(self.epoch, value, label=key)
         axis.legend()
 
+    """function"""
       
     def get_stats(self):
         """
@@ -238,7 +272,6 @@ class MeasurementArray:
         """
         self.arr.sort()
 
-
     def adjust_slice(self, minutes_min=None, minutes_max=None) -> None:
         tmin = None
         tmax = None
@@ -256,3 +289,13 @@ class MeasurementArray:
         """
         self.arr.append(foo_obj)
 
+
+
+    
+
+    
+if __name__=="__main__":
+    test_polyfit()
+    test_detrend()
+    print("Everything passed")
+    
