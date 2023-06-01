@@ -74,18 +74,19 @@ def handle_post_request() -> str :
     yaxis = form_data.getlist('key2')
     exclude = form_data.get('exclude')
     if exclude == "":
-        exlcude = 0
+        exclude = 0
     else:
         exclude = int(exclude)
 
     current_app.logger.info(f"GET {plot}, {series}, {sat}, {site}, {state}, {xaxis}, {yaxis}, "
-                            "{yaxis+[xaxis]}, exclude {exclude} mintues")
+                            f"{yaxis+[xaxis]}, exclude {exclude} mintues")
     with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
         try:
-            data = client.get_data_to_measurement("Measurements", None, site, sat, series, yaxis+[xaxis])
+            data = client.get_data_to_measurement("States", state, site, sat, series, yaxis+[xaxis])
         except Exception as err:
             current_app.logger.error(err)
-            return render_template("measurements.jinja", content=client.mongo_content, plot_type=plotType, message=f"Error getting data: {str(err)}")
+            return render_template("states.jinja", content=client.mongo_content, plot_type=plotType, message=f"Error getting data: {str(err)}")
+    print(len(data.arr))
     data.find_minmax()
     data.adjust_slice(minutes_min=exclude, minutes_max=None)
     trace = []
