@@ -73,11 +73,14 @@ def handle_post_request() -> str :
     xaxis = 'Epoch'
     yaxis = form_data.getlist('key2')
     exclude = form_data.get('exclude')
+    process = form_data.get('process')
+    degree = form_data.get('degree')
     if exclude == "":
         exclude = 0
     else:
         exclude = int(exclude)
 
+    print(process, degree)
     current_app.logger.info(f"GET {plot}, {series}, {sat}, {site}, {state}, {xaxis}, {yaxis}, "
                             f"{yaxis+[xaxis]}, exclude {exclude} mintues")
     with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
@@ -93,6 +96,10 @@ def handle_post_request() -> str :
     trace = []
     mode = "lines"
     table = {}
+    if process == "Detrend":
+        for _data in data:
+            _data.detrend(degree=int(degree))
+            
     for _data in data:
         for _yaxis in yaxis:
             for i in range(_data.data[_yaxis].shape[1]):

@@ -67,6 +67,13 @@ States
     {% endfor %}
   </select>
 
+  <input type="range" min="0" max="3" value="1" class="slider" name="degree">
+
+  <select name=process  method="GET" action="/">
+    <option value="None">None</option>
+    <option value="Fit">Fit</option>
+    <option value="Detrend">Detrend</option>
+  </select>
   <div>
     <label for="exclude">Exclude the first (min):</label>
     <input type="text" id="exclude" name="exclude" value="{{ exclude }}">

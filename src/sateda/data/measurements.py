@@ -91,8 +91,6 @@ class Measurements:
         sat = data_dict["_id"]["sat"]
         identifier = data_dict["_id"]
         epoch = np.array([np.datetime64(t) for t in data_dict["t"]])
-        print("****")
-        print(epoch)
         if max([len(value) for key, value in data_dict.items() if key not in ["t", "_id", "Epoch"]]) == 0:
             raise ValueError("No interesting data")
         data = {
@@ -175,7 +173,6 @@ class Measurements:
         """
         fit = {}
         epoch_ = (self.epoch - self.epoch[0]).astype('timedelta64[s]').astype('float64')
-        print(epoch_)
         for key in self.data:
             fit[key] = np.polyfit(epoch_, self.data[key], degree)
         return fit
@@ -187,9 +184,7 @@ class Measurements:
         :return: None
         """
         fit = self.polyfit(degree)
-        print(fit)
         epoch_ = (self.epoch - self.epoch[0]).astype('timedelta64[s]').astype('float64')
-        print(epoch_)
         for key in self.data:
             if self.data[key].ndim == 1:
                 self.data[key] -= np.polyval(fit[key], epoch_)        
@@ -289,13 +284,3 @@ class MeasurementArray:
         """
         self.arr.append(foo_obj)
 
-
-
-    
-
-    
-if __name__=="__main__":
-    test_polyfit()
-    test_detrend()
-    print("Everything passed")
-    
