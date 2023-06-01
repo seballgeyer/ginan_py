@@ -142,11 +142,9 @@ class Measurements:
         return results
 
     def __lt__(self, other):
-        print("sorting")
         order = ['series', 'sat', 'site', 'state', 'ax']  # Specify the order of fields for sorting
         for field in order:
             if field in self.id and field in other.id:
-                print(self.id, other.id)
                 if self.id[field] < other.id[field]:
                     return True
                 elif self.id[field] > other.id[field]:
@@ -239,10 +237,8 @@ class MeasurementArray:
         sort the array by sat, site, series, state, ax
         """
         self.arr.sort()
-        print(self.arr)
 
 
-    
     def adjust_slice(self, minutes_min=None, minutes_max=None) -> None:
         tmin = None
         tmax = None
@@ -250,7 +246,6 @@ class MeasurementArray:
             tmin = self.tmin + datetime.timedelta(minutes=minutes_min)
         if minutes_max:
             tmax = self.tmax - datetime.timedelta(minutes=tmax)
-        print("adjusting ", tmin, tmax)
         for data in self.arr:
             data.select_range(tmin=tmin, tmax=tmax)
 
