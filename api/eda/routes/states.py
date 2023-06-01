@@ -85,7 +85,8 @@ def handle_post_request() -> str :
             data = client.get_data_to_measurement("States", state, site, sat, series, yaxis+[xaxis])
         except Exception as err:
             current_app.logger.error(err)
-            return render_template("states.jinja", content=client.mongo_content, plot_type=plotType, message=f"Error getting data: {str(err)}")
+            return render_template("states.jinja", content=client.mongo_content, plot_type=plotType, 
+                                   message=f"Error getting data: {str(err)}")
     print(len(data.arr))
     data.find_minmax()
     data.adjust_slice(minutes_min=exclude, minutes_max=None)
@@ -97,8 +98,8 @@ def handle_post_request() -> str :
             for i in range(_data.data[_yaxis].shape[1]):
                 _data.id['state'] = _yaxis
                 _data.id['ax'] = i
-                trace.append(go.Scatter(x=_data.epoch[_data.subset], y=_data.data[_yaxis][_data.subset, i], 
-                                        mode=mode, 
+                trace.append(go.Scatter(x=_data.epoch[_data.subset], y=_data.data[_yaxis][_data.subset, i],
+                                        mode=mode,
                                         name=f"{_data.id}",
                                         hovertemplate = "%{x|%Y-%m-%d %H:%M:%S}<br>" +
                                                         "%{y:.4e%}<br>" +
@@ -110,4 +111,3 @@ def handle_post_request() -> str :
     return render_template("states.jinja", content=client.mongo_content,
                             plot_type=plotType, graphJSON=pio.to_html(fig), mode="plotly",
                             table_data= table, table_headers=['RMS', 'mean'])
-
