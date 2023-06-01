@@ -96,8 +96,8 @@ class Measurements:
         data = {
             key: np.asarray(value) for key, value in data_dict.items() if key not in ["t", "_id"] and len(value) != 0
         }
-        return cls(sat, identifier, epoch, data)
-
+        return cls(sat, identifier, epoch, data)  
+    
     def __sub__(self, other):
         """
         Subtract another Measurements object from this one, element-wise.
@@ -141,6 +141,22 @@ class Measurements:
 
         return results
 
+    def __lt__(self, other):
+        print("sorting")
+        order = ['series', 'sat', 'site', 'state', 'ax']  # Specify the order of fields for sorting
+        for field in order:
+            if field in self.id and field in other.id:
+                print(self.id, other.id)
+                if self.id[field] < other.id[field]:
+                    return True
+                elif self.id[field] > other.id[field]:
+                    return False
+            elif field in self.id:
+                return False
+            elif field in other.id:
+                return True
+        return False
+    
     def demean(self):
         """
         Remove the mean value from each data field of this Measurements object.
@@ -199,6 +215,7 @@ class MeasurementArray:
     def __iter__(self):
         return iter(self.arr)
         
+       
     @classmethod
     def from_mongolist(cls, data_lst: list) -> "MeasurementArray":
         object = cls()
@@ -217,7 +234,15 @@ class MeasurementArray:
             self.tmin = None
             self.tmax = None
 
+    def sort(self):
+        """
+        sort the array by sat, site, series, state, ax
+        """
+        self.arr.sort()
+        print(self.arr)
 
+
+    
     def adjust_slice(self, minutes_min=None, minutes_max=None) -> None:
         tmin = None
         tmax = None

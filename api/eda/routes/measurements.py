@@ -54,11 +54,11 @@ def handle_post_request():
     current_app.logger.info(f"GET {plot}, {series}, {sat}, {site}, {xaxis}, {yaxis}, {yaxis+[xaxis]}, exclude {exclude} mintues")
     current_app.logger.info("Getting Connection")
     with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
-        result = client.get_data("Measurements", None, site, sat, series, yaxis+[xaxis])
-    if len(result) == 0:
-        return render_template("measurements.jinja", content=client.mongo_content, plot_type=plotType, message="Nothing to plot")
-    print(len(result))
-    data = MeasurementArray.from_mongolist(result)
+        try:
+            data = client.get_data_to_measurement("Measurements", None, site, sat, series, yaxis+[xaxis])
+        except Exception as err:
+            current_app.logger.error(err)
+            return render_template("measurements.jinja", content=client.mongo_content, plot_type=plotType, message=f"Error getting data: {str(err)}")
     data.find_minmax()
     data.adjust_slice(minutes_min=exclude, minutes_max=None)
     trace = []

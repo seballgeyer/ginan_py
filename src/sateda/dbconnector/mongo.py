@@ -3,6 +3,7 @@ from typing import List, Union
 
 from pymongo.mongo_client import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
+from sateda.data.measurements import MeasurementArray
 
 logger = logging.getLogger(__name__)
 
@@ -63,9 +64,18 @@ class MongoDB:
         if self.mongo_client:
             self.list_collections = list(self.mongo_client[self.mongo_db].list_collection_names())
 
-    def get_data(self, collection, state, site, sat, series, keys) -> list:
+    def get_data(self, collection: str, state: str, site: List[str], sat: List[str], series:List[str], keys) -> list:
         """
-        hardcoded... yet.
+        get_data getting data from mongo databases. 
+
+        :param str collection: Collection to pull data from 
+        :param str state: State to plot (if collection is state)
+        :param List[str] site: List of site in the request
+        :param List[str] sat: List of sat in the request
+        :param List[str] series: List of series in the request
+        :param List[str] keys: List of keys to pull from the database
+        :raises ValueError: if no data is found
+        :return list: of the data
         """
         logger.debug("getting data")
         agg_pipeline = [{"$match": {"Sat": {"$in": sat}, "Site": {"$in": site}, "Series": {"$in": series}}}]
@@ -84,7 +94,29 @@ class MongoDB:
             agg_pipeline[-1]["$group"][key] = {"$push": f"${key}"}
         logger.info(agg_pipeline)
         cursor = self.mongo_client[self.mongo_db][collection].aggregate(agg_pipeline)
+        #check if cursor is empty
+        if not next(cursor, None):
+            raise ValueError("No data found")
         return list(cursor)
+    
+    
+    def get_data_to_measurement(self, collection: str, state: str, site: List[str], sat: List[str], series:List[str], keys) -> MeasurementArray:
+        """
+        get_data_to_measurement _summary_
+
+        :param str collection: _description_
+        :param str state: _description_
+        :param List[str] site: _description_
+        :param List[str] sat: _description_
+        :param List[str] series: _description_
+        :param _type_ keys: _description_
+        :return MeasurementArray: Object measurement with the data
+        """
+        data = self.get_data(collection, state, site, sat, series, keys)
+        array = MeasurementArray.from_mongolist(data)
+        array.sort()
+        return array
+    
     
     def get_config(self) -> dict:
         return self.mongo_client[self.mongo_db]["Config"].find_one()
