@@ -65,7 +65,7 @@ def handle_post_request() -> str :
     :return str: webpage code
     """
     form_data = request.form
-    plotType = form_data.get('type')
+    plot = form_data.get('type')
     series = form_data.getlist('series')
     sat = form_data.getlist('sat')
     site = form_data.getlist('site')
@@ -78,7 +78,7 @@ def handle_post_request() -> str :
     else:
         exclude = int(exclude)
 
-    current_app.logger.info(f"GET {plotType}, {series}, {sat}, {site}, {state}, {xaxis}, {yaxis}, "
+    current_app.logger.info(f"GET {plot}, {series}, {sat}, {site}, {state}, {xaxis}, {yaxis}, "
                             "{yaxis+[xaxis]}, exclude {exclude} mintues")
     with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
         result = client.get_data("States", state, site, sat, series, yaxis+[xaxis])

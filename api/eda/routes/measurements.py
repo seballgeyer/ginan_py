@@ -40,7 +40,7 @@ pio.templates["draft"] = go.layout.Template(
 
 def handle_post_request():
     form_data = request.form
-    plotType = form_data.get('type')
+    plot = form_data.get('type')
     series = form_data.getlist('series')
     sat = form_data.getlist('sat')
     site = form_data.getlist('site')
@@ -51,7 +51,7 @@ def handle_post_request():
         exlcude = 0
     else:
         exclude = int(exclude)
-    current_app.logger.info(f"GET {plotType}, {series}, {sat}, {site}, {xaxis}, {yaxis}, {yaxis+[xaxis]}, exclude {exclude} mintues")
+    current_app.logger.info(f"GET {plot}, {series}, {sat}, {site}, {xaxis}, {yaxis}, {yaxis+[xaxis]}, exclude {exclude} mintues")
     current_app.logger.info("Getting Connection")
     with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
         result = client.get_data("Measurements", None, site, sat, series, yaxis+[xaxis])
