@@ -6,7 +6,7 @@ from flask import Blueprint, current_app, render_template, request, session
 from sateda.data.measurements import MeasurementArray
 from sateda.dbconnector.mongo import MongoDB
 
-from ..utilities import init_page, plotType
+from ..utilities import init_page, extra
 
 # eda_bp = Blueprint('eda', __name__)
 
@@ -50,43 +50,44 @@ def handle_post_request() -> str :
     :return str: webpage code
     """
     form_data = request.form
-    plot = form_data.get('type')
-    series = form_data.getlist('series')
-    sat = form_data.getlist('sat')
-    site = form_data.getlist('site')
-    state = form_data.getlist('key')
-    xaxis = 'Epoch'
-    yaxis = form_data.getlist('key2')
-    exclude = form_data.get('exclude')
-    process = form_data.get('process')
-    degree = form_data.get('degree')
-    if exclude == "":
-        exclude = 0
+    form={}
+    form['plot'] = form_data.get('type')
+    form['series'] = form_data.getlist('series')
+    form['sat'] = form_data.getlist('sat')
+    form['site'] = form_data.getlist('site')
+    form['state'] = form_data.getlist('state')
+    form['xaxis'] = 'Epoch'
+    form['yaxis'] = form_data.getlist('yaxis')
+    form['exclude'] = form_data.get('exclude')
+    form['process'] = form_data.get('process')
+    form['degree'] = form_data.get('degree')
+    if form['exclude'] == "":
+        form['exclude'] = 0
     else:
-        exclude = int(exclude)
+        form['exclude'] = int(form['exclude'])
 
-    print(process, degree)
-    current_app.logger.info(f"GET {plot}, {series}, {sat}, {site}, {state}, {xaxis}, {yaxis}, "
-                            f"{yaxis+[xaxis]}, exclude {exclude} mintues")
+    print(form['process'], form['degree'])
+    current_app.logger.info(f"GET {form['plot']}, {form['series']}, {form['sat']}, {form['site']}, {form['state']}, {form['xaxis']}, {form['yaxis']}, "
+                            f"{form['yaxis']+[form['xaxis']]}, exclude {form['exclude']} mintues")
     with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
         try:
-            data = client.get_data_to_measurement("States", state, site, sat, series, yaxis+[xaxis])
+            data = client.get_data_to_measurement("States", form['state'], form['site'], form['sat'], form['series'], form['yaxis']+[form['xaxis']])
         except Exception as err:
             current_app.logger.error(err)
-            return render_template("states.jinja", content=client.mongo_content, plot_type=plotType, 
+            return render_template("states.jinja", content=client.mongo_content, extra=extra, 
                                    message=f"Error getting data: {str(err)}")
     print(len(data.arr))
     data.find_minmax()
-    data.adjust_slice(minutes_min=exclude, minutes_max=None)
+    data.adjust_slice(minutes_min=form['exclude'], minutes_max=None)
     trace = []
     mode = "lines"
     table = {}
-    if process == "Detrend":
+    if form['process'] == "Detrend":
         for _data in data:
-            _data.detrend(degree=int(degree))
+            _data.detrend(degree=int(form['degree']))
            
     for _data in data:
-        for _yaxis in yaxis:
+        for _yaxis in form['yaxis']:
             for i in range(_data.data[_yaxis].shape[1]):
                 _data.id['state'] = _yaxis
                 _data.id['ax'] = i
@@ -101,5 +102,5 @@ def handle_post_request() -> str :
     fig = go.Figure(data=trace)
     fig.update_layout(showlegend=True)
     return render_template("states.jinja", content=client.mongo_content,
-                            plot_type=plotType, graphJSON=pio.to_html(fig), mode="plotly",
+                            extra=extra, graphJSON=pio.to_html(fig), mode="plotly", selection=form,
                             table_data= table, table_headers=['RMS', 'mean'])

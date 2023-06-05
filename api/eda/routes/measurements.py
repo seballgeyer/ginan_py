@@ -7,7 +7,7 @@ from flask import Blueprint, current_app, render_template, request, session
 from sateda.data.measurements import MeasurementArray, Measurements
 from sateda.dbconnector.mongo import MongoDB
 
-from ..utilities import init_page, plotType
+from ..utilities import init_page, extra
 # eda_bp = Blueprint('eda', __name__)
 
 measurements_bp = Blueprint('measurements', __name__)
@@ -40,32 +40,33 @@ pio.templates["draft"] = go.layout.Template(
 
 def handle_post_request():
     form_data = request.form
-    plot = form_data.get('type')
-    series = form_data.getlist('series')
-    sat = form_data.getlist('sat')
-    site = form_data.getlist('site')
-    xaxis = form_data.get('key')
-    yaxis = form_data.getlist('key2')
-    exclude = form_data.get('exclude')
-    if exclude == "":
-        exclude = 0
+    form = {}
+    form['plot'] = form_data.get('type')
+    form['series'] = form_data.getlist('series')
+    form['sat'] = form_data.getlist('sat')
+    form['site'] = form_data.getlist('site')
+    form['xaxis'] = form_data.get('xaxis')
+    form['yaxis'] = form_data.getlist('yaxis')
+    form['exclude'] = form_data.get('exclude')
+    if form['exclude'] == "":
+        form['exclude'] = 0
     else:
-        exclude = int(exclude)
-    current_app.logger.info(f"GET {plot}, {series}, {sat}, {site}, {xaxis}, {yaxis}, {yaxis+[xaxis]}, exclude {exclude} mintues")
+        form['exclude'] = int(form['exclude'])
+    current_app.logger.info(f"GET {form['plot']}, {form['series']}, {form['sat']}, {form['site']}, {form['xaxis']}, {form['yaxis']}, {form['yaxis']+[form['xaxis']]}, exclude {form['exclude']} mintues")
     current_app.logger.info("Getting Connection")
     with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
         try:
-            data = client.get_data_to_measurement("Measurements", None, site, sat, series, yaxis+[xaxis])
+            data = client.get_data_to_measurement("Measurements", None, form['site'], form['sat'], form['series'], form['yaxis']+[form['xaxis']])
         except Exception as err:
             current_app.logger.error(err)
-            return render_template("measurements.jinja", content=client.mongo_content, plot_type=plotType, message=f"Error getting data: {str(err)}")
+            return render_template("measurements.jinja", content=client.mongo_content, extra=extra, message=f"Error getting data: {str(err)}")
     data.find_minmax()
-    data.adjust_slice(minutes_min=exclude, minutes_max=None)
+    data.adjust_slice(minutes_min=form['exclude'], minutes_max=None)
     trace = []
     mode = "lines"
     table = {}
     for _data in data:
-        for _yaxis in yaxis:
+        for _yaxis in form['yaxis']:
             trace.append(go.Scatter(x=_data.epoch[_data.subset], y=_data.data[_yaxis][_data.subset], mode=mode, name=f"{_data.id}",
                                     hovertemplate = "%{x|%Y-%m-%d %H:%M:%S}<br>" +
                                                     "%{y:.4e%}<br>" +
@@ -75,6 +76,6 @@ def handle_post_request():
     fig = go.Figure(data=trace)
     fig.update_layout(showlegend=True)
     return render_template("measurements.jinja", content=client.mongo_content,
-                            plot_type=plotType, graphJSON=pio.to_html(fig), mode="plotly", 
+                            extra=extra, graphJSON=pio.to_html(fig), mode="plotly", selection=form,
                             table_data= table, table_headers=['RMS', 'mean'])
 

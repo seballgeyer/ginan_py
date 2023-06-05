@@ -6,7 +6,7 @@ from flask import Blueprint, current_app, render_template, request, session
 from sateda.data.measurements import MeasurementArray
 from sateda.dbconnector.mongo import MongoDB
 
-from ..utilities import init_page, plotType
+from ..utilities import init_page, extra
 
 
 # eda_bp = Blueprint('eda', __name__)
