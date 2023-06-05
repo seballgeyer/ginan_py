@@ -62,3 +62,21 @@ class TestMeasurements(unittest.TestCase):
         self.assertAlmostEqual( m1.data['y'][1], 0)
         self.assertAlmostEqual( m1.data['x'][2], 1)
         self.assertAlmostEqual( m1.data['y'][2], 1)
+        
+    #unit test to test a function "find_gaps" in measurements.py which would numpy array of epochs, and insert a nan when the data are more than 15 minutes apart. However if there is only one point in the segment, link it to the closest in time
+    def test_find_gaps(self):
+        t0 = datetime.datetime(2021, 1, 1, 0, 0, 0)
+        #generate an array deltat of 12 elements being 5 second apart, with a gap of 60 seconds between the 3rd and 4th element, 60 seconds between the 6th and 7th element, 400 seconds between the 9th and 10th element
+        deltatt = np.array([i for i in range(12)])
+        deltatt[3:] = deltatt[3:] + 60
+        deltatt[6:] = deltatt[6:] + 60
+        deltatt[7:] = deltatt[7:] + 400
+        deltatt[9:] = deltatt[9:] + 400
+        deltatt[10:] += 60
+        data_dict = {"_id": {"sat": "G01", "site": "ALIC    "}, 
+                    "t": [t0 + datetime.timedelta(seconds=int(t)) for t in deltatt],
+                    "x": [1.0] * len(deltatt),}
+        m1 = Measurements.from_dictionary(data_dict)
+        m1.find_gaps()
+        for i in [3,8,11]:
+            self.assertTrue(np.isnan(m1.data['x'][i] ))
