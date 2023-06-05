@@ -7,17 +7,17 @@ from flask import Blueprint, current_app, render_template, request, session
 from sateda.data.measurements import MeasurementArray, Measurements
 from sateda.dbconnector.mongo import MongoDB
 
+from ..utilities import init_page, plotType
 # eda_bp = Blueprint('eda', __name__)
 
 measurements_bp = Blueprint('measurements', __name__)
-plotType = ["Scatter", "Line"]
 
 @measurements_bp.route('/measurements', methods=['GET', 'POST'])
 def measurements():
     if request.method == 'POST':
         return handle_post_request()
     else:
-        return init()
+        return init_page(template="measurements.jinja")
 
 
 pio.templates["draft"] = go.layout.Template(
@@ -78,10 +78,3 @@ def handle_post_request():
                             plot_type=plotType, graphJSON=pio.to_html(fig), mode="plotly", 
                             table_data= table, table_headers=['RMS', 'mean'])
 
-
-def init():
-    with MongoDB(url=session["mongo_ip"], port=session["mongo_port"], data_base=session["mongo_db"]) as client:
-        client.connect()
-        client.get_content()
-        mongo_content = client.mongo_content
-    return render_template("measurements.jinja", content=mongo_content, plot_type=plotType, exlcude=0)

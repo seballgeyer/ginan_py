@@ -6,10 +6,11 @@ from flask import Blueprint, current_app, render_template, request, session
 from sateda.data.measurements import MeasurementArray
 from sateda.dbconnector.mongo import MongoDB
 
+from ..utilities import init_page, plotType
+
 # eda_bp = Blueprint('eda', __name__)
 
 states_bp = Blueprint('states', __name__)
-plotType = ["Scatter", "Line"]
 
 pio.templates["draft"] = go.layout.Template(
     layout_annotations=[
@@ -38,24 +39,8 @@ def states() -> str:
     if request.method == 'POST':
         return handle_post_request()
     else:
-        return init()
+        return init_page(template="states.jinja")
 
-
-def init() -> str:
-    """
-    init Generate the empty page 
-
-    :return str: HTML Code
-    """
-    connect_db_ip = session["mongo_ip"]
-    db_name = session["mongo_db"]
-    db_port = session["mongo_port"]
-    print(connect_db_ip, db_name)
-    #TODO Later, database content, can be loaded in the session
-    client = MongoDB(url=connect_db_ip, port=db_port, data_base=db_name)
-    client.connect()
-    client.get_content()
-    return render_template("states.jinja", content=client.mongo_content, plot_type=plotType, exlcude=0)
 
 
 def handle_post_request() -> str :
@@ -99,7 +84,7 @@ def handle_post_request() -> str :
     if process == "Detrend":
         for _data in data:
             _data.detrend(degree=int(degree))
-            
+           
     for _data in data:
         for _yaxis in yaxis:
             for i in range(_data.data[_yaxis].shape[1]):
