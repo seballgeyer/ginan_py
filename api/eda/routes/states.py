@@ -7,8 +7,6 @@ from sateda.dbconnector.mongo import MongoDB
 
 from ..utilities import init_page, extra
 
-# eda_bp = Blueprint('eda', __name__)
-
 states_bp = Blueprint('states', __name__)
 
 pio.templates["draft"] = go.layout.Template(

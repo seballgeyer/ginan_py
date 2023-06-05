@@ -17,8 +17,7 @@ def init_page(template: str) -> str:
     db_name = session["mongo_db"]
     db_port = session["mongo_port"]
     print(connect_db_ip, db_name)
-    #TODO Later, database content, can be loaded in the session
-    client = MongoDB(url=connect_db_ip, port=db_port, data_base=db_name)
-    client.connect()
-    client.get_content()
-    return render_template(template, content=client.mongo_content, extra=extra, exlcude=0)
+    with MongoDB(url=connect_db_ip, port=db_port, data_base=db_name) as client:
+        client.get_content()
+        content = client.mongo_content
+    return render_template(template, content=content, extra=extra, exlcude=0)
