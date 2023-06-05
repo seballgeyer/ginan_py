@@ -104,34 +104,32 @@ class Measurements:
         However, if there is only one point in the segment, link it to the closest in time
         """
         self.gaps = []
-        for i in range(len(self.epoch)-1):
-            if (self.epoch[i+1] - self.epoch[i]) > np.timedelta64(1, 's'):
+        epoch_length = len(self.epoch)
+
+        for i in range(epoch_length - 1):
+            time_diff = (self.epoch[i+1] - self.epoch[i]) / np.timedelta64(1, 's')
+            if time_diff > 1:
                 self.gaps.append(i)
-        
-        for i in range( len(self.gaps)-1):
-            if self.gaps[i+1] - self.gaps[i] == 1:
-                if self.epoch[self.gaps[i]+2] - self.epoch[self.gaps[i]+1] < self.epoch[self.gaps[i]+1] - self.epoch[self.gaps[i]]:
+
+        gaps_length = len(self.gaps)
+        for i, gap_index in enumerate(self.gaps[:-1]):
+            if self.gaps[i+1] - gap_index == 1:
+                next_time_diff = (self.epoch[gap_index+2] - self.epoch[gap_index+1]) / np.timedelta64(1, 's')
+                current_time_diff = (self.epoch[gap_index+1] - self.epoch[gap_index]) / np.timedelta64(1, 's')
+                if next_time_diff < current_time_diff:
                     self.gaps[i+1] = None
                 else:
                     self.gaps[i] = None
 
-        if len(self.gaps) == 0:
-            self.gaps = None
-        else:
-            self.gaps = np.array(self.gaps)
-        
-        if self.gaps is not None:
-            self.gaps = self.gaps[self.gaps != None]
+        self.gaps = np.array([gap for gap in self.gaps if gap is not None])
 
-        if self.gaps is not None:
-            shift = 0  # Track the shift caused by insertions
-            for i in range(len(self.gaps)):
-                gap_index = self.gaps[i] + shift
-                print(gap_index, self.gaps[i])
-                self.epoch = np.insert(self.epoch, gap_index + 1, self.epoch[gap_index] + np.timedelta64(1, 'ms'))
-                for key in self.data:
-                    self.data[key] = np.insert(self.data[key], gap_index + 1, np.nan)
-                shift += 1  # Increment the shift value
+        shift = 0
+        for gap_index in self.gaps:
+            gap_index += shift
+            self.epoch = np.insert(self.epoch, gap_index + 1, self.epoch[gap_index] + np.timedelta64(1, 'ms'))
+            for key in self.data:
+                self.data[key] = np.insert(self.data[key], gap_index + 1, np.nan)
+            shift += 1
         
         
         
