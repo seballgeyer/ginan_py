@@ -3,7 +3,6 @@ import plotly.graph_objs as go
 import plotly.io as pio
 from flask import Blueprint, current_app, render_template, request, session
 
-from sateda.data.measurements import MeasurementArray
 from sateda.dbconnector.mongo import MongoDB
 
 from ..utilities import init_page, extra
