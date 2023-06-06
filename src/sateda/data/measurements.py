@@ -94,10 +94,11 @@ class Measurements:
         if max([len(value) for key, value in data_dict.items() if key not in ["t", "_id", "Epoch"]]) == 0:
             raise ValueError("No interesting data")
         data = {
-            key: np.asarray(value) for key, value in data_dict.items() if key not in ["t", "_id", "Epoch"] and len(value) != 0
+            key: np.asarray(value) for key, value in data_dict.items() \
+                if key not in ["t", "_id", "Epoch"] and len(value) != 0
         }
         return cls(sat, identifier, epoch, data)  
-    
+   
     def find_gaps(self):
         """
         find_gaps find the gaps in the epochs vector. A gap is defined as more than 1 seconds between two data point.
@@ -107,7 +108,7 @@ class Measurements:
         epoch_length = len(self.epoch)
 
         for i in range(epoch_length - 1):
-            time_diff = (self.epoch[i+1] - self.epoch[i]) / np.timedelta64(1, 's')
+            time_diff = (self.epoch[i+1] - self.epoch[i]) / np.timedelta64(10, 'm')
             if time_diff > 1:
                 self.gaps.append(i)
 
@@ -130,8 +131,6 @@ class Measurements:
             for key in self.data:
                 self.data[key] = np.insert(self.data[key], gap_index + 1, np.nan)
             shift += 1
-        
-        
         
     def __sub__(self, other):
         """

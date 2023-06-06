@@ -61,6 +61,8 @@ def handle_post_request():
             return render_template("measurements.jinja", content=client.mongo_content, extra=extra, message=f"Error getting data: {str(err)}")
     data.find_minmax()
     data.adjust_slice(minutes_min=form['exclude'], minutes_max=None)
+    for data_ in data:
+        data_.find_gaps()
     trace = []
     mode = "markers+lines" if form['plot'] == "Scatter" else "lines"
     table = {}
