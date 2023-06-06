@@ -77,6 +77,6 @@ class TestMeasurements(unittest.TestCase):
                     "t": [t0 + datetime.timedelta(seconds=int(t)) for t in deltatt],
                     "x": [1.0] * len(deltatt),}
         m1 = Measurements.from_dictionary(data_dict)
-        m1.find_gaps()
+        m1.find_gaps(delta=1)
         for i in [3,8,11]:
             self.assertTrue(np.isnan(m1.data['x'][i] ))

@@ -99,7 +99,7 @@ class Measurements:
         }
         return cls(sat, identifier, epoch, data)  
    
-    def find_gaps(self):
+    def find_gaps(self, delta=10):
         """
         find_gaps find the gaps in the epochs vector. A gap is defined as more than 1 seconds between two data point.
         However, if there is only one point in the segment, link it to the closest in time
@@ -108,7 +108,7 @@ class Measurements:
         epoch_length = len(self.epoch)
 
         for i in range(epoch_length - 1):
-            time_diff = (self.epoch[i+1] - self.epoch[i]) / np.timedelta64(10, 'm')
+            time_diff = (self.epoch[i+1] - self.epoch[i]) / np.timedelta64(int(delta), 'm')
             if time_diff > 1:
                 self.gaps.append(i)
 
