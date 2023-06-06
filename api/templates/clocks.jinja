@@ -1,16 +1,19 @@
 {% extends 'base.jinja'%}
 
 
-{% block header %}
-<h1>{% block title %} {{ plotingpage }} {% endblock %}</h1>
+
+{% block title%}
+Clocks
 {% endblock %}
+
 
 
 {% block menuselection %}
 <form method="post">
+
   <select name=type method="GET" action="/">
-    {% for key_ in g.db_definitions['plot_type'] %}
-    {% if dp is defined and dp['type']|length and key_ in dp['type']%}
+    {% for key_ in extra['plotType'] %}
+    {% if selection is defined and selection['type']|length and key_ in selection['type']%}
     <option value="{{key_}}" SELECTED>{{key_}}</option>"
     {%else%}
     <option value="{{key_}}">{{key_}}</option>"
@@ -18,9 +21,9 @@
     {% endfor %}
   </select>
 
-  <select name=series1 method="GET" action="/">
-    {% for series_ in g.db_definitions['Series'] %}
-    {% if dp is defined and dp['series']|length and series_ in dp['series']%}
+  <select name="series_base" multiple method="GET" style="width: 200px;" action="/">
+    {% for series_ in content['Series'] %}
+    {% if selection is defined and selection['series_base']|length and series_ in selection['series_base']%}
     <option value="{{series_}}" SELECTED>{{series_}}</option>"
     {%else%}
     <option value="{{series_}}">{{series_}}</option>"
@@ -28,9 +31,9 @@
     {% endfor %}
   </select>
 
-  <select name=series2 method="GET" action="/">
-    {% for series_ in g.db_definitions['Series'] %}
-    {% if dp is defined and dp['series']|length and series_ in dp['series']%}
+  <select name="series" multiple method="GET" style="width: 200px;" action="/">
+    {% for series_ in content['Series'] %}
+    {% if selection is defined and selection['series']|length and series_ in selection['series']%}
     <option value="{{series_}}" SELECTED>{{series_}}</option>"
     {%else%}
     <option value="{{series_}}">{{series_}}</option>"
@@ -38,16 +41,56 @@
     {% endfor %}
   </select>
 
-  <select name=mode method="GET" action="/">
-    {% for sat_ in ['SAT', 'SITE'] %}
-    {% if dp is defined and dp['mode']|length and sat_ in dp['mode']%}
+  <select name=sat multiple method="GET" action="/">
+    {% for sat_ in content['Sat'] %}
+    {% if selection is defined and selection['sat']|length and sat_ in selection['sat']%}
     <option value="{{sat_}}" SELECTED>{{sat_}}</option>"
     {%else%}
     <option value="{{sat_}}">{{sat_}}</option>"
     {%endif%}
     {% endfor %}
   </select>
+  <select name=site multiple method="GET" action="/">
+    {% for site_ in content['Site'] %}
+    {% if selection is defined and selection['site']|length and site_ in selection['site']%}
+    <option value="{{site_}}" SELECTED>{{site_}}</option>"
+    {%else%}
+    <option value="{{site_}}">{{site_}}</option>"
+    {%endif%}
+    {% endfor %}
+  </select>
 
+  <select name=state method="GET" action="/">
+    {% for key_ in content['State'] %}
+    {% if selection is defined and selection['state']|length and key_ in selection['state']%}
+    <option value="{{key_}}" SELECTED>{{key_}}</option>"
+    {%else%}
+    <option value="{{key_}}">{{key_}}</option>"
+    {%endif%}
+    {% endfor %}
+  </select>
+
+  <select name=yaxis multiple method="GET" action="/">
+    {% for key_ in content['states_fields'] %}
+    {% if selection is defined and selection['yaxis']|length and key_ in selection['yaxis']%}
+    <option value="{{key_}}" SELECTED>{{key_}}</option>"
+    {%else%}
+    <option value="{{key_}}">{{key_}}</option>"
+    {%endif%}
+    {% endfor %}
+  </select>
+
+  <input type="range" min="0" max="3" value="1" class="slider" name="degree">
+
+  <select name=process  method="GET" action="/">
+    <option value="None">None</option>
+    <option value="Fit">Fit</option>
+    <option value="Detrend">Detrend</option>
+  </select>
+  <div>
+    <label for="exclude">Exclude the first (min):</label>
+    <input type="text" id="exclude" name="exclude" value="{{ exclude }}">
+  </div>
   <input type="submit" value="PLOT">
 </form>
 {% endblock %}

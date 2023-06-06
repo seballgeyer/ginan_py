@@ -26,19 +26,29 @@ pio.templates["draft"] = go.layout.Template(
     ]
 )
 
-@states_bp.route('/states', methods=['GET', 'POST'])
-def states() -> str:
-    """
-    Overall handeling of the page.
+# @states_bp.route('/states', methods=['GET', 'POST'])
+# def states() -> str:
+#     """
+#     Overall handeling of the page.
 
-    :return str: HTML code
-    """
+#     :return str: HTML code
+#     """
+#     print(request)
+#     if request.method == 'POST':
+#         current_app.logger.info("Entering request")
+#         return handle_post_request()
+#     else:
+#         return init_page(template="states.jinja")
+
+
+@states_bp.route('/states', methods=['GET', 'POST'])
+def states():
     if request.method == 'POST':
         return handle_post_request()
     else:
         return init_page(template="states.jinja")
-
-
+    
+    
 
 def handle_post_request() -> str :
     """
@@ -46,6 +56,7 @@ def handle_post_request() -> str :
 
     :return str: webpage code
     """
+    current_app.logger.info("Entering request")
     form_data = request.form
     form={}
     form['plot'] = form_data.get('type')

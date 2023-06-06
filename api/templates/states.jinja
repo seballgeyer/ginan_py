@@ -1,11 +1,11 @@
 {% extends 'base.jinja'%}
 
 {% block title%}
-States
+States 
 {% endblock %}
 
 {% block menuselection %}
-<selection method="post">
+<form method="post">
 
   <select name=type method="GET" action="/">
     {% for key_ in extra['plotType'] %}
@@ -79,5 +79,5 @@ States
     <input type="text" id="exclude" name="exclude" value="{{ exclude }}">
   </div>
   <input type="submit" value="PLOT">
-</selection>
+</form>
 {% endblock %}
