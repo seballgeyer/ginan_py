@@ -11,16 +11,17 @@ from ..utilities import init_page, extra
 
 # eda_bp = Blueprint('eda', __name__)
 
-position_bp = Blueprint('position', __name__)
+position_bp = Blueprint("position", __name__)
 
-@position_bp.route('/position', methods=['GET', 'POST'])
+
+@position_bp.route("/position", methods=["GET", "POST"])
 def position() -> str:
     """
     Overall handeling of the page.
 
     :return str: HTML code
     """
-    if request.method == 'POST':
+    if request.method == "POST":
         return "aaaa"
     else:
         return init_page(template="position.jinja")

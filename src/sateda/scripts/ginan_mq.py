@@ -99,7 +99,10 @@ def get_measurements(
 
 
 def log_diff_measurements(
-    diff1: List[int], diff2: List[int], data1: List[Measurements], data2: List[Measurements]
+    diff1: List[int],
+    diff2: List[int],
+    data1: List[Measurements],
+    data2: List[Measurements],
 ) -> None:
     """
     Logs the differences between two measurements datasets.
@@ -185,14 +188,14 @@ def connect_databases(args):
     :param args: An argparse.Namespace object that contains the command-line arguments.
     :return: A tuple of dictionaries with the measurements objects.
     """
-    print(args['field'])
-    keys = {k: k for k in args['field']}
+    print(args["field"])
+    keys = {k: k for k in args["field"]}
     queues = []
     threads = []
     data = []
-    num_dbs = 2 if args['dbname2'] else 1
+    num_dbs = 2 if args["dbname2"] else 1
     for i in range(num_dbs):
-        db_args = args[ f"db{i+1}"]
+        db_args = args[f"db{i+1}"]
         coll_args = args[f"dbname{i+1}"]
         port_args = args[f"port{i+1}"]
         mongo_db = mongo.MongoDB(url=db_args, data_base=coll_args, port=port_args)
@@ -204,7 +207,13 @@ def connect_databases(args):
         thread = threading.Thread(
             target=get_measurements_thread,
             args=(mongo_db, queue_),
-            kwargs={"sat": args['sat'], "site": args['site'], "state": args['state'], "series": "", "keys": keys},
+            kwargs={
+                "sat": args["sat"],
+                "site": args["site"],
+                "state": args["state"],
+                "series": "",
+                "keys": keys,
+            },
         )
         threads.append(thread)
         thread.start()
@@ -226,7 +235,7 @@ def plot_measurements(args):
     """
     # create database connections
     data = connect_databases(args)
-    if args['diff']:
+    if args["diff"]:
         if len(data) == 2:
             common, diff1, diff2 = find_common(data[0], data[1])
             log_diff_measurements(diff1, diff2, data[0], data[1])
@@ -239,8 +248,8 @@ def plot_measurements(args):
             print(single_data)
             diff.extend(single_data)
     write_stats(diff)
-    if args['output'] is not False:
-        plot_diff_measurements(diff, args['output'])
+    if args["output"] is not False:
+        plot_diff_measurements(diff, args["output"])
 
 
 def main():
@@ -269,22 +278,45 @@ def main():
         epilog=f"(c) Sebastien Allgeyer {sateda.__version__}",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--db1", default="127.0.0.1", type=str, help="Mongo database url [default 127.0.0.1]")
+    parser.add_argument(
+        "--db1",
+        default="127.0.0.1",
+        type=str,
+        help="Mongo database url [default 127.0.0.1]",
+    )
     parser.add_argument("--port1", type=int, default=27017, help="Mongo port")
     parser.add_argument("--dbname1", type=str, required=True, help="Mongo collection to plot")
 
-    parser.add_argument("--db2", default="127.0.0.1", type=str, help="Mongo database url [default 127.0.0.1]")
+    parser.add_argument(
+        "--db2",
+        default="127.0.0.1",
+        type=str,
+        help="Mongo database url [default 127.0.0.1]",
+    )
     parser.add_argument("--port2", type=int, default=27017, help="Mongo port")
     parser.add_argument("--dbname2", type=str, required=False, help="Mongo collection to plot")
 
-    parser.add_argument("--sat", type=str, required=False, nargs="+", default=None, help="Satellite name")
+    parser.add_argument(
+        "--sat",
+        type=str,
+        required=False,
+        nargs="+",
+        default=None,
+        help="Satellite name",
+    )
     parser.add_argument("--site", type=str, required=False, nargs="+", default=None, help="Site name")
     parser.add_argument("--field", type=str, required=True, nargs="+")
     parser.add_argument("--state", type=str, nargs=1, default=None)
 
     parser.add_argument("--diff", default=False, action="store_true")
 
-    parser.add_argument("--output", nargs="?", const=True, default=False, help="output plot into a file or xdisplay")
+    parser.add_argument(
+        "--output",
+        nargs="?",
+        const=True,
+        default=False,
+        help="output plot into a file or xdisplay",
+    )
 
     args = parser.parse_args()
 

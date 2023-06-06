@@ -46,15 +46,17 @@ class MongoDB:
             self.mongo_content[cursor["type"]] = cursor["Values"]
             # print(cursor["type"])
         # print(self.mongo_content)
-        self.mongo_content['Geometry'] = []
-        geom  = self.mongo_client[self.mongo_db]["Geometry"].find_one({})
+        self.mongo_content["Geometry"] = []
+        geom = self.mongo_client[self.mongo_db]["Geometry"].find_one({})
         if geom is None:
             logger.debug("Geometry not available")
         else:
             for i in geom:
-                self.mongo_content['Geometry'].append(i)
-            self.mongo_content['merged_measurement'] = self.mongo_content['Geometry'] + self.mongo_content['Measurements']
-        self.mongo_content['states_fields'] = ['x', 'dx', 'P']
+                self.mongo_content["Geometry"].append(i)
+            self.mongo_content["merged_measurement"] = (
+                self.mongo_content["Geometry"] + self.mongo_content["Measurements"]
+            )
+        self.mongo_content["states_fields"] = ["x", "dx", "P"]
 
     def get_list_db(self) -> List[str]:
         return self.mongo_client.list_database_names()
@@ -64,11 +66,19 @@ class MongoDB:
         if self.mongo_client:
             self.list_collections = list(self.mongo_client[self.mongo_db].list_collection_names())
 
-    def get_data(self, collection: str, state: str, site: List[str], sat: List[str], series:List[str], keys) -> list:
+    def get_data(
+        self,
+        collection: str,
+        state: str,
+        site: List[str],
+        sat: List[str],
+        series: List[str],
+        keys,
+    ) -> list:
         """
-        get_data getting data from mongo databases. 
+        get_data getting data from mongo databases.
 
-        :param str collection: Collection to pull data from 
+        :param str collection: Collection to pull data from
         :param str state: State to plot (if collection is state)
         :param List[str] site: List of site in the request
         :param List[str] sat: List of sat in the request
@@ -78,7 +88,15 @@ class MongoDB:
         :return list: of the data
         """
         logger.debug("getting data")
-        agg_pipeline = [{"$match": {"Sat": {"$in": sat}, "Site": {"$in": site}, "Series": {"$in": series}}}]
+        agg_pipeline = [
+            {
+                "$match": {
+                    "Sat": {"$in": sat},
+                    "Site": {"$in": site},
+                    "Series": {"$in": series},
+                }
+            }
+        ]
         if state is not None:
             agg_pipeline[-1]["$match"]["State"] = {"$in": state}
         agg_pipeline.append({"$sort": {"Epoch": 1}})
@@ -94,13 +112,20 @@ class MongoDB:
             agg_pipeline[-1]["$group"][key] = {"$push": f"${key}"}
         logger.info(agg_pipeline)
         cursor = self.mongo_client[self.mongo_db][collection].aggregate(agg_pipeline)
-        #check if cursor is empty
+        # check if cursor is empty
         if not next(cursor, None):
             raise ValueError("No data found")
         return list(cursor)
-    
-    
-    def get_data_to_measurement(self, collection: str, state: str, site: List[str], sat: List[str], series:List[str], keys) -> MeasurementArray:
+
+    def get_data_to_measurement(
+        self,
+        collection: str,
+        state: str,
+        site: List[str],
+        sat: List[str],
+        series: List[str],
+        keys,
+    ) -> MeasurementArray:
         """
         get_data_to_measurement _summary_
 
@@ -116,7 +141,6 @@ class MongoDB:
         array = MeasurementArray.from_mongolist(data)
         array.sort()
         return array
-    
-    
+
     def get_config(self) -> dict:
         return self.mongo_client[self.mongo_db]["Config"].find_one()

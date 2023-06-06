@@ -20,4 +20,5 @@ stdout_handler.setFormatter(formatter)
 logger.addHandler(stdout_handler)
 
 from . import _version
-__version__ = _version.get_versions()['version']
+
+__version__ = _version.get_versions()["version"]

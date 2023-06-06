@@ -31,7 +31,10 @@ def read(args):
     sat.get_postfit()
     sat.get_state()
     rms = sat.get_rms()
-    logger.info(f"{args.coll} {arg.sat}   {np.array2string(rms[:3], precision=6, floatmode='fixed')}   ", end="")
+    logger.info(
+        f"{args.coll} {arg.sat}   {np.array2string(rms[:3], precision=6, floatmode='fixed')}   ",
+        end="",
+    )
     if args.to_rac:
         rms_rac = sat.get_rac()
         logger.info(f"{np.array2string(rms_rac[:3], precision=6, floatmode='fixed')}", end=" ")
@@ -78,7 +81,12 @@ if __name__ == "__main__":
         epilog="Text at the bottom of help",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--db", default="127.0.0.1", type=str, help="Mongo database url [default 127.0.0.1]")
+    parser.add_argument(
+        "--db",
+        default="127.0.0.1",
+        type=str,
+        help="Mongo database url [default 127.0.0.1]",
+    )
     parser.add_argument("--coll", type=str, required=True, help="Mongo collection to plot")
     parser.add_argument("-s", "--sat", type=str, required=True, help="Satellite name")
 

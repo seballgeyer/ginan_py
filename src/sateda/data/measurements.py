@@ -57,7 +57,13 @@ class Measurements:
         stats(self): Computes and logs statistics on the measurement data.
     """
 
-    def __init__(self, sat: str = "", identifier: dict = None, epoch: npt.ArrayLike = np.array([]), data: dict = None):
+    def __init__(
+        self,
+        sat: str = "",
+        identifier: dict = None,
+        epoch: npt.ArrayLike = np.array([]),
+        data: dict = None,
+    ):
         """
         Initializes a Measurements object.
 
@@ -94,11 +100,12 @@ class Measurements:
         if max([len(value) for key, value in data_dict.items() if key not in ["t", "_id", "Epoch"]]) == 0:
             raise ValueError("No interesting data")
         data = {
-            key: np.asarray(value) for key, value in data_dict.items() \
-                if key not in ["t", "_id", "Epoch"] and len(value) != 0
+            key: np.asarray(value)
+            for key, value in data_dict.items()
+            if key not in ["t", "_id", "Epoch"] and len(value) != 0
         }
-        return cls(sat, identifier, epoch, data)  
-   
+        return cls(sat, identifier, epoch, data)
+
     def find_gaps(self, delta=10):
         """
         find_gaps find the gaps in the epochs vector. A gap is defined as more than 1 seconds between two data point.
@@ -108,17 +115,17 @@ class Measurements:
         epoch_length = len(self.epoch)
 
         for i in range(epoch_length - 1):
-            time_diff = (self.epoch[i+1] - self.epoch[i]) / np.timedelta64(int(delta), 'm')
+            time_diff = (self.epoch[i + 1] - self.epoch[i]) / np.timedelta64(int(delta), "m")
             if time_diff > 1:
                 self.gaps.append(i)
 
         gaps_length = len(self.gaps)
         for i, gap_index in enumerate(self.gaps[:-1]):
-            if self.gaps[i+1] - gap_index == 1:
-                next_time_diff = (self.epoch[gap_index+2] - self.epoch[gap_index+1]) / np.timedelta64(1, 's')
-                current_time_diff = (self.epoch[gap_index+1] - self.epoch[gap_index]) / np.timedelta64(1, 's')
+            if self.gaps[i + 1] - gap_index == 1:
+                next_time_diff = (self.epoch[gap_index + 2] - self.epoch[gap_index + 1]) / np.timedelta64(1, "s")
+                current_time_diff = (self.epoch[gap_index + 1] - self.epoch[gap_index]) / np.timedelta64(1, "s")
                 if next_time_diff < current_time_diff:
-                    self.gaps[i+1] = None
+                    self.gaps[i + 1] = None
                 else:
                     self.gaps[i] = None
 
@@ -127,11 +134,15 @@ class Measurements:
         shift = 0
         for gap_index in self.gaps:
             gap_index += shift
-            self.epoch = np.insert(self.epoch, gap_index + 1, self.epoch[gap_index] + np.timedelta64(1, 'ms'))
+            self.epoch = np.insert(
+                self.epoch,
+                gap_index + 1,
+                self.epoch[gap_index] + np.timedelta64(1, "ms"),
+            )
             for key in self.data:
                 self.data[key] = np.insert(self.data[key], gap_index + 1, np.nan)
             shift += 1
-        
+
     def __sub__(self, other):
         """
         Subtract another Measurements object from this one, element-wise.
@@ -176,7 +187,13 @@ class Measurements:
         return results
 
     def __lt__(self, other):
-        order = ['series', 'sat', 'site', 'state', 'ax']  # Specify the order of fields for sorting
+        order = [
+            "series",
+            "sat",
+            "site",
+            "state",
+            "ax",
+        ]  # Specify the order of fields for sorting
         for field in order:
             if field in self.id and field in other.id:
                 if self.id[field] < other.id[field]:
@@ -188,7 +205,7 @@ class Measurements:
             elif field in other.id:
                 return True
         return False
-    
+
     def demean(self):
         """
         Remove the mean value from each data field of this Measurements object.
@@ -206,11 +223,11 @@ class Measurements:
         :return: dictionary of coefficient and fit
         """
         fit = {}
-        epoch_ = (self.epoch - self.epoch[0]).astype('timedelta64[s]').astype('float64')
+        epoch_ = (self.epoch - self.epoch[0]).astype("timedelta64[s]").astype("float64")
         for key in self.data:
             fit[key] = np.polyfit(epoch_, self.data[key], degree)
         return fit
-    
+
     def detrend(self, degree=1):
         """
         Remove the polynomial fit from all data in self.data dictionary
@@ -218,15 +235,14 @@ class Measurements:
         :return: None
         """
         fit = self.polyfit(degree)
-        epoch_ = (self.epoch - self.epoch[0]).astype('timedelta64[s]').astype('float64')
+        epoch_ = (self.epoch - self.epoch[0]).astype("timedelta64[s]").astype("float64")
         for key in self.data:
             if self.data[key].ndim == 1:
-                self.data[key] -= np.polyval(fit[key], epoch_)        
+                self.data[key] -= np.polyval(fit[key], epoch_)
             else:
                 for i in range(self.data[key].shape[1]):
-                    self.data[key][:,i] -= np.polyval(fit[key][:,i], epoch_)        
+                    self.data[key][:, i] -= np.polyval(fit[key][:, i], epoch_)
 
-    
     def plot(self, axis: plt.Axes):
         """
         Plot the data stored in this Measurements object.
@@ -243,7 +259,7 @@ class Measurements:
         axis.legend()
 
     """function"""
-      
+
     def get_stats(self):
         """
         Print statistics for the data stored in this Measurements object.
@@ -260,11 +276,10 @@ class Measurements:
         else:
             first_index = np.argmax(self.epoch >= tmin)
         if tmax is None:
-            last_index = len(self.epoch)-1
+            last_index = len(self.epoch) - 1
         else:
-            last_index = np.argmin(self.epoch <= tmax)-1
-        self.subset = slice(first_index, last_index+1)
-
+            last_index = np.argmin(self.epoch <= tmax) - 1
+        self.subset = slice(first_index, last_index + 1)
 
 
 class MeasurementArray:
@@ -275,8 +290,7 @@ class MeasurementArray:
 
     def __iter__(self):
         return iter(self.arr)
-        
-       
+
     @classmethod
     def from_mongolist(cls, data_lst: list) -> "MeasurementArray":
         object = cls()
@@ -311,10 +325,8 @@ class MeasurementArray:
         for data in self.arr:
             data.select_range(tmin=tmin, tmax=tmax)
 
-
     def append(self, foo_obj: Measurements) -> None:
         """
         Append a new time serie to the stack and update the minimum and maximum if required.
         """
         self.arr.append(foo_obj)
-

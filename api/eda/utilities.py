@@ -3,13 +3,13 @@ from flask import render_template, session
 from sateda.dbconnector.mongo import MongoDB
 
 extra = {}
-extra['plotType'] = ["Scatter", "Line"]
-extra['posMode'] = ["XYZ", "NEU"]
+extra["plotType"] = ["Scatter", "Line"]
+extra["posMode"] = ["XYZ", "NEU"]
 
 
 def init_page(template: str) -> str:
     """
-    init Generate the empty page 
+    init Generate the empty page
 
     :return str: HTML Code
     """

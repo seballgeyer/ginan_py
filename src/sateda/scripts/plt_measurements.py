@@ -26,13 +26,13 @@ logger.addHandler(stdout_handler)
 
 
 def plot_measurements(args):
-    db = mongo.MongoDB(url=args['db'], data_base=args['coll'], port=args['port'])
+    db = mongo.MongoDB(url=args["db"], data_base=args["coll"], port=args["port"])
     logger.info(arg.site)
     # print(db.mongo_content["Site"])
     # print(db.mongo_content["Sat"])
 
-    sites = generate_list(args['site'], db.mongo_content["Site"])
-    sats = generate_list(args['sat'], db.mongo_content["Sat"])
+    sites = generate_list(args["site"], db.mongo_content["Site"])
+    sats = generate_list(args["sat"], db.mongo_content["Sat"])
     # sites = match_patterns(args.site, db.mongo_content["Site"])
     # print(sites, sats)
     # print(args)
@@ -40,7 +40,7 @@ def plot_measurements(args):
     # print(db.mongo_content)
     # if args.sat not in db.mongo_content["Sat"]:
     # raise "error"
-    keys = {k: k for k in args['field']}
+    keys = {k: k for k in args["field"]}
     dd = db.get_data("Measurements", sat=sats, site=sites, state=None, series="", keys=keys)
     data = []
     # print(len(dd))
@@ -74,7 +74,12 @@ if __name__ == "__main__":
         epilog="Text at the bottom of help",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--db", default="127.0.0.1", type=str, help="Mongo database url [default 127.0.0.1]")
+    parser.add_argument(
+        "--db",
+        default="127.0.0.1",
+        type=str,
+        help="Mongo database url [default 127.0.0.1]",
+    )
     parser.add_argument("--port", type=int, default=27017, help="Mongo port")
     parser.add_argument("--coll", type=str, required=True, help="Mongo collection to plot")
     parser.add_argument("--sat", type=str, required=True, nargs="+", help="Satellite name")

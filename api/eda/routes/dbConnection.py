@@ -5,10 +5,10 @@ from pymongo.errors import ServerSelectionTimeoutError
 
 # eda_bp = Blueprint('eda', __name__)
 
-dbconection_bp = Blueprint('dbConnector', __name__)
+dbconection_bp = Blueprint("dbConnector", __name__)
 
 
-@dbconection_bp.route('/', methods=['GET', 'POST'])
+@dbconection_bp.route("/", methods=["GET", "POST"])
 def index():
     """
     Render the index page with the database connection form.
@@ -19,12 +19,12 @@ def index():
     Returns:
         The rendered template 'connect.html' for GET requests, or the result from the corresponding handler for POST requests.
     """
-    if request.method == 'POST':
+    if request.method == "POST":
         return handle_post_request()
     else:
         db_ip = getattr(session, "mongo_ip", "127.0.0.1")
         db_port = getattr(session, "mongo_port", "27017")
-        return render_template('connect.jinja', db_ip=db_ip, db_port=db_port)
+        return render_template("connect.jinja", db_ip=db_ip, db_port=db_port)
 
 
 def handle_post_request():
@@ -39,14 +39,14 @@ def handle_post_request():
     form_data = request.form
     db_ip = getattr(session, "mongo_ip", "127.0.0.1")
     db_port = getattr(session, "mongo_port", "27017")
-    if 'connect' in form_data:
-        #TODO: need to raise exception (DB connection failed)
+    if "connect" in form_data:
+        # TODO: need to raise exception (DB connection failed)
         return handle_connect_request(form_data)
-    elif 'load' in form_data:
+    elif "load" in form_data:
         return handle_load_request(form_data)
     else:
         # Handle other POST requests if needed
-        return render_template('connect.jinja', db_ip=db_ip, db_port=db_port)
+        return render_template("connect.jinja", db_ip=db_ip, db_port=db_port)
 
 
 def handle_connect_request(form_data):
@@ -62,19 +62,20 @@ def handle_connect_request(form_data):
     Returns:
         The rendered template 'connect.html' with the retrieved data.
     """
-    connect_db_ip = form_data.get('db_ip', '')
-    db_port = int(form_data.get('db_port', 27017))
+    connect_db_ip = form_data.get("db_ip", "")
+    db_port = int(form_data.get("db_port", 27017))
 
     current_app.logger.info(f"connecting to {connect_db_ip}")
     try:
         client = MongoDB(url=connect_db_ip, port=db_port)
         client.connect()
         databases = client.get_list_db()
-        return render_template('connect.jinja', db_ip=connect_db_ip, db_port=db_port, databases=databases)
+        return render_template("connect.jinja", db_ip=connect_db_ip, db_port=db_port, databases=databases)
     except ServerSelectionTimeoutError:
-        error_message = f"Connection failed: MongoDB server doesn't exist or is not reachable. {connect_db_ip}:{db_port}"
-        return render_template('connect.jinja', db_ip=connect_db_ip, db_port=db_port, message=error_message)
-
+        error_message = (
+            f"Connection failed: MongoDB server doesn't exist or is not reachable. {connect_db_ip}:{db_port}"
+        )
+        return render_template("connect.jinja", db_ip=connect_db_ip, db_port=db_port, message=error_message)
 
 
 def handle_load_request(form_data):
@@ -90,9 +91,9 @@ def handle_load_request(form_data):
     Returns:
         The rendered template 'connect.html' with the retrieved data.
     """
-    connect_db_ip = form_data.get('db_ip', '')
-    db_name = form_data.get('dataset', '')
-    db_port = int(form_data.get('db_port', 27017))
+    connect_db_ip = form_data.get("db_ip", "")
+    db_name = form_data.get("dataset", "")
+    db_port = int(form_data.get("db_port", 27017))
     current_app.logger.info(f"connection to {connect_db_ip}, {db_name}")
     client = MongoDB(connect_db_ip, port=db_port, data_base=db_name)
     client.connect()
@@ -103,18 +104,24 @@ def handle_load_request(form_data):
     session["mongo_port"] = db_port
     for k in client.mongo_content.items():
         print(k)
-    nsat = len(client.mongo_content['Sat'])
-    nsite = len(client.mongo_content['Site'])
+    nsat = len(client.mongo_content["Sat"])
+    nsite = len(client.mongo_content["Site"])
     message = f"connected to {db_name}:  has {nsat} satellites and {nsite} sites"
     # Move the selected database to the end of the list (to ensure it is selected.)
     if db_name in databases:
         databases.remove(db_name)
         databases.insert(0, db_name)
 
-    return render_template('connect.jinja', db_ip=connect_db_ip, db_port=db_port, databases=databases, message=message)
+    return render_template(
+        "connect.jinja",
+        db_ip=connect_db_ip,
+        db_port=db_port,
+        databases=databases,
+        message=message,
+    )
 
 
-#TODO This doesn't work yet.0
+# TODO This doesn't work yet.0
 # @eda_bp.errorhandler(404)
 # def page_not_found(error):
 #     print("entering 404")

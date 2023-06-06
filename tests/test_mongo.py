@@ -65,5 +65,6 @@ class TestMongo(unittest.TestCase):
         with self.assertRaises(ServerSelectionTimeoutError):
             dbmongo.MongoDB("dummy.host", "test").connect()
 
+
 if __name__ == "__main__":
     unittest.main()

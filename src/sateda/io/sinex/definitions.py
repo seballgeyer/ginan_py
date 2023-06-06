@@ -14,7 +14,12 @@ def _read_sat_identifier(f):
             _comment = trim_string(line[39:])
             if _svn not in block_data:
                 block_data[_svn] = {}
-            block_data[_svn] = {"cospar": _cospar, "satCat": _satCat, "block": _block, "comment": _comment}
+            block_data[_svn] = {
+                "cospar": _cospar,
+                "satCat": _satCat,
+                "block": _block,
+                "comment": _comment,
+            }
     return block_data
 
 
@@ -49,7 +54,14 @@ def _read_sat_yaw(f):
             _comment = trim_string(line[49:])
             if _svn not in block_data:
                 block_data[_svn] = {}
-            block_data[_svn] = {_startdate: {"endDate": _enddate, "ub": _ub, "rate": _rate, "comment": _comment}}
+            block_data[_svn] = {
+                _startdate: {
+                    "endDate": _enddate,
+                    "ub": _ub,
+                    "rate": _rate,
+                    "comment": _comment,
+                }
+            }
     return block_data
 
 

@@ -4,11 +4,11 @@ from flask import Flask, render_template
 
 from .routes import register_routes
 
-app = Flask(__name__, template_folder='templates')  # Specify the templates folder
+app = Flask(__name__, template_folder="templates")  # Specify the templates folder
 
 register_routes(app)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run()
 
 
