@@ -65,9 +65,10 @@ def handle_post_request():
         # table[f"{_data.id}"]= {"mean": np.array(_data.data[_yaxis][i][_data.subset]).mean() }
     fig = go.Figure(data=trace)
     fig.update_layout(
-        showlegend=True,
-        xaxis={"rangeslider": {"visible": True}},
-    )
+            xaxis=dict(rangeslider=dict(visible=True)),
+            yaxis=dict(fixedrange=False),
+            height=600,
+        )
 
     return render_template(
         "clocks.jinja",

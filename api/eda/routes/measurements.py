@@ -95,7 +95,12 @@ def handle_post_request():
             )
             table[f"{_data.id}"] = {"mean": np.array(_data.data[_yaxis][_data.subset]).mean()}
     fig = go.Figure(data=trace)
-    fig.update_layout(showlegend=True)
+    fig.update_layout(
+            xaxis=dict(rangeslider=dict(visible=False)),
+            yaxis=dict(fixedrange=False, tickformat=".3f"),
+            height=800,
+        )
+    fig.layout.autosize = True
     return render_template(
         "measurements.jinja",
         content=client.mongo_content,
