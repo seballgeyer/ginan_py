@@ -11,6 +11,16 @@ Clocks
 {% block menuselection %}
 <form method="post">
 
+  <select name="clockType"  method="GET" style="width: 200px;" action="/">
+    {% for type_ in extra['clockType'] %}
+    {% if selection is defined and selection['clockType']|length and type_ in selection['clockType']%}
+    <option value="{{type_}}" SELECTED>{{type_}}</option>"
+    {%else%}
+    <option value="{{type_}}">{{type_}}</option>"
+    {%endif%}
+    {% endfor %}
+  </select>
+
   <select name="series_base"  method="GET" style="width: 200px;" action="/">
     {% for series_ in content['Series'] %}
     {% if selection is defined and selection['series_base']|length and series_ in selection['series_base']%}

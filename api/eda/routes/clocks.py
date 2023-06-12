@@ -29,14 +29,22 @@ def handle_post_request():
         form["exclude"] = 0
     else:
         form["exclude"] = int(form["exclude"])
-
+    form["clockType"] = form_data.get("clockType")
+    
     with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
         try:
             sat_list = client.mongo_content["Sat"]
+            site_list = client.mongo_content["Site"]
+            if form["clockType"] == "Satellite":
+                state = ["SAT_CLOCK"]
+                site_list = [""]
+            elif form["clockType"] == "Site":
+                state = ["REC_CLOCK"]
+                sat_list = ["", "G--"]
             data = client.get_data_to_measurement(
                 "States",
-                ["SAT_CLOCK"],
-                [""],
+                state,
+                site_list,
                 sat_list,
                 [form["series"]] + [form["series_base"]],
                 ["x"],
@@ -49,7 +57,10 @@ def handle_post_request():
                 extra=extra,
                 message=f"Error getting data: {str(err)}",
             )
-    clocks = Clocks(data, satlist=sat_list, series=form["series"], series_base=form["series_base"])
+    if form["clockType"] == "Satellite":
+        clocks = Clocks(data, satlist=sat_list, series=form["series"], series_base=form["series_base"])
+    else:
+        clocks = Clocks(data, sitelist=site_list, series=form["series"], series_base=form["series_base"])
     trace = []
     for _clock in clocks.process():
         trace.append(
