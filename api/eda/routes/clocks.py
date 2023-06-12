@@ -6,11 +6,11 @@ from flask import Blueprint, current_app, render_template, request, session
 from sateda.dbconnector.mongo import MongoDB
 from sateda.data.clocks import Clocks
 from ..utilities import init_page, extra
+from . import eda_bp
+# clocks_bp = Blueprint("clocks", __name__)
 
-clocks_bp = Blueprint("clocks", __name__)
 
-
-@clocks_bp.route("/clocks", methods=["GET", "POST"])
+@eda_bp.route("/clocks", methods=["GET", "POST"])
 def clocks():
     if request.method == "POST":
         return handle_post_request()

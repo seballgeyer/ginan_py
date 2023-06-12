@@ -1,17 +1,15 @@
-from .dbConnection import dbconection_bp
-from .measurements import measurements_bp
-from .config import config_bp
-from .states import states_bp
-from .errorPages import error_bp
-from .position import position_bp
-from .clocks import clocks_bp
+from flask import Blueprint
 
+eda_bp = Blueprint('eda', __name__, url_prefix="/")
 
+# @eda_bp.route('/')
+# def index():
+#     return 'EDA Application'
+
+# Define your routes for the EDA application here
+
+# Register the blueprint
 def register_routes(app):
-    app.register_blueprint(dbconection_bp)
-    app.register_blueprint(measurements_bp)
-    app.register_blueprint(config_bp)
-    app.register_blueprint(states_bp)
-    app.register_blueprint(error_bp)
-    app.register_blueprint(position_bp)
-    app.register_blueprint(clocks_bp)
+    app.register_blueprint(eda_bp)
+    
+from . import states, measurements, config, errorPages, position, clocks, dbConnection

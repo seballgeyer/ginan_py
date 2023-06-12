@@ -2,14 +2,12 @@ from flask import Blueprint, render_template, request, session
 from flask import current_app
 from sateda.dbconnector.mongo import MongoDB
 from pymongo.errors import ServerSelectionTimeoutError
-
-# eda_bp = Blueprint('eda', __name__)
-
-dbconection_bp = Blueprint("dbConnector", __name__)
+from . import eda_bp# eda_bp = Blueprint('eda', __name__)
 
 
-@dbconection_bp.route("/", methods=["GET", "POST"])
-def index():
+
+@eda_bp.route("/", methods=["GET", "POST"])
+def connect():
     """
     Render the index page with the database connection form.
 

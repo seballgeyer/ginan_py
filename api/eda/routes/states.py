@@ -6,8 +6,8 @@ from flask import Blueprint, current_app, render_template, request, session
 from sateda.dbconnector.mongo import MongoDB
 
 from ..utilities import init_page, extra
-
-states_bp = Blueprint("states", __name__)
+from . import eda_bp 
+# states_bp = Blueprint("states", __name__)
 
 pio.templates["draft"] = go.layout.Template(
     layout_annotations=[
@@ -41,7 +41,7 @@ pio.templates["draft"] = go.layout.Template(
 #         return init_page(template="states.jinja")
 
 
-@states_bp.route("/states", methods=["GET", "POST"])
+@eda_bp.route("/states", methods=["GET", "POST"])
 def states():
     if request.method == "POST":
         return handle_post_request()

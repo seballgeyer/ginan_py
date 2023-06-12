@@ -7,14 +7,13 @@ from sateda.data.measurements import MeasurementArray
 from sateda.dbconnector.mongo import MongoDB
 
 from ..utilities import init_page, extra
-
+from . import eda_bp
 
 # eda_bp = Blueprint('eda', __name__)
 
-position_bp = Blueprint("position", __name__)
 
 
-@position_bp.route("/position", methods=["GET", "POST"])
+@eda_bp.route("/position", methods=["GET", "POST"])
 def position() -> str:
     """
     Overall handeling of the page.

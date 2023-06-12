@@ -7,13 +7,13 @@ from flask import Blueprint, current_app, render_template, request, session
 from sateda.dbconnector.mongo import MongoDB
 
 from ..utilities import init_page, extra
-
+from . import eda_bp
 # eda_bp = Blueprint('eda', __name__)
 
 measurements_bp = Blueprint("measurements", __name__)
 
 
-@measurements_bp.route("/measurements", methods=["GET", "POST"])
+@eda_bp.route("/measurements", methods=["GET", "POST"])
 def measurements():
     if request.method == "POST":
         return handle_post_request()
