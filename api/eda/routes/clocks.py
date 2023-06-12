@@ -33,7 +33,6 @@ def handle_post_request():
     with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
         try:
             sat_list = client.mongo_content["Sat"]
-            print(sat_list)
             data = client.get_data_to_measurement(
                 "States",
                 ["SAT_CLOCK"],

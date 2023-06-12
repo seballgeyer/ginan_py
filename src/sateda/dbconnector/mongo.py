@@ -38,14 +38,10 @@ class MongoDB:
         except ConnectionError as err:
             raise ConnectionError("Failed to connect to MongoDB server") from err
 
-        # print(self.mongo_client)
 
     def get_content(self) -> None:
-        # logger.info(f"Getting content {self.mongo_url} {self.mongo_port} {self.mongo_db} ")
         for cursor in self.mongo_client[self.mongo_db]["Content"].find():
             self.mongo_content[cursor["type"]] = cursor["Values"]
-            # print(cursor["type"])
-        # print(self.mongo_content)
         self.mongo_content["Geometry"] = []
         geom = self.mongo_client[self.mongo_db]["Geometry"].find_one({})
         if geom is None:

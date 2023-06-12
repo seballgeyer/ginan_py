@@ -19,10 +19,9 @@ def connect():
     """
     if request.method == "POST":
         return handle_post_request()
-    else:
-        db_ip = getattr(session, "mongo_ip", "127.0.0.1")
-        db_port = getattr(session, "mongo_port", "27017")
-        return render_template("connect.jinja", db_ip=db_ip, db_port=db_port)
+    db_ip = getattr(session, "mongo_ip", "127.0.0.1")
+    db_port = getattr(session, "mongo_port", "27017")
+    return render_template("connect.jinja", db_ip=db_ip, db_port=db_port)
 
 
 def handle_post_request():
@@ -117,10 +116,3 @@ def handle_load_request(form_data):
         databases=databases,
         message=message,
     )
-
-
-# TODO This doesn't work yet.0
-# @eda_bp.errorhandler(404)
-# def page_not_found(error):
-#     print("entering 404")
-#     return render_template('404.html'), 404

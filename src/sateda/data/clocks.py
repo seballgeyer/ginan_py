@@ -35,13 +35,10 @@ class Clocks:
         2. create a common time vector for the two elements, filling the missing data with Nan.
         """
         result = MeasurementArray()
-        print(self.satlist)
         for sat in self.satlist:
-            # print("looking for sat", sat)
             reference = None
             comparison = None
             for data in self.data:
-                # print(data.id, self.series, self.series_base)
                 if data.id["sat"] == sat and data.id["series"] == self.series:
                     comparison = data
                 if data.id["sat"] == sat and data.id["series"] == self.series_base:
@@ -50,7 +47,6 @@ class Clocks:
                 common_time = np.union1d(reference.epoch, comparison.epoch)
                 common_data1 = np.full_like(common_time, np.nan, dtype="float64")
                 common_data2 = np.full_like(common_time, np.nan, dtype="float64")
-                # print(ref.data['x'].shape)
                 # check if there is a dupllicated epoch in ref.epoch, and remove it, as well as in ref.data['x']
                 # Comes from the PEA writting duplicates (last epochs) and inaptitude to deal with it.
                 for series in [reference, comparison]:
