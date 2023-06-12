@@ -37,21 +37,12 @@ class Clocks:
         2. create a common time vector for the two elements, filling the missing data with Nan.
         """
         result = MeasurementArray()
-        if self.satlist is None:
-            iterate_list = self.sitelist
-            key = "site"
-        else:
-            iterate_list = self.satlist
-            key = "sat"
+        iterate_list = self.sitelist if self.satlist is None else self.satlist
+        key = "site" if self.satlist is None else "sat"
             
         for sat in iterate_list:
-            reference = None
-            comparison = None
-            for data in self.data:
-                if data.id[key] == sat and data.id["series"] == self.series:
-                    comparison = data
-                if data.id[key] == sat and data.id["series"] == self.series_base:
-                    reference = data
+            reference, comparison = self._find_reference_and_comparison(sat, key)
+            
             if reference is not None and comparison is not None:
                 common_time = np.union1d(reference.epoch, comparison.epoch)
                 common_data1 = np.full_like(common_time, np.nan, dtype="float64")
@@ -86,3 +77,13 @@ class Clocks:
             _result.data["x"]  -= data[np.isin(common_time, _result.epoch)]
 
         return result
+
+    def _find_reference_and_comparison(self, sat, key):
+        reference = None
+        comparison = None
+        for data in self.data:
+            if data.id[key] == sat and data.id["series"] == self.series:
+                comparison = data
+            if data.id[key] == sat and data.id["series"] == self.series_base:
+                reference = data
+        return reference, comparison
