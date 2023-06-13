@@ -2,8 +2,7 @@ from flask import Blueprint, render_template, request, session
 from flask import current_app
 from sateda.dbconnector.mongo import MongoDB
 from pymongo.errors import ServerSelectionTimeoutError
-from . import eda_bp# eda_bp = Blueprint('eda', __name__)
-
+from . import eda_bp  # eda_bp = Blueprint('eda', __name__)
 
 
 @eda_bp.route("/", methods=["GET", "POST"])

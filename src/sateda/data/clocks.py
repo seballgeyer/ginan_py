@@ -39,10 +39,10 @@ class Clocks:
         result = MeasurementArray()
         iterate_list = self.sitelist if self.satlist is None else self.satlist
         key = "site" if self.satlist is None else "sat"
-            
+
         for sat in iterate_list:
             reference, comparison = self._find_reference_and_comparison(sat, key)
-            
+
             if reference is not None and comparison is not None:
                 common_time = np.union1d(reference.epoch, comparison.epoch)
                 common_data1 = np.full_like(common_time, np.nan, dtype="float64")
@@ -74,7 +74,7 @@ class Clocks:
             data[np.isin(common_time, _result.epoch), i] = _result.data["x"]
         data = np.nanmean(data, axis=1)
         for _result in result:
-            _result.data["x"]  -= data[np.isin(common_time, _result.epoch)]
+            _result.data["x"] -= data[np.isin(common_time, _result.epoch)]
 
         return result
 

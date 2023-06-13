@@ -12,7 +12,6 @@ from . import eda_bp
 # eda_bp = Blueprint('eda', __name__)
 
 
-
 @eda_bp.route("/position", methods=["GET", "POST"])
 def position() -> str:
     """

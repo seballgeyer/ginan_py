@@ -7,6 +7,7 @@ extra["plotType"] = ["Scatter", "Line"]
 extra["posMode"] = ["XYZ", "NEU"]
 extra["clockType"] = ["Site", "Satellite"]
 
+
 def init_page(template: str) -> str:
     """
     init Generate the empty page

@@ -7,6 +7,7 @@ from sateda.dbconnector.mongo import MongoDB
 from sateda.data.clocks import Clocks
 from ..utilities import init_page, extra
 from . import eda_bp
+
 # clocks_bp = Blueprint("clocks", __name__)
 
 
@@ -30,7 +31,7 @@ def handle_post_request():
     else:
         form["exclude"] = int(form["exclude"])
     form["clockType"] = form_data.get("clockType")
-    
+
     with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
         try:
             sat_list = client.mongo_content["Sat"]
@@ -75,10 +76,10 @@ def handle_post_request():
         # table[f"{_data.id}"]= {"mean": np.array(_data.data[_yaxis][i][_data.subset]).mean() }
     fig = go.Figure(data=trace)
     fig.update_layout(
-            xaxis=dict(rangeslider=dict(visible=True)),
-            yaxis=dict(fixedrange=False),
-            height=600,
-        )
+        xaxis=dict(rangeslider=dict(visible=True)),
+        yaxis=dict(fixedrange=False),
+        height=600,
+    )
 
     return render_template(
         "clocks.jinja",

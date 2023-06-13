@@ -38,7 +38,6 @@ class MongoDB:
         except ConnectionError as err:
             raise ConnectionError("Failed to connect to MongoDB server") from err
 
-
     def get_content(self) -> None:
         for cursor in self.mongo_client[self.mongo_db]["Content"].find():
             self.mongo_content[cursor["type"]] = cursor["Values"]

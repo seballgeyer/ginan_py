@@ -59,8 +59,6 @@ stdout_handler.setFormatter(formatter)
 logger.addHandler(stdout_handler)
 
 
-
-
 def plot_diff_measurements(diff, output_type):
     """
     Plots the differences between two sets of measurements.
@@ -79,8 +77,6 @@ def plot_diff_measurements(diff, output_type):
         plt.savefig(output_type, bbox_inches="tight")
 
 
-
-
 def connect_databases(args):
     """
     Connects to the MongoDB databases using the provided arguments.
@@ -89,14 +85,14 @@ def connect_databases(args):
     :return: A tuple of dictionaries with the measurements objects.
     """
     print(args)
-    print(args['db1'])
+    print(args["db1"])
     with MongoDB(args["db1"], data_base=args["dbname1"], port=args["port1"]) as client:
         try:
             sat_list = generate_list(args["sat"], client.mongo_content["Sat"])
             print(sat_list)
             if args["exclude"]:
                 sat_exlude = generate_list(args["exclude"], client.mongo_content["Sat"])
-                #remove the value from sat_exclude from the sat_list values
+                # remove the value from sat_exclude from the sat_list values
                 print("exclude", sat_exlude)
                 sat_list = [sat for sat in sat_list if sat not in sat_exlude]
             print(sat_list)
@@ -112,13 +108,13 @@ def connect_databases(args):
             print(str(err))
     clocks = Clocks(data, satlist=sat_list, series=args["coll1"], series_base=args["coll2"])
     clocks.process()
-    
+
     fig, axis = plt.subplots()
     for data in clocks.process():
         axis.plot(data.epoch, data.data["x"], label=data.id)
     # axis.legend()
     plt.show()
-        
+
     # keys = {k: k for k in args["field"]}
     # queues = []
     # threads = []
@@ -227,7 +223,7 @@ def main():
         default=None,
         help="Satellite name",
     )
-    
+
     parser.add_argument(
         "--exclude",
         type=str,

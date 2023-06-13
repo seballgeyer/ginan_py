@@ -6,7 +6,8 @@ from flask import Blueprint, current_app, render_template, request, session
 from sateda.dbconnector.mongo import MongoDB
 
 from ..utilities import init_page, extra
-from . import eda_bp 
+from . import eda_bp
+
 # states_bp = Blueprint("states", __name__)
 
 pio.templates["draft"] = go.layout.Template(
@@ -123,9 +124,9 @@ def handle_post_request() -> str:
                 table[f"{_data.id}"] = {"mean": np.array(_data.data[_yaxis][i][_data.subset]).mean()}
     fig = go.Figure(data=trace)
     fig.update_layout(
-            xaxis=dict(rangeslider=dict(visible=True)),
-            yaxis=dict(fixedrange=False),
-            height=600,
+        xaxis=dict(rangeslider=dict(visible=True)),
+        yaxis=dict(fixedrange=False),
+        height=600,
     )
     return render_template(
         "states.jinja",

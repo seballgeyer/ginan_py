@@ -119,7 +119,6 @@ class Measurements:
             if time_diff > 1:
                 self.gaps.append(i)
 
-        gaps_length = len(self.gaps)
         for i, gap_index in enumerate(self.gaps[:-1]):
             if self.gaps[i + 1] - gap_index == 1:
                 next_time_diff = (self.epoch[gap_index + 2] - self.epoch[gap_index + 1]) / np.timedelta64(1, "s")
@@ -258,8 +257,6 @@ class Measurements:
                 axis.plot(self.epoch, value, label=key)
         axis.legend()
 
-    """function"""
-
     def get_stats(self):
         """
         Print statistics for the data stored in this Measurements object.
@@ -289,19 +286,33 @@ class MeasurementArray:
         self.tmax = None
 
     def __iter__(self):
+        """
+        __iter__ determine the iterator of the class based on the data in the array
+
+        :return iterator: _description_
+        """
         return iter(self.arr)
 
     @classmethod
     def from_mongolist(cls, data_lst: list) -> "MeasurementArray":
-        object = cls()
+        """
+        from_mongolist Load a list of dictionary from a mongoDB query and return a MeasurementArray object
+
+        :param list data_lst: List of data from a mongoDB query
+        :return MeasurementArray: object of the data in it
+        """
+        temporary_loader = cls()
         for data in data_lst:
             try:
-                object.append(Measurements.from_dictionary(data))
+                temporary_loader.append(Measurements.from_dictionary(data))
             except:
                 logger.debug("skyping this one")
-        return object
+        return temporary_loader
 
     def find_minmax(self):
+        """
+        find_minmax determine the minimum and maximum time of all series in the array
+        """
         try:
             self.tmin = min(obj.epoch[0] for obj in self.arr)
             self.tmax = max(obj.epoch[-1] for obj in self.arr)
@@ -315,7 +326,13 @@ class MeasurementArray:
         """
         self.arr.sort()
 
-    def adjust_slice(self, minutes_min=None, minutes_max=None) -> None:
+    def adjust_slice(self, minutes_min: int = None, minutes_max: int = None) -> None:
+        """
+        adjust_slice trim the data of a minimum and maximum number of minutes from the extrem of all datas.
+
+        :param int minutes_min: integer of minutes to trim from the set of data, defaults to None
+        :param int minutes_max: integer of minutes to trim from the set of data, defaults to None
+        """
         tmin = None
         tmax = None
         if minutes_min:

@@ -2,6 +2,7 @@
 
 from flask import Blueprint, render_template
 from . import eda_bp
+
 # error_bp = Blueprint("error_pages", __name__)
 
 

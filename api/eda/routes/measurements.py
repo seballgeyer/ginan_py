@@ -8,6 +8,7 @@ from sateda.dbconnector.mongo import MongoDB
 
 from ..utilities import init_page, extra
 from . import eda_bp
+
 # eda_bp = Blueprint('eda', __name__)
 
 measurements_bp = Blueprint("measurements", __name__)
@@ -96,10 +97,10 @@ def handle_post_request():
             table[f"{_data.id}"] = {"mean": np.array(_data.data[_yaxis][_data.subset]).mean()}
     fig = go.Figure(data=trace)
     fig.update_layout(
-            xaxis=dict(rangeslider=dict(visible=False)),
-            yaxis=dict(fixedrange=False, tickformat=".3f"),
-            height=800,
-        )
+        xaxis=dict(rangeslider=dict(visible=False)),
+        yaxis=dict(fixedrange=False, tickformat=".3f"),
+        height=800,
+    )
     fig.layout.autosize = True
     return render_template(
         "measurements.jinja",
