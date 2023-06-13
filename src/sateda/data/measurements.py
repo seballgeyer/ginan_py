@@ -267,7 +267,13 @@ class Measurements:
             string += f"\n\t{key} {self.data[key].mean(): .4e} sigma  {self.data[key].std(): .4e} RMS {rms:.4e}"
         logger.info(string)
 
-    def select_range(self, tmin=None, tmax=None):
+    def select_range(self, tmin:int=None, tmax:int=None) -> None:
+        """
+        select_range generate the slice of data between the time requested.
+
+        :param _type_ tmin: minimum time to trim, defaults to None
+        :param _type_ tmax: maximum time to trim, defaults to None
+        """
         if tmin is None:
             first_index = 0
         else:
