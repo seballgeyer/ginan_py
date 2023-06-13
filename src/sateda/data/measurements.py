@@ -299,6 +299,23 @@ class MeasurementArray:
         """
         return iter(self.arr)
 
+    def __sub__(self, other):
+        """
+        __sub__ Function to make the difference of 2 MeasurementArray object. It will return a MeasurementArray object
+        1. First need to identify the common object arr[?].id have the same sat and site
+        2. Make the differences between those Measurement objects (already implemented in Measurement class)
+
+        :param _type_ other: _description_
+        :return _type_: _description_
+        """
+        results = MeasurementArray()
+        for data in self.arr:
+            for other_data in other.arr:
+                if data.id["sat"] == other_data.id["sat"] and data.id["site"] == other_data.id["site"]:
+                    results.append(data - other_data)
+        return results
+        
+        
     @classmethod
     def from_mongolist(cls, data_lst: list) -> "MeasurementArray":
         """
