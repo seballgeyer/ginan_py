@@ -108,7 +108,7 @@ class MongoDB:
         logger.info(agg_pipeline)
         cursor = self.mongo_client[self.mongo_db][collection].aggregate(agg_pipeline)
         # check if cursor is empty
-        if not next(cursor, None):
+        if not cursor.alive:
             raise ValueError("No data found")
         return list(cursor)
 
