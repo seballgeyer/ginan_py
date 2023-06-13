@@ -42,9 +42,7 @@ class tests_measurementArray(unittest.TestCase):
             "x": [1.0] * len(deltatt),
         }
         data.append(Measurements.from_dictionary(data_dict))
-        print(data.arr[0].id, reference.arr[0].id)
         res = reference-data
-        print(res.arr[0].id)
         self.assertEqual(len(res.arr),1)
         
         
