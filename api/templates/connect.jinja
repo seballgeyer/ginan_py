@@ -43,7 +43,7 @@
                         {% if databases %}
                         <div>
                             <label for="dataset">Select Dataset in DB:</label>
-                            <select name="dataset" id="dataset">
+                            <select name="dataset" multiple id="dataset">
                                 {% for database in databases %}
                                 <option value="{{ database }}">{{ database }}</option>
                                 {% endfor %}

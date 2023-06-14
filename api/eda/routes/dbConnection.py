@@ -88,30 +88,29 @@ def handle_load_request(form_data):
         The rendered template 'connect.html' with the retrieved data.
     """
     connect_db_ip = form_data.get("db_ip", "")
-    db_name = form_data.get("dataset", "")
+    db_name = form_data.getlist("dataset")
     db_port = int(form_data.get("db_port", 27017))
     current_app.logger.info(f"connection to {connect_db_ip}, {db_name}")
-    client = MongoDB(connect_db_ip, port=db_port, data_base=db_name)
-    client.connect()
-    databases = client.get_list_db()
-    client.get_content()
+    message = []
     session["mongo_ip"] = connect_db_ip
     session["mongo_db"] = db_name
     session["mongo_port"] = db_port
-    for k in client.mongo_content.items():
-        print(k)
-    nsat = len(client.mongo_content["Sat"])
-    nsite = len(client.mongo_content["Site"])
-    message = f"connected to {db_name}:  has {nsat} satellites and {nsite} sites"
+    for database  in db_name:
+        with MongoDB(connect_db_ip, port=db_port, data_base=database) as client:
+            databases = client.get_list_db()
+            client.get_content()
+            nsat = len(client.mongo_content["Sat"])
+            nsite = len(client.mongo_content["Site"])
+            message.append(f"connected to {database}:  has {nsat} satellites and {nsite} sites")
     # Move the selected database to the end of the list (to ensure it is selected.)
     if db_name in databases:
         databases.remove(db_name)
         databases.insert(0, db_name)
-
+    print("\n".join(message))
     return render_template(
         "connect.jinja",
         db_ip=connect_db_ip,
         db_port=db_port,
         databases=databases,
-        message=message,
+        message="<br>".join(message),
     )
