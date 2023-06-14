@@ -76,9 +76,7 @@ class Position:
             rot[2,1] = np.cos(lat)
             rot[2,2] = np.sin(lat)
             print(rot.shape, data.data['x'].shape)
-            # enu = np.einsum('ijk,jk->ik', rot, data.data['x'])
             enu = np.matmul(rot.transpose(), data.data['x'][:,:,np.newaxis])[:,:,0]
-            print(enu.shape, data.data['x'].shape)
             data.data['x'] = np.matmul(rot.transpose(), data.data['x'][:,:,np.newaxis])[:,:,0]
         
         

@@ -172,8 +172,6 @@ class Measurements:
 
         results = self
         _common, in_self, in_t = np.intersect1d(self.epoch, other.epoch, return_indices=True)
-        in_self = np.where(in_self)[0].astype(int)
-        in_t = np.where(in_t)[0].astype(int)
         results.epoch = self.epoch[in_self]
 
         results.data = {key: self.data[key][in_self] - other.data[key][in_t] for key in common_keys}
@@ -311,6 +309,7 @@ class MeasurementArray:
         results = MeasurementArray()
         for data in self.arr:
             for other_data in other.arr:
+                print("looking to match", data.id, other_data.id, data.id["sat"] == other_data.id["sat"] , data.id["site"] == other_data.id["site"])
                 if data.id["sat"] == other_data.id["sat"] and data.id["site"] == other_data.id["site"]:
                     results.append(data - other_data)
         return results
