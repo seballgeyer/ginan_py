@@ -370,3 +370,18 @@ class MeasurementArray:
         Append a new time serie to the stack and update the minimum and maximum if required.
         """
         self.arr.append(foo_obj)
+        
+    def locate(self, site: str = None, sat: str = None, series: str = None, state: str = None) -> Measurements:
+        """
+        locate Return the element in the self.arr that match the criteria
+
+        :param str site: _description_, defaults to None
+        :param str sat: _description_, defaults to None
+        :param str series: _description_, defaults to None
+        :param str state: _description_, defaults to None
+        :return Measurements: _description_
+        """
+        for data in self.arr:
+            if site is not None and data.id["site"] == site:
+                return data
+        raise ValueError("Data not found")

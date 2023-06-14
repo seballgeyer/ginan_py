@@ -4,7 +4,7 @@ from sateda.dbconnector.mongo import MongoDB
 
 extra = {}
 extra["plotType"] = ["Scatter", "Line"]
-extra["posMode"] = ["XYZ", "NEU"]
+extra["posMode"] = ["XYZ", "ENU"]
 extra["clockType"] = ["Site", "Satellite"]
 
 

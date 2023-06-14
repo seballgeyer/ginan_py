@@ -39,7 +39,7 @@ Positions
 
   <select name=mode  method="GET" action="/">
     {% for mode in extra['posMode'] %}
-    {% if selection is defined and extra['posMode']|length and mode in extra['posMode']%}
+    {% if selection is defined and selection['mode']|length and mode in selection['mode']%}
     <option value="{{mode}}" SELECTED>{{mode}}</option>"
     {%else%}
     <option value="{{mode}}">{{mode}}</option>"

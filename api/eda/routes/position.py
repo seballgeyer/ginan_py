@@ -4,6 +4,7 @@ import plotly.io as pio
 from flask import Blueprint, current_app, render_template, request, session
 
 from sateda.data.measurements import MeasurementArray
+from sateda.data.position import Position
 from sateda.dbconnector.mongo import MongoDB
 
 from ..utilities import init_page, extra
@@ -37,7 +38,7 @@ def handle_post_request() -> str:
         form["exclude"] = int(form["exclude"])
     form["mode"] = form_data.get("mode")
     form["site"] = form_data.getlist("site")
-    
+    print(form["mode"], form["site"], form["series"], form["series_base"])
     with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
         try:
             data = client.get_data_to_measurement(
@@ -65,13 +66,14 @@ def handle_post_request() -> str:
                 message=f"Error getting data: {str(err)}",
             )
     # print(len(data.arr),len(base.arr))
-    residuals = data - base
+    position = Position(data, base)
+    if form["mode"] == "ENU":
+        position.rotate_enu()
+    # residuals = data - base
     trace = []
-    for _residual in residuals:
+    for _residual in position:
         print(_residual.data["x"].shape)
         for i in range(3):
-            # print(i)
-            # print(_residual.data["x"][:,i])
             trace.append(
                 go.Scatter(
                     x=_residual.epoch,
