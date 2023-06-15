@@ -3,9 +3,10 @@ import plotly.graph_objs as go
 import plotly.io as pio
 from flask import Blueprint, current_app, render_template, request, session
 
+from sateda.data.measurements import MeasurementArray, Measurements
 from sateda.dbconnector.mongo import MongoDB
 
-from ..utilities import init_page, extra
+from ..utilities import extra, init_page
 from . import eda_bp
 
 # states_bp = Blueprint("states", __name__)
@@ -79,25 +80,33 @@ def handle_post_request() -> str:
         f"GET {form['plot']}, {form['series']}, {form['sat']}, {form['site']}, {form['state']}, {form['xaxis']}, {form['yaxis']}, "
         f"{form['yaxis']+[form['xaxis']]}, exclude {form['exclude']} mintues"
     )
-    with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
-        try:
-            data = client.get_data_to_measurement(
+    
+    data = MeasurementArray()
+
+    for series in form["series"] :
+        db_, series_ = series.split("\\")
+        print(db_, series_)
+        with MongoDB(session["mongo_ip"], data_base=db_, port=session["mongo_port"]) as client:
+            try:
+                for req in client.get_data(
                 "States",
                 form["state"],
                 form["site"],
                 form["sat"],
-                form["series"],
+                [series_],
                 form["yaxis"] + [form["xaxis"]],
-            )
-        except Exception as err:
-            current_app.logger.error(err)
-            return render_template(
-                "states.jinja",
-                content=client.mongo_content,
-                extra=extra,
-                message=f"Error getting data: {str(err)}",
-            )
-    print(len(data.arr))
+                ):
+                    data.append(Measurements.from_dictionary(req))
+                
+            except Exception as err:
+                current_app.logger.error(err)
+    if len(data.arr) == 0:
+        return render_template(
+            "states.jinja",
+            content=client.mongo_content,
+            extra=extra,
+            message=f"Error getting data: No data",
+        )
     data.find_minmax()
     data.adjust_slice(minutes_min=form["exclude"], minutes_max=None)
     trace = []

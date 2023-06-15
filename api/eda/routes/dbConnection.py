@@ -100,6 +100,7 @@ def handle_load_request(form_data):
     series = []
     mesurements = []
     geometry = []
+    state = []
     for database  in db_name:
         with MongoDB(connect_db_ip, port=db_port, data_base=database) as client:
             databases = client.get_list_db()
@@ -111,14 +112,15 @@ def handle_load_request(form_data):
             sat += client.mongo_content["Sat"]
             series += [ f"{database}\{series}" for series in client.mongo_content["Series"]]
             mesurements += client.mongo_content["Measurements"]
-            geometry = client.mongo_content["Geometry"]
+            geometry += client.mongo_content["Geometry"]
+            state += client.mongo_content["State"]
     print(site, sat, series)
     print("\n".join(message))
     session["list_sat"] = sorted(set(sat))
     session["list_site"] = sorted(set(site))
     session["list_series"] = sorted(set(series))
     session["list_measurements"] = sorted(set(geometry)) + sorted(set(mesurements))
-    
+    session["list_state"] = sorted(set(state))
     return render_template(
         "connect.jinja",
         db_ip=connect_db_ip,

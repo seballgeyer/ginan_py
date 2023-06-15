@@ -6,7 +6,7 @@ extra = {}
 extra["plotType"] = ["Scatter", "Line"]
 extra["posMode"] = ["XYZ", "ENU"]
 extra["clockType"] = ["Site", "Satellite"]
-
+extra["stateField"] = ["x", "dx", "P"]
 
 def init_page(template: str) -> str:
     """
