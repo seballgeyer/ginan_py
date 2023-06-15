@@ -64,7 +64,7 @@ class Position:
         for data in self.data:
             #locate the base with the same station id
             base = self.base.locate(site=data.id['site'])
-            lat, lon, height = xyz2blh(base.data['x'][:-1:,0], base.data['x'][:-1:,1], base.data['x'][:-1:,2])
+            lat, lon, height = xyz2blh(base.data['x'][:,0], base.data['x'][:,1], base.data['x'][:,2])
             rot = np.zeros((3,3, len(lat)))
             rot[0,0] = -np.sin(lon)
             rot[0,1] = -np.sin(lat)*np.cos(lon)

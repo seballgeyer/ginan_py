@@ -39,14 +39,24 @@ def handle_post_request() -> str:
     form["mode"] = form_data.get("mode")
     form["site"] = form_data.getlist("site")
     print(form["mode"], form["site"], form["series"], form["series_base"])
-    with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
+    db_, series_ = form["series"].split("\\")
+    db_2, series_2 = form["series_base"].split("\\")
+    if db_ != db_2:
+        return render_template(
+            "position.jinja",
+            # content=client.mongo_content,
+            extra=extra,
+            message=f"Error getting data: Can only compare series from the same database",
+        )
+        
+    with MongoDB(session["mongo_ip"], data_base=db_, port=session["mongo_port"]) as client:
         try:
             data = client.get_data_to_measurement(
                 "States",
                 ["REC_POS"],
                 form["site"],
                 [""],
-                [form["series"]] ,
+                [series_] ,
                 ["x"],
             )
             base = client.get_data_to_measurement(
@@ -54,7 +64,7 @@ def handle_post_request() -> str:
                 ["REC_POS"],
                 form["site"],
                 [""],
-                [form["series_base"]] ,
+                [series_2] ,
                 ["x"],
             )
         except Exception as err:

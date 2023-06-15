@@ -18,7 +18,7 @@ Positions
   </select>
 
   <select name="series"  method="GET" style="width: 200px;" action="/">
-    {% for series_ in content['Series'] %}
+    {% for series_ in session['list_series'] %}
     {% if selection is defined and selection['series']|length and series_ in selection['series']%}
     <option value="{{series_}}" SELECTED>{{series_}}</option>"
     {%else%}
@@ -28,7 +28,7 @@ Positions
   </select>
 
   <select name="series_base" method="GET" style="width: 200px;" action="/">
-    {% for series_ in content['Series'] %}
+    {% for series_ in session['list_series'] %}
     {% if selection is defined and selection['series_base']|length and series_ in selection['series_base']%}
     <option value="{{series_}}" SELECTED>{{series_}}</option>"
     {%else%}
@@ -48,7 +48,7 @@ Positions
   </select>
 
   <select name=site multiple method="GET" action="/">
-    {% for site_ in content['Site'] %}
+    {% for site_ in session['list_site'] %}
     {% if selection is defined and selection['site']|length and site_ in selection['site']%}
     <option value="{{site_}}" SELECTED>{{site_}}</option>"
     {%else%}
