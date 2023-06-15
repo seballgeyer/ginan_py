@@ -32,7 +32,16 @@ def handle_post_request():
         form["exclude"] = int(form["exclude"])
     form["clockType"] = form_data.get("clockType")
 
-    with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
+    db_, series_ = form["series"].split("\\")
+    db_2, series_2 = form["series_base"].split("\\")
+    if db_ != db_2:
+        return render_template(
+            "clocks.jinja",
+            # content=client.mongo_content,
+            extra=extra,
+            message=f"Error getting data: Can only compare series from the same database",
+        )
+    with MongoDB(session["mongo_ip"], data_base=db_, port=session["mongo_port"]) as client:
         try:
             sat_list = client.mongo_content["Sat"]
             site_list = client.mongo_content["Site"]
@@ -47,7 +56,7 @@ def handle_post_request():
                 state,
                 site_list,
                 sat_list,
-                [form["series"]] + [form["series_base"]],
+                [series_] + [series_2],
                 ["x"],
             )
         except Exception as err:
@@ -58,10 +67,13 @@ def handle_post_request():
                 extra=extra,
                 message=f"Error getting data: {str(err)}",
             )
+    print(len(data.arr))
+    for d in data.arr:
+        print(d.id)
     if form["clockType"] == "Satellite":
-        clocks = Clocks(data, satlist=sat_list, series=form["series"], series_base=form["series_base"])
+        clocks = Clocks(data, satlist=sat_list, series=series_, series_base=series_2)
     else:
-        clocks = Clocks(data, sitelist=site_list, series=form["series"], series_base=form["series_base"])
+        clocks = Clocks(data, sitelist=site_list, series=series_, series_base=series_2)
     trace = []
     for _clock in clocks.process():
         trace.append(
