@@ -5,7 +5,7 @@ import plotly.io as pio
 from flask import Blueprint, current_app, render_template, request, session
 
 from sateda.dbconnector.mongo import MongoDB
-
+from sateda.data.measurements import MeasurementArray, Measurements
 from ..utilities import init_page, extra
 from . import eda_bp
 
@@ -58,24 +58,35 @@ def handle_post_request():
         f"GET {form['plot']}, {form['series']}, {form['sat']}, {form['site']}, {form['xaxis']}, {form['yaxis']}, {form['yaxis']+[form['xaxis']]}, exclude {form['exclude']} mintues"
     )
     current_app.logger.info("Getting Connection")
-    with MongoDB(session["mongo_ip"], data_base=session["mongo_db"], port=session["mongo_port"]) as client:
-        try:
-            data = client.get_data_to_measurement(
-                "Measurements",
-                None,
-                form["site"],
-                form["sat"],
-                form["series"],
-                form["yaxis"] + [form["xaxis"]],
-            )
-        except Exception as err:
-            current_app.logger.error(err)
-            return render_template(
-                "measurements.jinja",
-                content=client.mongo_content,
-                extra=extra,
-                message=f"Error getting data: {str(err)}",
-            )
+    data = MeasurementArray()
+    print("------")
+    for series in form["series"] :
+        print(series)
+        db_, series_ = series.split("\\")
+        with MongoDB(session["mongo_ip"], data_base=db_, port=session["mongo_port"]) as client:
+            try:
+                for req in client.get_data(
+                    "Measurements",
+                    None,
+                    form["site"],
+                    form["sat"],
+                    [series_],
+                    form["yaxis"] + [form["xaxis"]],
+                ):
+                    data.append(Measurements.from_dictionary(req))
+                print(len(data.arr))
+            except Exception as err:
+                #TODO not sure why it is going in there 
+                print(form["site"], form["sat"], [series_], form["yaxis"] + [form["xaxis"]])
+                current_app.logger.error(err)
+    if len(data.arr) == 0:
+        return render_template(
+            "measurements.jinja",
+            content=client.mongo_content,
+            extra=extra,
+            message=f"Error getting data: No data",
+        )
+    print(data)
     data.find_minmax()
     data.adjust_slice(minutes_min=form["exclude"], minutes_max=None)
     for data_ in data:

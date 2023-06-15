@@ -95,6 +95,11 @@ def handle_load_request(form_data):
     session["mongo_ip"] = connect_db_ip
     session["mongo_db"] = db_name
     session["mongo_port"] = db_port
+    site = []
+    sat = []
+    series = []
+    mesurements = []
+    geometry = []
     for database  in db_name:
         with MongoDB(connect_db_ip, port=db_port, data_base=database) as client:
             databases = client.get_list_db()
@@ -102,11 +107,18 @@ def handle_load_request(form_data):
             nsat = len(client.mongo_content["Sat"])
             nsite = len(client.mongo_content["Site"])
             message.append(f"connected to {database}:  has {nsat} satellites and {nsite} sites")
-    # Move the selected database to the end of the list (to ensure it is selected.)
-    if db_name in databases:
-        databases.remove(db_name)
-        databases.insert(0, db_name)
+            site += client.mongo_content["Site"]
+            sat += client.mongo_content["Sat"]
+            series += [ f"{database}\{series}" for series in client.mongo_content["Series"]]
+            mesurements += client.mongo_content["Measurements"]
+            geometry = client.mongo_content["Geometry"]
+    print(site, sat, series)
     print("\n".join(message))
+    session["list_sat"] = sorted(set(sat))
+    session["list_site"] = sorted(set(site))
+    session["list_series"] = sorted(set(series))
+    session["list_measurements"] = sorted(set(geometry)) + sorted(set(mesurements))
+    
     return render_template(
         "connect.jinja",
         db_ip=connect_db_ip,
