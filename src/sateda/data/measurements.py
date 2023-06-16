@@ -282,6 +282,23 @@ class Measurements:
             last_index = np.argmin(self.epoch <= tmax) - 1
         self.subset = slice(first_index, last_index + 1)
 
+    def mask_outliers(self, sigma:int=10) -> bool:
+        """
+        mask_outliers mask the outliers in the data based on the sigma value
+
+        :param _type_ sigma: sigma value to mask, defaults to 10
+        """
+        found = False
+        for key in self.data:
+            mean = np.nanmean(self.data[key])
+            std = np.nanstd(self.data[key])
+            mask = np.abs(self.data[key] - mean) > sigma * std
+            # if mask contains only one true value, set found to True
+            if np.sum(mask) == 1:
+                found = True
+            self.data[key][mask] = np.nan
+        return found
+        
 
 class MeasurementArray:
     def __init__(self) -> None:
