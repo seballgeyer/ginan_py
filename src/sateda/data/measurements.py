@@ -83,7 +83,7 @@ class Measurements:
         self.subset = slice(None, None, None)
 
     @classmethod
-    def from_dictionary(cls, data_dict: dict) -> "Measurements":
+    def from_dictionary(cls, data_dict: dict, reshape_on:str = None) -> "Measurements":
         """
         Initializes a Measurements object.
 
@@ -99,11 +99,27 @@ class Measurements:
         epoch = np.array([np.datetime64(t) for t in data_dict["t"]])
         if max([len(value) for key, value in data_dict.items() if key not in ["t", "_id", "Epoch"]]) == 0:
             raise ValueError("No interesting data")
-        data = {
-            key: np.asarray(value)
-            for key, value in data_dict.items()
-            if key not in ["t", "_id", "Epoch"] and len(value) != 0
-        }
+        if reshape_on:
+            reshaped = data_dict[reshape_on]
+            unique = np.unique([item for sublist in reshaped for item in sublist])
+            print(unique)
+            data = {}
+            for key in data_dict:
+                if key not in ["t", "_id", "Epoch", reshape_on]:
+                    for u in unique:
+                        data[f"{key}_{u}"] = np.empty_like((epoch), dtype='float64')
+                        for i, row in enumerate(data_dict[key]):
+                            n = np.asarray(data_dict[reshape_on][i])
+                            index = np.where(n == u)[0]
+                            if len(index) == 1:
+                                data[f"{key}_{u}"][i] = row[index[0]]   
+                        data[f"{key}_{u}"] = data[f"{key}_{u}"].reshape(-1, 1)                 
+        else:    
+            data = {
+                key: np.asarray(value).reshape(-1, 1) if len(np.asarray(value).shape) == 1 else np.asarray(value)
+                for key, value in data_dict.items()
+                if key not in ["t", "_id", "Epoch"] and len(value) != 0
+            }
         return cls(sat, identifier, epoch, data)
 
     def find_gaps(self, delta=10):
@@ -375,9 +391,11 @@ class MeasurementArray:
         tmin = None
         tmax = None
         if minutes_min:
-            tmin = self.tmin + datetime.timedelta(minutes=minutes_min)
+            print(self.tmin, minutes_min)
+            #need to change this line, adding miniutes_min as numpy datetime objects
+            tmin = self.tmin + np.timedelta64(minutes_min, 'm')#datetime.timedelta(minutes=minutes_min)
         if minutes_max:
-            tmax = self.tmax - datetime.timedelta(minutes=tmax)
+            tmax = self.tmax - np.timedelta64(minutes_max, 'm')
         for data in self.arr:
             data.select_range(tmin=tmin, tmax=tmax)
 

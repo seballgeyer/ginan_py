@@ -94,9 +94,9 @@ def handle_post_request() -> str:
                 form["site"],
                 form["sat"],
                 [series_],
-                form["yaxis"] + [form["xaxis"]],
+                form["yaxis"] + [form["xaxis"]] + ["Num"],
                 ):
-                    data.append(Measurements.from_dictionary(req))
+                    data.append(Measurements.from_dictionary(req, reshape_on="Num"))
                 
             except Exception as err:
                 current_app.logger.error(err)
@@ -117,7 +117,7 @@ def handle_post_request() -> str:
             _data.detrend(degree=int(form["degree"]))
 
     for _data in data:
-        for _yaxis in form["yaxis"]:
+        for _yaxis in _data.data:
             for i in range(_data.data[_yaxis].shape[1]):
                 _data.id["state"] = _yaxis
                 _data.id["ax"] = i
