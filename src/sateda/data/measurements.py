@@ -113,10 +113,11 @@ class Measurements:
                             index = np.where(n == u)[0]
                             if len(index) == 1:
                                 data[f"{key}_{u}"][i] = row[index[0]]   
-                        data[f"{key}_{u}"] = data[f"{key}_{u}"].reshape(-1, 1)                 
+                        # data[f"{key}_{u}"] = data[f"{key}_{u}"].reshape(-1, 1)                 
         else:    
             data = {
-                key: np.asarray(value).reshape(-1, 1) if len(np.asarray(value).shape) == 1 else np.asarray(value)
+                # key: np.asarray(value).reshape(-1, 1) if len(np.asarray(value).shape) == 1 else np.asarray(value)
+                key: np.asarray(value)
                 for key, value in data_dict.items()
                 if key not in ["t", "_id", "Epoch"] and len(value) != 0
             }
@@ -312,7 +313,7 @@ class Measurements:
             # if mask contains only one true value, set found to True
             if np.sum(mask) == 1:
                 found = True
-            self.data[key][mask] = np.nan
+                self.data[key][mask] = np.nan
         return found
         
 

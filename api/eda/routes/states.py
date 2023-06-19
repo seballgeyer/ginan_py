@@ -118,19 +118,19 @@ def handle_post_request() -> str:
 
     for _data in data:
         for _yaxis in _data.data:
-            for i in range(_data.data[_yaxis].shape[1]):
-                _data.id["state"] = _yaxis
-                _data.id["ax"] = i
-                trace.append(
-                    go.Scatter(
-                        x=_data.epoch[_data.subset],
-                        y=_data.data[_yaxis][_data.subset, i],
-                        mode=mode,
-                        name=f"{_data.id}",
-                        hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_data.id}",
-                    )
+            # for i in range(_data.data[_yaxis]):
+            _data.id["state"] = _yaxis
+            # _data.id["ax"] = i
+            trace.append(
+                go.Scatter(
+                    x=_data.epoch[_data.subset],
+                    y=_data.data[_yaxis][_data.subset],
+                    mode=mode,
+                    name=f"{_data.id}",
+                    hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_data.id}",
                 )
-                table[f"{_data.id}"] = {"mean": np.array(_data.data[_yaxis][i][_data.subset]).mean()}
+            )
+            table[f"{_data.id}"] = {"mean": np.array(_data.data[_yaxis][_data.subset]).mean()}
     fig = go.Figure(data=trace)
     fig.update_layout(
         xaxis=dict(rangeslider=dict(visible=True)),
