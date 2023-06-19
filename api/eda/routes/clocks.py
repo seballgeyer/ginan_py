@@ -67,9 +67,6 @@ def handle_post_request():
                 extra=extra,
                 message=f"Error getting data: {str(err)}",
             )
-    print(len(data.arr))
-    for d in data.arr:
-        print(d.id)
     if form["clockType"] == "Satellite":
         clocks = Clocks(data, satlist=sat_list, series=series_, series_base=series_2)
     else:

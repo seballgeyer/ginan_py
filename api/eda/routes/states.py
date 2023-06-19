@@ -95,11 +95,15 @@ def handle_post_request() -> str:
                 form["sat"],
                 [series_],
                 form["yaxis"] + [form["xaxis"]] + ["Num"],
-                ):
-                    data.append(Measurements.from_dictionary(req, reshape_on="Num"))
-                
-            except Exception as err:
+                ): 
+                    try:
+                        data.append(Measurements.from_dictionary(req, reshape_on="Num"))     
+                    except ValueError as err:
+                        current_app.logger.warning(err)
+                        continue   
+            except ValueError as err:
                 current_app.logger.error(err)
+                continue
     if len(data.arr) == 0:
         return render_template(
             "states.jinja",

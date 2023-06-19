@@ -98,7 +98,7 @@ class Measurements:
         identifier = data_dict["_id"]
         epoch = np.array([np.datetime64(t) for t in data_dict["t"]])
         if max([len(value) for key, value in data_dict.items() if key not in ["t", "_id", "Epoch"]]) == 0:
-            raise ValueError("No interesting data")
+            raise ValueError(f"No data for: {identifier}")
         if reshape_on:
             reshaped = data_dict[reshape_on]
             unique = np.unique([item for sublist in reshaped for item in sublist])
@@ -362,7 +362,7 @@ class MeasurementArray:
             try:
                 temporary_loader.append(Measurements.from_dictionary(data))
             except:
-                logger.debug("skyping this one")
+                logger.info("skyping this one")
         return temporary_loader
 
     def find_minmax(self):

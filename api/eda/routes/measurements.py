@@ -73,12 +73,14 @@ def handle_post_request():
                     [series_],
                     form["yaxis"] + [form["xaxis"]],
                 ):
-                    data.append(Measurements.from_dictionary(req))
-                print(len(data.arr))
-            except Exception as err:
-                #TODO not sure why it is going in there 
-                print(form["site"], form["sat"], [series_], form["yaxis"] + [form["xaxis"]])
-                current_app.logger.error(err)
+                    try:
+                        data.append(Measurements.from_dictionary(req))
+                    except ValueError as err:
+                        current_app.logger.warning(err)
+                        continue   
+            except ValueError as err:
+                current_app.logger.warning(err)
+                continue               
     if len(data.arr) == 0:
         return render_template(
             "measurements.jinja",
