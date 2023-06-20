@@ -114,7 +114,7 @@ def handle_post_request() -> str:
     data.find_minmax()
     data.adjust_slice(minutes_min=form["exclude"], minutes_max=None)
     trace = []
-    mode = "lines"
+    mode = "markers+lines" if form["plot"] == "Scatter" else "lines"
     table = {}
     if form["process"] == "Detrend":
         for _data in data:
