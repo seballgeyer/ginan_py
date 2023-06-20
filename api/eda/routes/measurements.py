@@ -98,7 +98,11 @@ def handle_post_request():
     table = {}
     for _data in data:
         for _yaxis in form["yaxis"]:
-            print(_data.id, np.nanmin(_data.data[_yaxis][_data.subset]), np.nanmax(_data.data[_yaxis][_data.subset]))
+            if np.isnan(_data.data[_yaxis][_data.subset]).any():
+                current_app.logger.warning(f"Nan detected for {_data.id}")
+                #print the index of the nan
+                current_app.logger.warning(np.argwhere(np.isnan(_data.data[_yaxis][_data.subset])))
+            # print(_data.id, np.nanmin(_data.data[_yaxis][_data.subset]), np.nanmax(_data.data[_yaxis][_data.subset]))
             trace.append(
                 go.Scatter(
                     x=_data.epoch[_data.subset],

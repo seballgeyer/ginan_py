@@ -125,6 +125,11 @@ def handle_post_request() -> str:
             # for i in range(_data.data[_yaxis]):
             _data.id["state"] = _yaxis
             # _data.id["ax"] = i
+            # if there is nan in _data.data[_yaxis][_data.subset] print warning
+            if np.isnan(_data.data[_yaxis][_data.subset]).any():
+                current_app.logger.warning(f"Nan detected for {_data.id}")
+                #print the index of the nan
+                current_app.logger.warning(np.argwhere(np.isnan(_data.data[_yaxis][_data.subset])))
             trace.append(
                 go.Scatter(
                     x=_data.epoch[_data.subset],
@@ -134,7 +139,8 @@ def handle_post_request() -> str:
                     hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_data.id}",
                 )
             )
-            table[f"{_data.id}"] = {"mean": np.array(_data.data[_yaxis][_data.subset]).mean()}
+            table[f"{_data.id}"] = {"mean": np.nanmean(_data.data[_yaxis][_data.subset]),
+                        "RMS": np.sqrt(np.nanmean(_data.data[_yaxis][_data.subset]**2))}
     fig = go.Figure(data=trace)
     fig.update_layout(
         xaxis=dict(rangeslider=dict(visible=True)),
