@@ -103,8 +103,18 @@ class MongoDB:
                 }
             }
         )
+        # for key in keys:
+        #    agg_pipeline[-1]["$group"][key] = {"$push": f"${key}"}
         for key in keys:
-            agg_pipeline[-1]["$group"][key] = {"$push": f"${key}"}
+            agg_pipeline[-1]["$group"][key] = {
+                "$push": {
+                    "$cond": [
+                        {"$eq": [{"$ifNull": [f"${key}", None]}, None]},
+                        float('nan'),
+                        f"${key}"
+                    ]
+                }
+            }
         logger.info(agg_pipeline)
         cursor = self.mongo_client[self.mongo_db][collection].aggregate(agg_pipeline)
         # check if cursor is empty

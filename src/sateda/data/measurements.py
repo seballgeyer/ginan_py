@@ -121,6 +121,12 @@ class Measurements:
                 for key, value in data_dict.items()
                 if key not in ["t", "_id", "Epoch"] and len(value) != 0
             }
+            n = len(epoch)
+            for k in data:
+                if n!= len(data[k]):
+                    print("Warning: data length not the same for all keys", identifier)
+                    print(k, n, len(data[k]))
+                    # data[k] = np.nan*np.ones_like(epoch)
         return cls(sat, identifier, epoch, data)
 
     def find_gaps(self, delta=10):
@@ -150,12 +156,14 @@ class Measurements:
         shift = 0
         for gap_index in self.gaps:
             gap_index += shift
+            # print("gap_index", gap_index, len(self.epoch))
             self.epoch = np.insert(
                 self.epoch,
                 gap_index + 1,
                 self.epoch[gap_index] + np.timedelta64(1, "ms"),
             )
             for key in self.data:
+                # print(" => gap_index", gap_index, len(self.data[key]))
                 self.data[key] = np.insert(self.data[key], gap_index + 1, np.nan)
             shift += 1
 

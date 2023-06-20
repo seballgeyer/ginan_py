@@ -98,6 +98,7 @@ def handle_post_request():
     table = {}
     for _data in data:
         for _yaxis in form["yaxis"]:
+            print(_data.id, np.nanmin(_data.data[_yaxis][_data.subset]), np.nanmax(_data.data[_yaxis][_data.subset]))
             trace.append(
                 go.Scatter(
                     x=_data.epoch[_data.subset],
@@ -107,7 +108,9 @@ def handle_post_request():
                     hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_data.id}",
                 )
             )
-            table[f"{_data.id}"] = {"mean": np.array(_data.data[_yaxis][_data.subset]).mean()}
+            table[f"{_data.id}"] = {"mean": np.nanmean(_data.data[_yaxis][_data.subset]),
+                                    "RMS": np.sqrt(np.nanmean(_data.data[_yaxis][_data.subset]**2))}
+            
     fig = go.Figure(data=trace)
     fig.update_layout(
         xaxis=dict(rangeslider=dict(visible=False)),
