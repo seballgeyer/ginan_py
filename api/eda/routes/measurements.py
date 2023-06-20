@@ -108,17 +108,17 @@ def handle_post_request():
                     x=_data.epoch[_data.subset],
                     y=_data.data[_yaxis][_data.subset],
                     mode=mode,
-                    name=f"{_data.id}",
-                    hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_data.id}",
+                    name=f"{_data.id}{_yaxis}",
+                    hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_data.id}{_yaxis}",
                 )
             )
-            table[f"{_data.id}"] = {"mean": np.nanmean(_data.data[_yaxis][_data.subset]),
+            table[f"{_data.id} {_yaxis}"] = {"mean": np.nanmean(_data.data[_yaxis][_data.subset]),
                                     "RMS": np.sqrt(np.nanmean(_data.data[_yaxis][_data.subset]**2))}
             
     fig = go.Figure(data=trace)
     fig.update_layout(
         xaxis=dict(rangeslider=dict(visible=False)),
-        yaxis=dict(fixedrange=False, tickformat=".3f"),
+        yaxis=dict(fixedrange=False, tickformat=".3e"),
         height=800,
     )
     fig.layout.autosize = True
