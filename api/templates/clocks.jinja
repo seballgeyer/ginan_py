@@ -9,43 +9,109 @@ Clocks
 
 
 {% block menuselection %}
-<form method="post">
+<form method="post" class="row g-5" role="form">
+  <div class="col-lg-1">
+    <label for="type" class="form-label">Type:</label>
+    <br>
+    <select class="selectpicker form-control" name="clockType" id="clockType" data-container="body"
+      data-live-search="true" title="Select type">
+      {% for type_ in extra['clockType'] %}
+      {% if selection is defined and selection['clockType']|length and type_ in selection['clockType']%}
+      <option value="{{type_}}" SELECTED>{{type_}}</option>"
+      {%else%}
+      <option value="{{type_}}">{{type_}}</option>"
+      {%endif%}
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-lg-1">
+    <label for="type" class="form-label">Series-base:</label>
+    <br>
+    <select class="selectpicker form-control" name="series_base" id="series_base" data-container="body"
+      data-live-search="true" title="Select type">
+      {% for series_ in session['list_series'] %}
+      {% if selection is defined and selection['series_base']|length and series_ in selection['series_base']%}
+      <option value="{{series_}}" SELECTED>{{series_}}</option>"
+      {%else%}
+      <option value="{{series_}}">{{series_}}</option>"
+      {%endif%}
+      {% endfor %}
+    </select>
+  </div>
 
-  <select name="clockType"  method="GET" style="width: 200px;" action="/">
-    {% for type_ in extra['clockType'] %}
-    {% if selection is defined and selection['clockType']|length and type_ in selection['clockType']%}
-    <option value="{{type_}}" SELECTED>{{type_}}</option>"
-    {%else%}
-    <option value="{{type_}}">{{type_}}</option>"
-    {%endif%}
-    {% endfor %}
+  <div class="col-lg-1">
+    <label for="type" class="form-label">Series:</label>
+    <br>
+    <select class="selectpicker form-control" name="series" id="series" data-container="body" data-live-search="true"
+      title="Series">
+      {% for series_ in session['list_series'] %}
+      {% if selection is defined and selection['series']|length and series_ in selection['series']%}
+      <option value="{{series_}}" SELECTED>{{series_}}</option>"
+      {%else%}
+      <option value="{{series_}}">{{series_}}</option>"
+      {%endif%}
+      {% endfor %}
+    </select>
+  </div>
+
+<div class="col-lg-1">
+  <label for="subset" class="form-label">subset:</label>
+  <br>
+<select multiple class="selectpicker form-control"  name="subset" id="subset" data-container="body" data-live-search="true"
+      title="subset" data-hide-disabled="true" data-actions-box="true" data-virtual-scroll="false">
   </select>
-
-  <select name="series_base"  method="GET" style="width: 200px;" action="/">
-    {% for series_ in session['list_series']  %}
-    {% if selection is defined and selection['series_base']|length and series_ in selection['series_base']%}
-    <option value="{{series_}}" SELECTED>{{series_}}</option>"
-    {%else%}
-    <option value="{{series_}}">{{series_}}</option>"
-    {%endif%}
-    {% endfor %}
-  </select>
-
-  <select name="series"  method="GET" style="width: 200px;" action="/">
-    {% for series_ in session['list_series']  %}
-    {% if selection is defined and selection['series']|length and series_ in selection['series']%}
-    <option value="{{series_}}" SELECTED>{{series_}}</option>"
-    {%else%}
-    <option value="{{series_}}">{{series_}}</option>"
-    {%endif%}
-    {% endfor %}
-  </select>
+</div>
 
 
-  <div>
-    <label for="exclude">Exclude the first (min):</label>
-    <input type="text" id="exclude" name="exclude" value="{{ exclude }}">
+  <div class="col-lg-2">
+    <label for="exclude">Exclude first (min):</label>
+    <input type="text" class="form-control" id="exclude" name="exclude" placeholder="exclude" value="{{ exclude }}">
   </div>
   <input type="submit" value="PLOT">
 </form>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    // Function to update the options of the subset dropdown
+    function updateSubsetDropdown(selectedType) {
+      var subsetDropdown = document.getElementById('subset');
+      
+      // Clear existing options
+            console.log('Options before clearing:', subsetDropdown.innerHTML);
+
+      subsetDropdown.innerHTML = '';
+      $(subsetDropdown).selectpicker('destroy');
+      $(subsetDropdown).selectpicker();
+      console.log('Options after clearing:', subsetDropdown.innerHTML);
+
+      if (selectedType === 'Site') {
+        // Populate options from session['site']
+        {% for site in session['list_site'] %}
+          subsetDropdown.innerHTML += '<option value="{{ site }}">{{ site }}</option>';
+        {% endfor %}
+      } else if (selectedType === 'Satellite') {
+        // Populate options from session['sat']
+        {% for sat in session['list_sat'] %}
+          subsetDropdown.innerHTML += '<option value="{{ sat }}">{{ sat }}</option>';
+        {% endfor %}
+      }
+      console.log('Options refill:', subsetDropdown.innerHTML);
+
+      // Refresh the selectpicker to update the dropdown UI
+      $(subsetDropdown).selectpicker('refresh');
+    }
+
+    // Event handler for type selection change
+    $('#clockType').change(function() {
+      var selectedType = $(this).val();
+      updateSubsetDropdown(selectedType);
+    });
+  });
+</script>
+
+
+
+
 {% endblock %}
