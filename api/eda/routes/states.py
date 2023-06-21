@@ -119,7 +119,6 @@ def handle_post_request() -> str:
     if form["process"] == "Detrend":
         for _data in data:
             _data.detrend(degree=int(form["degree"]))
-
     for _data in data:
         for _yaxis in _data.data:
             # for i in range(_data.data[_yaxis]):

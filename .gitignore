@@ -11,3 +11,4 @@ htmlcov/
 /__pycache__/
 *.egg-info
 .DS_Store
+src/sateda/io/eop/eopc04_14_IAU2000.62-now.txt
