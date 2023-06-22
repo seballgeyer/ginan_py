@@ -101,29 +101,37 @@ States
   <div class="col-lg-1">
     <label for="degree" class="form-label">Degree:</label>
     <div class="d-flex align-items-center">
-      <input type="range" min="0" max="3" value="1" class="form-range" id="degree" name="degree" list="degree-ticks">
-      <datalist id="degree-ticks">
-        <option value="0"></option>
-        <option value="1"></option>
-        <option value="2"></option>
-        <option value="3"></option>
-      </datalist>
+      <select class="selectpicker form-control" name="degree" id="degree" data-container="body"
+        data-live-search="true" title="degree">
+        {% for key_ in extra["degree"] %}
+        {% if selection is defined and selection['degree']|length and key_ in selection['degree']%}
+        <option value="{{key_}}" SELECTED>{{key_}}</option>"
+        {%else%}
+        <option value="{{key_}}">{{key_}}</option>"
+        {%endif%}
+        {% endfor %}
+      </select>
     </div>
   </div>
   <div class="col-lg-1">
     <label for="process">Pre processing:</label>
       <select class="selectpicker form-control" name="process" id="process" data-container="body"
         data-live-search="true" title="Preprocessing">
-        <option value="None">None</option>
-        <option value="Fit">Fit</option>
-        <option value="Detrend">Detrend</option>
+        {% for key_ in extra["preprocess"] %}
+        {% if selection is defined and selection['process']|length and key_ in selection['process']%}
+        <option value="{{key_}}" SELECTED>{{key_}}</option>"
+        {%else%}
+        <option value="{{key_}}">{{key_}}</option>"
+        {%endif%}
+        {% endfor %}
       </select>
   </div>
 
   <div class="col-lg-2">
     <label for="exclude">Exclude first (min):</label>
-    <input type="text" class="form-control" id="exclude" name="exclude" placeholder="exclude" value="{{ exclude }}">
-
+  <input type="text" class="form-control" id="exclude" name="exclude" placeholder="exclude" 
+  {% if selection is defined and  selection['exclude'] %}value="{{ selection['exclude'] }}"{% endif %}  
+  >
   </div>
 
   <input type="submit" value="PLOT">

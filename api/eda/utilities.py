@@ -7,6 +7,8 @@ extra["plotType"] = ["Scatter", "Line"]
 extra["posMode"] = ["XYZ", "ENU"]
 extra["clockType"] = ["Site", "Satellite"]
 extra["stateField"] = ["x", "dx", "P"]
+extra["preprocess"] = ["None", "Fit", "Detrend"]
+extra['degree'] = ["0", "1", "2"]
 
 def init_page(template: str) -> str:
     """

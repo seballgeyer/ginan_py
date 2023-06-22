@@ -103,9 +103,14 @@ def handle_post_request():
                 #print the index of the nan
                 current_app.logger.warning(np.argwhere(np.isnan(_data.data[_yaxis][_data.subset])))
             # print(_data.id, np.nanmin(_data.data[_yaxis][_data.subset]), np.nanmax(_data.data[_yaxis][_data.subset]))
+            if form['xaxis'] == 'epoch':
+                _x = _data.epoch[_data.subset]
+            else:
+                _x = _data.data[form['xaxis']][_data.subset]
+                
             trace.append(
                 go.Scatter(
-                    x=_data.epoch[_data.subset],
+                    x=_x,
                     y=_data.data[_yaxis][_data.subset],
                     mode=mode,
                     name=f"{_data.id}{_yaxis}",

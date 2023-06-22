@@ -60,7 +60,7 @@ def handle_post_request() -> str:
     current_app.logger.info("Entering request")
     form_data = request.form
     form = {}
-    form["plot"] = form_data.get("type")
+    form["type"] = form_data.get("type")
     form["series"] = form_data.getlist("series")
     form["sat"] = form_data.getlist("sat")
     form["site"] = form_data.getlist("site")
@@ -77,7 +77,7 @@ def handle_post_request() -> str:
 
     print(form["process"], form["degree"])
     current_app.logger.info(
-        f"GET {form['plot']}, {form['series']}, {form['sat']}, {form['site']}, {form['state']}, {form['xaxis']}, {form['yaxis']}, "
+        f"GET {form['type']}, {form['series']}, {form['sat']}, {form['site']}, {form['state']}, {form['xaxis']}, {form['yaxis']}, "
         f"{form['yaxis']+[form['xaxis']]}, exclude {form['exclude']} mintues"
     )
     
@@ -114,7 +114,7 @@ def handle_post_request() -> str:
     data.find_minmax()
     data.adjust_slice(minutes_min=form["exclude"], minutes_max=None)
     trace = []
-    mode = "markers+lines" if form["plot"] == "Scatter" else "lines"
+    mode = "markers+lines" if form["type"] == "Scatter" else "lines"
     table = {}
     if form["process"] == "Detrend":
         for _data in data:

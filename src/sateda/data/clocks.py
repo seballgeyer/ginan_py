@@ -30,7 +30,7 @@ class Clocks:
         self.series = series
         self.series_base = series_base
 
-    def process(self) -> None:
+    def process(self) -> MeasurementArray:
         """
         Process the data. process in 2 steps.
         1. locate inside the data vector the two element with the same "sat" name in the self.identifier field.

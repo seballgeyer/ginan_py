@@ -29,6 +29,7 @@ def handle_post_request() -> str:
     current_app.logger.info("Entering request")
     form_data = request.form
     form = {}
+    form["type"] = form_data.get("type")
     form["series"] = form_data.get("series")
     form["series_base"] = form_data.get("series_base")
     form["exclude"] = form_data.get("exclude")
@@ -79,21 +80,28 @@ def handle_post_request() -> str:
     position = Position(data, base)
     if form["mode"] == "ENU":
         position.rotate_enu()
+    print("..., ", form["exclude"])
+    position.data.find_minmax()
+    print(position.data.tmin, position.data.tmax)
+    position.data.adjust_slice(minutes_min=form["exclude"], minutes_max=None)
     # residuals = data - base
     trace = []
-    for _residual in position:
-        print(_residual.data["x"].shape)
+    table = {}
+    type = "markers+lines" if form["type"] == "Scatter" else "lines"
+    for _data in position:
+        print(_data.data["x"].shape)
         for i in range(3):
             trace.append(
                 go.Scatter(
-                    x=_residual.epoch,
-                    y=_residual.data["x"][:,i],
-                    mode="lines",
-                    name=f"{_residual.id}{i}",
-                    hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_residual.id}{i}",
+                    x=_data.epoch[_data.subset],
+                    y=_data.data["x"][_data.subset,i],
+                    mode=type,
+                    name=f"{_data.id}{i}",
+                    hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_data.id}{i}",
                 )
-            )  
-        # table[f"{_data.id}"]= {"mean": np.array(_data.data[_yaxis][i][_data.subset]).mean() }
+            )
+            table[f"{_data.id}_{i}"] = {"mean": np.nanmean(_data.data["x"][_data.subset,i]),
+                        "RMS": np.sqrt(np.nanmean(_data.data["x"][_data.subset,i]**2))}   
     fig = go.Figure(data=trace)
     fig.update_layout(
         xaxis=dict(rangeslider=dict(visible=True)),
@@ -108,6 +116,6 @@ def handle_post_request() -> str:
         graphJSON=pio.to_html(fig),
         mode="plotly",
         selection=form,
-        # table_data= table, t
-        able_headers=["RMS", "mean"],
+        table_data= table, 
+        table_headers=["RMS", "mean"],
     )

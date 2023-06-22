@@ -101,8 +101,10 @@ Measurements
   </div>
   <div class="col-lg-2">
     <label for="exclude">Exclude first (min):</label>
-    <input type="text" class="form-control" id="exclude" name="exclude" placeholder="exclude" value="{{ exclude }}">
-  </div>
+    <input type="text" class="form-control" id="exclude" name="exclude" placeholder="exclude" 
+    {% if selection is defined and  selection['exclude'] %}value="{{ selection['exclude'] }}"{% endif %}  
+    >
+    </div>
   <input type="submit" value="PLOT">
 </form>
 {% endblock %}

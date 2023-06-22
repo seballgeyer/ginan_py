@@ -72,11 +72,14 @@ def handle_post_request():
     else:
         clocks = Clocks(data, sitelist=site_list, series=series_, series_base=series_2)
     trace = []
-    for _clock in clocks.process():
+    result = clocks.process()
+    result.find_minmax()
+    result.adjust_slice(minutes_min=form["exclude"], minutes_max=None)
+    for _clock in result:
         trace.append(
             go.Scatter(
-                x=_clock.epoch,
-                y=_clock.data["x"],
+                x=_clock.epoch[_clock.subset],
+                y=_clock.data["x"][_clock.subset],
                 mode="lines",
                 name=f"{_clock.id}",
                 hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_clock.id}",
