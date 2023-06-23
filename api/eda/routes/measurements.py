@@ -75,7 +75,7 @@ def handle_post_request():
                     form["yaxis"] + [form["xaxis"]],
                 ):
                     try:
-                        data.append(Measurements.from_dictionary(req))
+                        data.append(Measurements.from_dictionary(req, database=db_))
                     except ValueError as err:
                         current_app.logger.warning(err)
                         continue   
@@ -141,8 +141,9 @@ def handle_post_request():
     table_agg = {}
     for _data in data :
         series_ = _data.id["series"]
+        db_ = _data.id["db"]
         for _yaxis in form["yaxis"]:
-            name = f"{series_} {_yaxis}"
+            name = f"{db_} {series_} {_yaxis}"
             if name not in table_agg:
                 table_agg[name] = {"mean": 0, "RMS": 0, "len": 0, "count": 0}
             table_agg[name]["mean"] += _data.info[_yaxis]["mean"]

@@ -84,7 +84,7 @@ class Measurements:
         self.subset = slice(None, None, None)
 
     @classmethod
-    def from_dictionary(cls, data_dict: dict, reshape_on:str = None) -> "Measurements":
+    def from_dictionary(cls, data_dict: dict, reshape_on:str = None, database:str = "") -> "Measurements":
         """
         Initializes a Measurements object.
 
@@ -97,6 +97,7 @@ class Measurements:
         """
         sat = data_dict["_id"]["sat"]
         identifier = data_dict["_id"]
+        identifier['db'] = database
         epoch = np.array([np.datetime64(t) for t in data_dict["t"]])
         if max([len(value) for key, value in data_dict.items() if key not in ["t", "_id", "Epoch"]]) == 0:
             raise ValueError(f"No data for: {identifier}")
