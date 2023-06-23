@@ -111,7 +111,8 @@ def handle_load_request(form_data):
             site += client.mongo_content["Site"]
             sat += client.mongo_content["Sat"]
             series += [ f"{database}\{series}" for series in client.mongo_content["Series"]]
-            mesurements += client.mongo_content["Measurements"]
+            if client.mongo_content["Has_measurements"]:
+                mesurements += client.mongo_content["Measurements"]
             geometry += client.mongo_content["Geometry"]
             state += client.mongo_content["State"]
     print(site, sat, series)
@@ -119,7 +120,8 @@ def handle_load_request(form_data):
     session["list_sat"] = sorted(set(sat))
     session["list_site"] = sorted(set(site))
     session["list_series"] = sorted(set(series))
-    session["list_measurements"] = sorted(set(geometry)) + sorted(set(mesurements))
+    if client.mongo_content["Has_measurements"]:
+        session["list_measurements"] = sorted(set(geometry)) + sorted(set(mesurements))
     session["list_state"] = sorted(set(state))
     return render_template(
         "connect.jinja",

@@ -43,6 +43,11 @@ class MongoDB:
             self.mongo_content[cursor["type"]] = cursor["Values"]
         self.mongo_content["Geometry"] = []
         geom = self.mongo_client[self.mongo_db]["Geometry"].find_one({})
+        if "Measurements" in self.mongo_client[self.mongo_db].list_collection_names():
+            self.mongo_content["Has_measurements"]=  True 
+        else:
+            self.mongo_content["Has_measurements"] =  False
+            
         if geom is None:
             logger.debug("Geometry not available")
         else:

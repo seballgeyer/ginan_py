@@ -20,7 +20,7 @@ dynamic = ["version"]
 
 [project.scripts]
 "ginan_mq" = "sateda.scripts.ginan_mq:main"
-
+"ginan_clocks" = "sateda.scripts.ginan_clocks:main"
 [project.optional-dependencies]
 tests = [
   'coverage>=5.0.3',
