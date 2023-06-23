@@ -119,6 +119,9 @@ def handle_post_request() -> str:
     if form["process"] == "Detrend":
         for _data in data:
             _data.detrend(degree=int(form["degree"]))
+    if form["process"] == "Fit":
+        for _data in data:
+            _data.polyfit(degree=int(form["degree"]))
     for _data in data:
         for _yaxis in _data.data:
             # for i in range(_data.data[_yaxis]):
@@ -138,8 +141,11 @@ def handle_post_request() -> str:
                     hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_data.id}",
                 )
             )
-            table[f"{_data.id}"] = {"mean": np.nanmean(_data.data[_yaxis][_data.subset]),
-                        "RMS": np.sqrt(np.nanmean(_data.data[_yaxis][_data.subset]**2))}
+            table[f"{_data.id}"] = {"mean": np.array2string(np.nanmean(_data.data[_yaxis][_data.subset]), precision=3),
+                        "RMS": np.array2string(np.sqrt(np.nanmean(_data.data[_yaxis][_data.subset]**2)), precision=3),
+                        }
+            if any(keyword in form["process"] for keyword in ["Detrend", "Fit"]):
+                table[f"{_data.id}"]["Fit"] = np.array2string(_data.info["Fit"][_yaxis][::-1], precision=2, separator=", ")
     fig = go.Figure(data=trace)
     fig.update_layout(
         xaxis=dict(rangeslider=dict(visible=True)),
@@ -154,5 +160,5 @@ def handle_post_request() -> str:
         mode="plotly",
         selection=form,
         table_data=table,
-        table_headers=["RMS", "mean"],
+        table_headers=["RMS", "mean", "Fit"],
     )

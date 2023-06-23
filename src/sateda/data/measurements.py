@@ -80,6 +80,7 @@ class Measurements:
         self.id = identifier if identifier is None else identifier
         self.epoch = epoch
         self.data = {} if data is None else data
+        self.info = {}
         self.subset = slice(None, None, None)
 
     @classmethod
@@ -238,17 +239,19 @@ class Measurements:
             logger.info(f"Removing mean of data {self.id}: {np.array2string(mean)}")
             self.data[key] -= mean
 
-    def polyfit(self, degree=1):
+    def polyfit(self, degree=1) -> None:
         """
         Compute the polynomial fit to all data in self.data dictionary and return the coefficient and the fit
         :param degree: degree of the polynomial fit
         :return: dictionary of coefficient and fit
         """
-        fit = {}
         epoch_ = (self.epoch - self.epoch[0]).astype("timedelta64[s]").astype("float64")
+        self.info['Fit'] = {}
         for key in self.data:
-            fit[key] = np.polyfit(epoch_, self.data[key], degree)
-        return fit
+            self.info['Fit'][key] = np.polyfit(epoch_, self.data[key], degree)
+            print(self.info['Fit'][key])
+            # self.data[]
+        # return fit
 
     def detrend(self, degree=1):
         """
@@ -256,14 +259,14 @@ class Measurements:
         :param degree: degree of the polynomial fit
         :return: None
         """
-        fit = self.polyfit(degree)
+        self.polyfit(degree)
         epoch_ = (self.epoch - self.epoch[0]).astype("timedelta64[s]").astype("float64")
         for key in self.data:
             if self.data[key].ndim == 1:
-                self.data[key] -= np.polyval(fit[key], epoch_)
+                self.data[key] -= np.polyval(self.info['Fit'][key], epoch_)
             else:
                 for i in range(self.data[key].shape[1]):
-                    self.data[key][:, i] -= np.polyval(fit[key][:, i], epoch_)
+                    self.data[key][:, i] -= np.polyval(self.info['Fit'][key][:, i], epoch_)
 
     def plot(self, axis: plt.Axes):
         """
@@ -288,6 +291,13 @@ class Measurements:
         for key in self.data:
             rms = np.sqrt((self.data[key] ** 2).mean())
             string += f"\n\t{key} {self.data[key].mean(): .4e} sigma  {self.data[key].std(): .4e} RMS {rms:.4e}"
+            mask = ~np.isnan(self.data[key][self.subset])
+            if key not in self.info:
+                self.info[key] = {}
+            self.info[key]['mean'] = np.mean(self.data[key][self.subset][mask])
+            self.info[key]['len'] = len(self.data[key][self.subset][mask])
+            self.info[key]['rms'] = np.sqrt(np.mean(self.data[key][self.subset][mask]**2))
+            self.info[key]['sumsqr'] = np.sum(self.data[key][self.subset][mask]**2)
         logger.info(string)
 
     def select_range(self, tmin:int=None, tmax:int=None) -> None:
@@ -428,3 +438,31 @@ class MeasurementArray:
             if site is not None and data.id["site"] == site:
                 return data
         raise ValueError("Data not found")
+    
+    def merge(self, other) -> None:
+        """
+        Merge data from on structure with another one. 
+        It will consiste first to indentify the two element of the array with the same sat and site, 
+        Then generate a common time vector with the unique value of both time vector, and generate a dict of data with nans, 
+        fill the values to  the corresponding time
+        """
+        for _data in self.arr:
+            for _other in other.arr:
+                if _data.id["sat"] == _other.id["sat"] and _data.id["site"] == _other.id["site"]:
+                    common_time = np.union1d(_data.epoch, _other.epoch)
+                    data = {}
+                    for name, val in _data.data.items():
+                        data[name] = np.full_like(common_time, np.nan, dtype="float64")
+                        data[name][np.isin(common_time, _data.epoch)] = val
+                        print(name, val)
+                    for name, val in _other.data.items():
+                        mask = ~np.isnan(val)
+                        print(name, val[mask])
+                        data[name][np.isin(common_time, _other.epoch[mask])] = val[mask]
+                    _data.epoch = common_time
+                    _data.data = data                
+                    break
+                
+    def get_stats(self) -> None:
+        for data in self.arr:
+            data.get_stats()

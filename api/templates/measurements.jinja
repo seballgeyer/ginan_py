@@ -70,9 +70,9 @@ Measurements
   </div>
 
   <div class="col-lg-1">
-    <label for="xaxis" class="form-label">Y-Axis:</label>
+    <label for="xaxis" class="form-label">X-Axis:</label>
     <br>
-    <select multiple class="selectpicker form-control" name="xaxis" id="xaxis" data-hide-disabled="true"
+    <select  class="selectpicker form-control" name="xaxis" id="xaxis" data-hide-disabled="true"
       data-live-search="true">
       {% for key_ in session['list_measurements'] %}
       {% if selection is defined and selection['xaxis']|length and key_ in selection['xaxis']%}

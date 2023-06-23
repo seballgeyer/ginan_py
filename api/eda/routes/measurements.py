@@ -59,6 +59,7 @@ def handle_post_request():
     )
     current_app.logger.info("Getting Connection")
     data = MeasurementArray()
+    data2 = MeasurementArray()
     print("------")
     for series in form["series"] :
         print(series)
@@ -80,7 +81,24 @@ def handle_post_request():
                         continue   
             except ValueError as err:
                 current_app.logger.warning(err)
-                continue               
+                continue
+            try:
+                for req in client.get_data(
+                    "Geometry",
+                    None,
+                    form["site"],
+                    form["sat"],
+                    [""],
+                    form["yaxis"] + [form["xaxis"]],
+                ):
+                    try:
+                        data2.append(Measurements.from_dictionary(req))
+                    except ValueError as err:
+                        current_app.logger.warning(err)
+                        continue   
+            except ValueError as err:
+                current_app.logger.warning(err)
+                continue                   
     if len(data.arr) == 0:
         return render_template(
             "measurements.jinja",
@@ -88,11 +106,13 @@ def handle_post_request():
             extra=extra,
             message=f"Error getting data: No data",
         )
+    data.merge(data2)
     print(data)
     data.find_minmax()
     data.adjust_slice(minutes_min=form["exclude"], minutes_max=None)
     for data_ in data:
         data_.find_gaps()
+    data.get_stats()
     trace = []
     mode = "markers+lines" if form["plot"] == "Scatter" else "lines"
     table = {}
@@ -100,10 +120,8 @@ def handle_post_request():
         for _yaxis in form["yaxis"]:
             if np.isnan(_data.data[_yaxis][_data.subset]).any():
                 current_app.logger.warning(f"Nan detected for {_data.id}")
-                #print the index of the nan
                 current_app.logger.warning(np.argwhere(np.isnan(_data.data[_yaxis][_data.subset])))
-            # print(_data.id, np.nanmin(_data.data[_yaxis][_data.subset]), np.nanmax(_data.data[_yaxis][_data.subset]))
-            if form['xaxis'] == 'epoch':
+            if form['xaxis'] == 'Epoch':
                 _x = _data.epoch[_data.subset]
             else:
                 _x = _data.data[form['xaxis']][_data.subset]
@@ -117,9 +135,26 @@ def handle_post_request():
                     hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_data.id}{_yaxis}",
                 )
             )
-            table[f"{_data.id} {_yaxis}"] = {"mean": np.nanmean(_data.data[_yaxis][_data.subset]),
-                                    "RMS": np.sqrt(np.nanmean(_data.data[_yaxis][_data.subset]**2))}
+            table[f"{_data.id} {_yaxis}"] = {"mean": _data.info[_yaxis]["mean"],
+                                    "RMS": _data.info[_yaxis]["rms"]}
             
+    table_agg = {}
+    for _data in data :
+        series_ = _data.id["series"]
+        for _yaxis in form["yaxis"]:
+            name = f"{series_} {_yaxis}"
+            if name not in table_agg:
+                table_agg[name] = {"mean": 0, "RMS": 0, "len": 0, "count": 0}
+            table_agg[name]["mean"] += _data.info[_yaxis]["mean"]
+            table_agg[name]["RMS"] += _data.info[_yaxis]["sumsqr"]
+            table_agg[name]["len"] += _data.info[_yaxis]["len"]
+            table_agg[name]["count"] += 1
+            
+    for _name, _tab in table_agg.items():
+        _tab["mean"] /= _tab["count"]
+        _tab["RMS"] = np.sqrt(_tab["RMS"] / _tab["len"])
+            
+
     fig = go.Figure(data=trace)
     fig.update_layout(
         xaxis=dict(rangeslider=dict(visible=False)),
@@ -136,4 +171,6 @@ def handle_post_request():
         selection=form,
         table_data=table,
         table_headers=["RMS", "mean"],
+        tableagg_data=table_agg,
+        tableagg_headers=["RMS", "mean"],
     )
