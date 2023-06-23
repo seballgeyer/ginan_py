@@ -43,7 +43,8 @@ class TestMeasurements(unittest.TestCase):
         m1 = Measurements.from_dictionary(data_dict)
         print(m1.data)
         print(m1)
-        fit = m1.polyfit()
+        m1.polyfit()
+        fit = m1.info['Fit']
         print(fit)
         print(fit["x"][0])
         self.assertAlmostEqual(fit["x"][0], 1)
