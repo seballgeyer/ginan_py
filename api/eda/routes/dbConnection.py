@@ -120,8 +120,12 @@ def handle_load_request(form_data):
     session["list_sat"] = sorted(set(sat))
     session["list_site"] = sorted(set(site))
     session["list_series"] = sorted(set(series))
+    if "Epoch" not in geometry :
+        geometry = ["Epoch"] + geometry
     if client.mongo_content["Has_measurements"]:
         session["list_measurements"] = sorted(set(geometry)) + sorted(set(mesurements))
+
+    
     session["list_state"] = sorted(set(state))
     return render_template(
         "connect.jinja",

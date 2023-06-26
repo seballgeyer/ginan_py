@@ -105,7 +105,7 @@ def handle_post_request() -> str:
     fig = go.Figure(data=trace)
     fig.update_layout(
         xaxis=dict(rangeslider=dict(visible=True)),
-        yaxis=dict(fixedrange=False),
+        yaxis=dict(fixedrange=False, tickformat=".3e"),
         height=600,
     )
 

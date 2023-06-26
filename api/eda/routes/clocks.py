@@ -75,6 +75,8 @@ def handle_post_request():
     result = clocks.process()
     result.find_minmax()
     result.adjust_slice(minutes_min=form["exclude"], minutes_max=None)
+    result.get_stats()
+    table={}
     for _clock in result:
         trace.append(
             go.Scatter(
@@ -85,11 +87,32 @@ def handle_post_request():
                 hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_clock.id}",
             )
         )
-        # table[f"{_data.id}"]= {"mean": np.array(_data.data[_yaxis][i][_data.subset]).mean() }
+        print(_clock.info)
+        table[f"{_clock.id}"] = {"mean": _clock.info['x']["mean"],
+                            "RMS": _clock.info['x']["rms"]}
+        
+    table_agg = {}
+    for _data in result :
+        series_ = _data.id["series"]
+        db_ = _data.id["db"]
+        name = f" "
+        if name not in table_agg:
+            table_agg[name] = {"mean": 0, "RMS": 0, "len": 0, "count": 0}
+            print(_data.info)
+            table_agg[name]["mean"] += _data.info['x']["mean"]
+            table_agg[name]["RMS"] += _data.info['x']["sumsqr"]
+            table_agg[name]["len"] += _data.info['x']["len"]
+            table_agg[name]["count"] += 1
+
+    for _name, _tab in table_agg.items():
+        _tab["mean"] /= _tab["count"]
+        _tab["RMS"] = np.sqrt(_tab["RMS"] / _tab["len"])
+
+
     fig = go.Figure(data=trace)
     fig.update_layout(
         xaxis=dict(rangeslider=dict(visible=True)),
-        yaxis=dict(fixedrange=False),
+        yaxis=dict(fixedrange=False, tickformat=".3e"),
         height=600,
     )
 
@@ -100,6 +123,8 @@ def handle_post_request():
         graphJSON=pio.to_html(fig),
         mode="plotly",
         selection=form,
-        # table_data= table, t
-        able_headers=["RMS", "mean"],
+        table_data= table, 
+        table_headers=["RMS", "mean"],
+        tableagg_data=table_agg,
+        tableagg_headers=["RMS", "mean"],
     )

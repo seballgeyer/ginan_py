@@ -22,7 +22,6 @@ def handle_post_request():
     database = form.get("database")
     print(database)
     with MongoDB(session["mongo_ip"], data_base=database, port=session["mongo_port"]) as client:
-        config = client.get_config()
-    print(config)
-    config["_id"] = str(config["_id"])
-    return render_template("config.jinja", configuration=config, selection=form)
+        configuration = client.get_config()
+    configuration.pop('_id')
+    return render_template("config.jinja", configuration=configuration, selection=form)

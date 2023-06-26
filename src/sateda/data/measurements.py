@@ -115,10 +115,8 @@ class Measurements:
                             index = np.where(n == u)[0]
                             if len(index) == 1:
                                 data[f"{key}_{u}"][i] = row[index[0]]   
-                        # data[f"{key}_{u}"] = data[f"{key}_{u}"].reshape(-1, 1)                 
-        else:    
+        else:
             data = {
-                # key: np.asarray(value).reshape(-1, 1) if len(np.asarray(value).shape) == 1 else np.asarray(value)
                 key: np.asarray(value)
                 for key, value in data_dict.items()
                 if key not in ["t", "_id", "Epoch"] and len(value) != 0
@@ -126,9 +124,7 @@ class Measurements:
             n = len(epoch)
             for k in data:
                 if n!= len(data[k]):
-                    print("Warning: data length not the same for all keys", identifier)
-                    print(k, n, len(data[k]))
-                    # data[k] = np.nan*np.ones_like(epoch)
+                    logger.debug("Warning: data length not the same for all keys", identifier)
         return cls(sat, identifier, epoch, data)
 
     def find_gaps(self, delta=10):
@@ -158,15 +154,16 @@ class Measurements:
         shift = 0
         for gap_index in self.gaps:
             gap_index += shift
-            # print("gap_index", gap_index, len(self.epoch))
             self.epoch = np.insert(
                 self.epoch,
                 gap_index + 1,
                 self.epoch[gap_index] + np.timedelta64(1, "ms"),
             )
             for key in self.data:
-                # print(" => gap_index", gap_index, len(self.data[key]))
-                self.data[key] = np.insert(self.data[key], gap_index + 1, np.nan)
+                if self.data[key].dtype.type ==  np.str_:
+                    self.data[key] = np.insert(self.data[key], gap_index + 1, self.data[key][gap_index])
+                else:
+                    self.data[key] = np.insert(self.data[key], gap_index + 1, np.nan)
             shift += 1
 
     def __sub__(self, other):
@@ -290,15 +287,19 @@ class Measurements:
         """
         string = f"{self.id}"
         for key in self.data:
-            rms = np.sqrt((self.data[key] ** 2).mean())
-            string += f"\n\t{key} {self.data[key].mean(): .4e} sigma  {self.data[key].std(): .4e} RMS {rms:.4e}"
-            mask = ~np.isnan(self.data[key][self.subset])
-            if key not in self.info:
-                self.info[key] = {}
-            self.info[key]['mean'] = np.mean(self.data[key][self.subset][mask])
-            self.info[key]['len'] = len(self.data[key][self.subset][mask])
-            self.info[key]['rms'] = np.sqrt(np.mean(self.data[key][self.subset][mask]**2))
-            self.info[key]['sumsqr'] = np.sum(self.data[key][self.subset][mask]**2)
+            #check if self.data['key'] is not a string
+            try:
+                rms = np.sqrt((self.data[key] ** 2).mean())
+                string += f"\n\t{key} {self.data[key].mean(): .4e} sigma  {self.data[key].std(): .4e} RMS {rms:.4e}"
+                mask = ~np.isnan(self.data[key][self.subset])
+                if key not in self.info:
+                    self.info[key] = {}
+                self.info[key]['mean'] = np.mean(self.data[key][self.subset][mask])
+                self.info[key]['len'] = len(self.data[key][self.subset][mask])
+                self.info[key]['rms'] = np.sqrt(np.mean(self.data[key][self.subset][mask]**2))
+                self.info[key]['sumsqr'] = np.sum(self.data[key][self.subset][mask]**2)
+            except:
+                logger.debug('data not a number')
         logger.info(string)
 
     def select_range(self, tmin:int=None, tmax:int=None) -> None:

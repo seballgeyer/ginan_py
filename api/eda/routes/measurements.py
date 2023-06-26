@@ -82,6 +82,7 @@ def handle_post_request():
             except ValueError as err:
                 current_app.logger.warning(err)
                 continue
+            
             try:
                 for req in client.get_data(
                     "Geometry",
@@ -106,21 +107,27 @@ def handle_post_request():
             extra=extra,
             message=f"Error getting data: No data",
         )
-    data.merge(data2)
-    print(data)
+    try:
+        data.merge(data2)
+    except:
+        pass
     data.find_minmax()
     data.adjust_slice(minutes_min=form["exclude"], minutes_max=None)
     for data_ in data:
         data_.find_gaps()
     data.get_stats()
     trace = []
-    mode = "markers+lines" if form["plot"] == "Scatter" else "lines"
+    mode = "markers" if form["plot"] == "Scatter" else "lines"
     table = {}
     for _data in data:
         for _yaxis in form["yaxis"]:
-            if np.isnan(_data.data[_yaxis][_data.subset]).any():
-                current_app.logger.warning(f"Nan detected for {_data.id}")
-                current_app.logger.warning(np.argwhere(np.isnan(_data.data[_yaxis][_data.subset])))
+            try:
+                if np.isnan(_data.data[_yaxis][_data.subset]).any():
+                    current_app.logger.warning(f"Nan detected for {_data.id}")
+                    current_app.logger.warning(np.argwhere(np.isnan(_data.data[_yaxis][_data.subset])))
+            except:
+                current_app.logger.debug(f"{_data.id} is not numbers")
+                pass
             if form['xaxis'] == 'Epoch':
                 _x = _data.epoch[_data.subset]
             else:
@@ -135,25 +142,32 @@ def handle_post_request():
                     hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_data.id}{_yaxis}",
                 )
             )
-            table[f"{_data.id} {_yaxis}"] = {"mean": _data.info[_yaxis]["mean"],
-                                    "RMS": _data.info[_yaxis]["rms"]}
+            try:
+                table[f"{_data.id} {_yaxis}"] = {"mean": _data.info[_yaxis]["mean"],
+                                        "RMS": _data.info[_yaxis]["rms"]}
+            except:
+                pass
             
     table_agg = {}
-    for _data in data :
-        series_ = _data.id["series"]
-        db_ = _data.id["db"]
-        for _yaxis in form["yaxis"]:
-            name = f"{db_} {series_} {_yaxis}"
-            if name not in table_agg:
-                table_agg[name] = {"mean": 0, "RMS": 0, "len": 0, "count": 0}
-            table_agg[name]["mean"] += _data.info[_yaxis]["mean"]
-            table_agg[name]["RMS"] += _data.info[_yaxis]["sumsqr"]
-            table_agg[name]["len"] += _data.info[_yaxis]["len"]
-            table_agg[name]["count"] += 1
-            
-    for _name, _tab in table_agg.items():
-        _tab["mean"] /= _tab["count"]
-        _tab["RMS"] = np.sqrt(_tab["RMS"] / _tab["len"])
+    try:
+        for _data in data :
+            series_ = _data.id["series"]
+            db_ = _data.id["db"]
+            for _yaxis in form["yaxis"]:
+                name = f"{db_} {series_} {_yaxis}"
+                if name not in table_agg:
+                    table_agg[name] = {"mean": 0, "RMS": 0, "len": 0, "count": 0}
+                    table_agg[name]["mean"] += _data.info[_yaxis]["mean"]
+                    table_agg[name]["RMS"] += _data.info[_yaxis]["sumsqr"]
+                    table_agg[name]["len"] += _data.info[_yaxis]["len"]
+                    table_agg[name]["count"] += 1
+    
+        for _name, _tab in table_agg.items():
+            _tab["mean"] /= _tab["count"]
+            _tab["RMS"] = np.sqrt(_tab["RMS"] / _tab["len"])
+    except:
+        current_app.logger.debug('not number operations')
+        pass
             
 
     fig = go.Figure(data=trace)
