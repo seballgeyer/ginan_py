@@ -50,12 +50,12 @@ class MongoDB:
             
         if geom is None:
             logger.debug("Geometry not available")
+            self.mongo_content["Geometry"] = ["Site", "Sat", "Epoch"]
         else:
             for i in geom:
-                self.mongo_content["Geometry"].append(i)
-            self.mongo_content["merged_measurement"] = (
-                self.mongo_content["Geometry"] + self.mongo_content["Measurements"]
-            )
+                if i != "_id":
+                    self.mongo_content["Geometry"].append(i)
+                        
         self.mongo_content["states_fields"] = ["x", "dx", "P"]
 
     def get_list_db(self) -> List[str]:

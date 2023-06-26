@@ -37,7 +37,9 @@
           {% block data %}
           {% endblock %}
 
+          {% if table_data or tableagg_data %}
           <h2>Statistics</h2>
+          {% endif %}
           {% if table_data %}
           <div class="table-responsive">
             <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#tableCollapse"
@@ -70,10 +72,11 @@
           {% endif %}
 
           {% if tableagg_data %}
+          <br>
           <div class="table-responsive">
             <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#tableAggCollapse"
               aria-expanded="false" aria-controls="tableAggCollapse">
-              Aggreation Statistics
+              Aggregated Statistics
             </button>
             <div class="collapse" id="tableAggCollapse">
               <table class="table table-striped table-sm">
