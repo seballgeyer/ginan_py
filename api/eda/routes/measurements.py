@@ -111,6 +111,7 @@ def handle_post_request():
         data.merge(data2)
     except:
         pass
+    data.sort()
     data.find_minmax()
     data.adjust_slice(minutes_min=form["exclude"], minutes_max=None)
     for data_ in data:

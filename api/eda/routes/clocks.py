@@ -73,6 +73,7 @@ def handle_post_request():
         clocks = Clocks(data, sitelist=site_list, series=series_, series_base=series_2)
     trace = []
     result = clocks.process()
+    result.sort()
     result.find_minmax()
     result.adjust_slice(minutes_min=form["exclude"], minutes_max=None)
     result.get_stats()

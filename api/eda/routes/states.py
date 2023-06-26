@@ -111,6 +111,7 @@ def handle_post_request() -> str:
             extra=extra,
             message="Error getting data: No data",
         )
+    data.sort()
     data.find_minmax()
     data.adjust_slice(minutes_min=form["exclude"], minutes_max=None)
     trace = []

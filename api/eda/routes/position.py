@@ -81,6 +81,7 @@ def handle_post_request() -> str:
     if form["mode"] == "ENU":
         position.rotate_enu()
     print("..., ", form["exclude"])
+    position.data.sort()
     position.data.find_minmax()
     print(position.data.tmin, position.data.tmax)
     position.data.adjust_slice(minutes_min=form["exclude"], minutes_max=None)
