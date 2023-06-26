@@ -149,10 +149,10 @@ function notSelectedValue(fieldId, missingField) {
     var missingField = []; // Array to store the empty fields
     
     // Check if a value is selected in each field
-    notSelectedValue('type', missingField);
-    notSelectedValue('series_base', missingField);
-    notSelectedValue('series', missingField);
-    notSelectedValue('subset', missingField);
+    notSelectedValue('clockType', missingField);
+notSelectedValue('series_base', missingField);
+notSelectedValue('series', missingField);
+notSelectedValue('subset', missingField);
     console.log(missingField)
     if (missingField.length > 0) {
       var errorMessage = 'Please select a value in the following fields:\n\n';
