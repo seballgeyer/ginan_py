@@ -5,7 +5,7 @@ States
 {% endblock %}
 
 {% block menuselection %}
-<form method="post" class="row g-5" role="form">
+<form method="post" class="row g-5" role="form" onsubmit="return validateForm()">
   <div class="col-lg-1">
     <label for="type" class="form-label">Type:</label>
     <br>
@@ -136,4 +136,51 @@ States
 
   <input type="submit" value="PLOT">
 </form>
+{% endblock %}
+
+
+{% block scripts %}
+
+
+<script>
+function notSelectedValue(fieldId, missingField) {
+    var field = document.getElementById(fieldId);
+    var selectedIndex = field.selectedIndex;
+    console.log("selectedIndex: " + selectedIndex + " for fieldId: " + fieldId);
+    // Check if the field is a single-selection dropdown
+    if (field.getAttribute('multiple') === null) {
+      // For single-selection dropdown, check if selectedIndex is 0 or -1
+      if (selectedIndex === 0 || selectedIndex === -1) {
+        missingField.push(fieldId);
+      }
+    } else {
+      // For multiple-selection dropdown, check if selectedIndex is -1
+      if (selectedIndex === -1) {
+        missingField.push(fieldId);
+      }
+    }
+  }
+  
+  function validateForm() {
+    var missingField = []; // Array to store the empty fields
+    
+    // Check if a value is selected in each field
+    notSelectedValue('type', missingField);
+    notSelectedValue('sat', missingField);
+    notSelectedValue('site', missingField);
+    notSelectedValue('series', missingField);
+    notSelectedValue('state', missingField);
+    console.log(missingField)
+    if (missingField.length > 0) {
+      var errorMessage = 'Please select a value in the following fields:\n\n';
+      for (var i = 0; i < missingField.length; i++) {
+        errorMessage += '- ' + missingField[i] + '\n';
+      }
+      alert(errorMessage);
+      return false; // Prevent form submission
+    }
+
+    return true; // Allow form submission
+  }
+</script>
 {% endblock %}

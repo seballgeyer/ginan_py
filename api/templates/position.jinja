@@ -101,10 +101,20 @@ function notSelectedValue(fieldId, missingField) {
     var field = document.getElementById(fieldId);
     var selectedIndex = field.selectedIndex;
     console.log("selectedIndex: " + selectedIndex + " for fieldId: " + fieldId);
-    if (selectedIndex == -1) {
-      missingField.push(fieldId);
+    // Check if the field is a single-selection dropdown
+    if (field.getAttribute('multiple') === null) {
+      // For single-selection dropdown, check if selectedIndex is 0 or -1
+      if (selectedIndex === 0 || selectedIndex === -1) {
+        missingField.push(fieldId);
+      }
+    } else {
+      // For multiple-selection dropdown, check if selectedIndex is -1
+      if (selectedIndex === -1) {
+        missingField.push(fieldId);
+      }
     }
   }
+  
   function validateForm() {
     var missingField = []; // Array to store the empty fields
     
