@@ -57,7 +57,7 @@ Measurements
     <label for="site" class="form-label">Site:</label>
     <br>
     <select multiple class="selectpicker form-control" name="site" id="site" data-container="body"
-      data-live-search="true" title="Select satellite" data-hide-disabled="true" data-actions-box="true"
+      data-live-search="true" title="Select site" data-hide-disabled="true" data-actions-box="true"
       data-virtual-scroll="false">
       {% for site_ in session['list_site'] %}
       {% if selection is defined and selection['site']|length and site_ in selection['site']%}
