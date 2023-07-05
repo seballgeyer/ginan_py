@@ -1,46 +1,12 @@
 import numpy as np
 import plotly.graph_objs as go
-import plotly.io as pio
 from flask import Blueprint, current_app, render_template, request, session
 
 from sateda.data.measurements import MeasurementArray, Measurements
 from sateda.dbconnector.mongo import MongoDB
 
-from ..utilities import extra, init_page
+from ..utilities import extra, init_page, generate_fig, aggregate_stats, get_data
 from . import eda_bp
-
-# states_bp = Blueprint("states", __name__)
-
-pio.templates["draft"] = go.layout.Template(
-    layout_annotations=[
-        dict(
-            name="draft watermark",
-            text="DRAFT",
-            textangle=-30,
-            opacity=0.1,
-            font=dict(color="black", size=10),
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-        )
-    ]
-)
-
-# @states_bp.route('/states', methods=['GET', 'POST'])
-# def states() -> str:
-#     """
-#     Overall handeling of the page.
-
-#     :return str: HTML code
-#     """
-#     print(request)
-#     if request.method == 'POST':
-#         current_app.logger.info("Entering request")
-#         return handle_post_request()
-#     else:
-#         return init_page(template="states.jinja")
 
 
 @eda_bp.route("/states", methods=["GET", "POST"])
@@ -75,7 +41,6 @@ def handle_post_request() -> str:
     else:
         form["exclude"] = int(form["exclude"])
 
-    print(form["process"], form["degree"])
     current_app.logger.info(
         f"GET {form['type']}, {form['series']}, {form['sat']}, {form['site']}, {form['state']}, {form['xaxis']}, {form['yaxis']}, "
         f"{form['yaxis']+[form['xaxis']]}, exclude {form['exclude']} mintues"
@@ -85,29 +50,29 @@ def handle_post_request() -> str:
 
     for series in form["series"] :
         db_, series_ = series.split("\\")
-        print(db_, series_)
-        with MongoDB(session["mongo_ip"], data_base=db_, port=session["mongo_port"]) as client:
-            try:
-                for req in client.get_data(
-                "States",
-                form["state"],
-                form["site"],
-                form["sat"],
-                [series_],
-                form["yaxis"] + [form["xaxis"]] + ["Num"],
-                ): 
-                    try:
-                        data.append(Measurements.from_dictionary(req, reshape_on="Num", database=db_))     
-                    except ValueError as err:
-                        current_app.logger.warning(err)
-                        continue   
-            except ValueError as err:
-                current_app.logger.error(err)
-                continue
+        get_data(db_, "States", form["state"], form["site"], form["sat"], [series_], form["yaxis"] + [form["xaxis"]] + ["Num"], data, reshape_on="Num")
+        # with MongoDB(session["mongo_ip"], data_base=db_, port=session["mongo_port"]) as client:
+        #     try:
+        #         for req in client.get_data(
+        #         "States",
+        #         form["state"],
+        #         form["site"],
+        #         form["sat"],
+        #         [series_],
+        #         form["yaxis"] + [form["xaxis"]] + ["Num"],
+        #         ): 
+        #             try:
+        #                 data.append(Measurements.from_dictionary(req, reshape_on="Num", database=db_))     
+        #             except ValueError as err:
+        #                 current_app.logger.warning(err)
+        #                 continue   
+        #     except ValueError as err:
+        #         current_app.logger.error(err)
+        #         continue
     if len(data.arr) == 0:
         return render_template(
             "states.jinja",
-            content=client.mongo_content,
+            # content=client.mongo_content,
             extra=extra,
             message="Error getting data: No data",
         )
@@ -145,38 +110,13 @@ def handle_post_request() -> str:
             if any(keyword in form["process"] for keyword in ["Detrend", "Fit"]):
                 table[f"{_data.id}"]["Fit"] = np.array2string(_data.info["Fit"][_yaxis][::-1], precision=2, separator=", ")
                 
-    table_agg = {}
-    
-    for _data in data :
-        series_ = _data.id["series"]
-        db_ = _data.id["db"]
-        for _yaxis in _data.data:
-            print(_yaxis)
-            name = f"{db_} {series_} {_yaxis}"
-            if name not in table_agg:
-                table_agg[name] = {"mean": 0, "RMS": 0, "len": 0, "count": 0}
-                print(_data.info)
-                table_agg[name]["mean"] += _data.info[_yaxis]["mean"]
-                table_agg[name]["RMS"] += _data.info[_yaxis]["sumsqr"]
-                table_agg[name]["len"] += _data.info[_yaxis]["len"]
-                table_agg[name]["count"] += 1
-
-    for _name, _tab in table_agg.items():
-        _tab["mean"] /= _tab["count"]
-        _tab["RMS"] = np.sqrt(_tab["RMS"] / _tab["len"])
-
-    
-    fig = go.Figure(data=trace)
-    fig.update_layout(
-        xaxis=dict(rangeslider=dict(visible=True)),
-        yaxis=dict(fixedrange=False, tickformat=".3e"),
-        height=600,
-    )
+    table_agg = aggregate_stats(data)
+     
     return render_template(
         "states.jinja",
-        content=client.mongo_content,
+        # content=client.mongo_content,
         extra=extra,
-        graphJSON=pio.to_html(fig),
+        graphJSON=generate_fig(trace),
         mode="plotly",
         selection=form,
         table_data=table,

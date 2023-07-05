@@ -24,7 +24,7 @@ Positions
 <div class="col-lg-2">
   <label for="series" class="form-label">Series:</label>
   <br>
-  <select  class="selectpicker form-control" name="series" id="series" data-container="body"
+  <select  multiple class="selectpicker form-control" name="series" id="series" data-container="body"
     data-live-search="true" title="Select series" data-hide-disabled="true" data-actions-box="true"
     data-virtual-scroll="false">
     {% for series_ in session['list_series'] %}
@@ -36,21 +36,7 @@ Positions
     {% endfor %}
   </select>
 </div>
-<div class="col-lg-2">
-  <label for="series_base" class="form-label">Series:</label>
-  <br>
-  <select  class="selectpicker form-control" name="series_base" id="series_base" data-container="body"
-    data-live-search="true" title="Select series" data-hide-disabled="true" data-actions-box="true"
-    data-virtual-scroll="false">
-    {% for series_ in session['list_series'] %}
-    {% if selection is defined and selection['series_base']|length and series_ in selection['series_base']%}
-    <option value="{{series_}}" SELECTED>{{series_}}</option>"
-    {%else%}
-    <option value="{{series_}}">{{series_}}</option>"
-    {%endif%}
-    {% endfor %}
-  </select>
-</div>
+
 
 <div class="col-lg-2">
   <label for="mode" class="form-label">Mode:</label>

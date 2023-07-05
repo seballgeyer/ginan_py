@@ -13,11 +13,13 @@ States
         title="Select type">
 
         {% for key_ in extra['plotType'] %}
-        {% if selection is defined and selection['type']|length and key_ in selection['type']%}
-        <option value="{{key_}}" SELECTED>{{key_}}</option>"
-        {%else%}
-        <option value="{{key_}}">{{key_}}</option>"
-        {%endif%}
+        {% if key_ != 'QQ' %}
+          {% if selection is defined and selection['type']|length and key_ in selection['type']%}
+          <option value="{{key_}}" SELECTED>{{key_}}</option>"
+          {%else%}
+          <option value="{{key_}}">{{key_}}</option>"
+          {%endif%}
+        {% endif %}
         {% endfor %}
       </select>
   </div>

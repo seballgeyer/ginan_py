@@ -28,9 +28,12 @@ Exceptions:
 import datetime
 import logging
 
+import concurrent.futures
+
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
+from scipy import stats
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -82,6 +85,7 @@ class Measurements:
         self.data = {} if data is None else data
         self.info = {}
         self.subset = slice(None, None, None)
+        self.gaps = []
 
     @classmethod
     def from_dictionary(cls, data_dict: dict, reshape_on:str = None, database:str = "") -> "Measurements":
@@ -99,32 +103,40 @@ class Measurements:
         identifier = data_dict["_id"]
         identifier['db'] = database
         epoch = np.array([np.datetime64(t) for t in data_dict["t"]])
-        if max([len(value) for key, value in data_dict.items() if key not in ["t", "_id", "Epoch"]]) == 0:
+        if max(len(value) for key, value in data_dict.items() if key not in ["t", "_id", "Epoch"]) == 0:
             raise ValueError(f"No data for: {identifier}")
         if reshape_on:
             reshaped = data_dict[reshape_on]
             unique = np.unique([item for sublist in reshaped for item in sublist])
-            print(unique)
+            unique = np.sort(unique)
             data = {}
             for key in data_dict:
-                if key not in ["t", "_id", "Epoch", reshape_on]:
-                    for u in unique:
-                        data[f"{key}_{u}"] = np.empty_like((epoch), dtype='float64')
-                        for i, row in enumerate(data_dict[key]):
-                            n = np.asarray(data_dict[reshape_on][i])
-                            index = np.where(n == u)[0]
-                            if len(index) == 1:
-                                data[f"{key}_{u}"][i] = row[index[0]]   
+                if key in ["t", "_id", "Epoch", reshape_on]:
+                    continue
+                for unique_value in unique:
+                    data[f"{key}_{unique_value}"] = np.empty_like((epoch), dtype='float64')
+                    for i, row in enumerate(data_dict[key]):
+                        n = np.asarray(data_dict[reshape_on][i])
+                        index = np.where(n == unique_value)[0]
+                        if len(index) == 1:
+                            data[f"{key}_{unique_value}"][i] = row[index[0]]  
         else:
-            data = {
-                key: np.asarray(value)
-                for key, value in data_dict.items()
-                if key not in ["t", "_id", "Epoch"] and len(value) != 0
-            }
+            missing_keys = []
+            data = {}
+            for key, value in data_dict.items():
+                if key not in ["t", "_id", "Epoch"]:
+                    if len(value) != 0 and not np.all(np.isnan(value)):
+                        data[key] = np.asarray(value)
+                    else:
+                        missing_keys.append(key)
             n = len(epoch)
-            for k in data:
-                if n!= len(data[k]):
-                    logger.debug("Warning: data length not the same for all keys", identifier)
+            for key, value in data.items():
+                if n!= len(value):
+                    logger.debug(f"Warning: data length not the same for all keys {identifier}")
+            if len(missing_keys) != 0:
+                logger.info(f"Warning: keys missing in {identifier} are {missing_keys}")
+        if len(data) == 0:
+            raise ValueError(f"No data for: {identifier}")
         return cls(sat, identifier, epoch, data)
 
     def find_gaps(self, delta=10):
@@ -132,7 +144,6 @@ class Measurements:
         find_gaps find the gaps in the epochs vector. A gap is defined as more than 1 seconds between two data point.
         However, if there is only one point in the segment, link it to the closest in time
         """
-        self.gaps = []
         epoch_length = len(self.epoch)
 
         for i in range(epoch_length - 1):
@@ -197,14 +208,12 @@ class Measurements:
         results = self
         _common, in_self, in_t = np.intersect1d(self.epoch, other.epoch, return_indices=True)
         results.epoch = self.epoch[in_self]
-
         results.data = {key: self.data[key][in_self] - other.data[key][in_t] for key in common_keys}
 
         if len(missing_keys) > 0:
             logger.warning("Warning: keys not present in both dictionaries:")
             logger.warning(f"Present in self.data only: {sorted(self_keys - other_keys)}")
             logger.warning(f"Present in other.data only: {sorted(other_keys - self_keys)}")
-
         return results
 
     def __lt__(self, other):
@@ -233,7 +242,7 @@ class Measurements:
         :return None.
         """
         for key in self.data:
-            mean = self.data[key].mean(axis=0)
+            mean = np.nanmean(self.data[key])
             logger.info(f"Removing mean of data {self.id}: {np.array2string(mean)}")
             self.data[key] -= mean
 
@@ -247,9 +256,7 @@ class Measurements:
         self.info['Fit'] = {}
         for key in self.data:
             self.info['Fit'][key] = np.polyfit(epoch_, self.data[key], degree)
-            print(self.info['Fit'][key])
-            # self.data[]
-        # return fit
+
 
     def detrend(self, degree=1):
         """
@@ -285,12 +292,8 @@ class Measurements:
         """
         Print statistics for the data stored in this Measurements object.
         """
-        string = f"{self.id}"
         for key in self.data:
-            #check if self.data['key'] is not a string
             try:
-                rms = np.sqrt((self.data[key] ** 2).mean())
-                string += f"\n\t{key} {self.data[key].mean(): .4e} sigma  {self.data[key].std(): .4e} RMS {rms:.4e}"
                 mask = ~np.isnan(self.data[key][self.subset])
                 if key not in self.info:
                     self.info[key] = {}
@@ -298,9 +301,23 @@ class Measurements:
                 self.info[key]['len'] = len(self.data[key][self.subset][mask])
                 self.info[key]['rms'] = np.sqrt(np.mean(self.data[key][self.subset][mask]**2))
                 self.info[key]['sumsqr'] = np.sum(self.data[key][self.subset][mask]**2)
+                logger.debug(f"{self.id}: {self.info[key]}")
             except:
                 logger.debug('data not a number')
-        logger.info(string)
+            
+                
+    def compute_qq(self):
+        #compute the qq plot
+        for key in self.data:
+            mask = ~np.isnan(self.data[key][self.subset])
+            if key not in self.info:
+                self.info[key] = {}
+            qq = np.quantile(self.data[key][self.subset][mask], np.linspace(0, 1, 100))
+            # Generate quantiles of a theoretical distribution (e.g., normal distribution)
+            num_quantiles = len(qq)
+            theoretical_quantiles = stats.norm.ppf(np.linspace(0, 1, num_quantiles))
+            self.info[key]['qq'] = [qq, theoretical_quantiles]
+            logger.debug(f"{self.id}: {self.info[key]}")            
 
     def select_range(self, tmin:int=None, tmax:int=None) -> None:
         """
@@ -342,6 +359,7 @@ class MeasurementArray:
         self.arr = []
         self.tmin = None
         self.tmax = None
+        self.difference_check = False
 
     def __iter__(self):
         """
@@ -363,9 +381,15 @@ class MeasurementArray:
         results = MeasurementArray()
         for data in self.arr:
             for other_data in other.arr:
-                print("looking to match", data.id, other_data.id, data.id["sat"] == other_data.id["sat"] , data.id["site"] == other_data.id["site"])
                 if data.id["sat"] == other_data.id["sat"] and data.id["site"] == other_data.id["site"]:
+                    logger.debug("Matching", data.id, other_data.id, data.id["sat"] == other_data.id["sat"] , data.id["site"] == other_data.id["site"])
+                    if self.difference_check:
+                        #QnD fix for the postion difference (if diff > 100m, then it's an old v1 database and we don't do the difference)
+                        if abs(data.data['x_1'][0] - other_data.data['x_1'][0]) > 100:
+                            results.append(data)
+                            break
                     results.append(data - other_data)
+                    break
         return results
         
         
@@ -412,9 +436,7 @@ class MeasurementArray:
         tmin = None
         tmax = None
         if minutes_min:
-            print(self.tmin, minutes_min)
-            #need to change this line, adding miniutes_min as numpy datetime objects
-            tmin = self.tmin + np.timedelta64(minutes_min, 'm')#datetime.timedelta(minutes=minutes_min)
+            tmin = self.tmin + np.timedelta64(minutes_min, 'm')
         if minutes_max:
             tmax = self.tmax - np.timedelta64(minutes_max, 'm')
         for data in self.arr:
@@ -443,28 +465,45 @@ class MeasurementArray:
     
     def merge(self, other) -> None:
         """
-        Merge data from on structure with another one. 
-        It will consiste first to indentify the two element of the array with the same sat and site, 
-        Then generate a common time vector with the unique value of both time vector, and generate a dict of data with nans, 
-        fill the values to  the corresponding time
+        Merge data from one structure with another one.
+        It will consist of first identifying the two elements of the array with the same sat and site,
+        then generate a common time vector with the unique values of both time vectors,
+        and generate a dict of data with nans, fill the values to the corresponding time.
         """
         for _data in self.arr:
             for _other in other.arr:
                 if _data.id["sat"] == _other.id["sat"] and _data.id["site"] == _other.id["site"]:
                     common_time = np.union1d(_data.epoch, _other.epoch)
                     data = {}
+                    for key in set(_data.data) | set(_other.data):
+                        data[key] = np.full_like(common_time, np.nan, dtype="float64")
                     for name, val in _data.data.items():
-                        data[name] = np.full_like(common_time, np.nan, dtype="float64")
-                        data[name][np.isin(common_time, _data.epoch)] = val
-                        print(name, val)
+                        mask = ~np.isnan(val)
+                        data[name][np.isin(common_time, _data.epoch[mask])] = val[mask]
                     for name, val in _other.data.items():
                         mask = ~np.isnan(val)
-                        print(name, val[mask])
                         data[name][np.isin(common_time, _other.epoch[mask])] = val[mask]
                     _data.epoch = common_time
-                    _data.data = data                
-                    break
+                    _data.data = data
+      
                 
     def get_stats(self) -> None:
-        for data in self.arr:
+        def get_stats_worker(data):
             data.get_stats()
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.map(get_stats_worker, self.arr)
+
+    def compute_qq(self) -> None:
+        def compute_qq_worker(data):
+            data.demean()
+            data.compute_qq()
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.map(compute_qq_worker, self.arr)
+        
+    # def get_stats(self) -> None:
+    #     for data in self.arr:
+    #         data.get_stats()
+            
+    # def compute_qq(self) -> None:
+    #     for data in self.arr:
+    #         data.compute_qq()

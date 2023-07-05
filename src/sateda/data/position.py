@@ -62,9 +62,11 @@ class Position:
         rotate Rotate the position to the ENU frame from the base 
         """
         for data in self.data:
+            for k in data.data:
+                print(k)
             #locate the base with the same station id
             base = self.base.locate(site=data.id['site'])
-            lat, lon, height = xyz2blh(base.data['x'][:,0], base.data['x'][:,1], base.data['x'][:,2])
+            lat, lon, height = xyz2blh(base.data['x_0'], base.data['x_1'], base.data['x_2'])
             rot = np.zeros((3,3, len(lat)))
             rot[0,0] = -np.sin(lon)
             rot[0,1] = -np.sin(lat)*np.cos(lon)
@@ -75,8 +77,10 @@ class Position:
             rot[2,0] = 0
             rot[2,1] = np.cos(lat)
             rot[2,2] = np.sin(lat)
-            print(rot.shape, data.data['x'].shape)
-            enu = np.matmul(rot.transpose(), data.data['x'][:,:,np.newaxis])[:,:,0]
-            data.data['x'] = np.matmul(rot.transpose(), data.data['x'][:,:,np.newaxis])[:,:,0]
-        
+            project = np.empty((len(data.data['x_0']),3))
+            for i in range(3):
+                project[:, i] = data.data[f'x_{i}']
+            enu = np.matmul(rot.transpose(), project[:,:,np.newaxis])[:,:,0]
+            for i in range(3):
+                data.data[f'x_{i}'] = enu[:, i]
         

@@ -15,17 +15,21 @@ class TestPositions(unittest.TestCase):
         data_dict = {
             "_id": {"sat": "", "site": "North"},
             "t": [t0, t0+datetime.timedelta(seconds=1)],
-            "x": [[0, 0, 1], [0, 0, 1]],
+            "x_0": [0, 0],
+            "x_1": [0, 0],
+            "x_2": [1, 1],
         }
         reference.append(Measurements.from_dictionary(data_dict))
         data_dict = {
             "_id": {"sat": "", "site": "North"},
             "t": [t0, t0+datetime.timedelta(seconds=1)],
-            "x": [[1,1,2], [1,1,3]],
+            "x_0": [1,1],
+            "x_1": [1, 1],
+            "x_2": [2, 3],
         }
         data.append(Measurements.from_dictionary(data_dict))
         p = Position(data=data, base=reference)
-        self.assertTrue(np.alltrue(p.data.arr[0].data["x"][:,2] == [1,2]))
+        self.assertTrue(np.alltrue(p.data.arr[0].data["x_2"] == [1,2]))
         
     def test_rotate_North(self):
         """
@@ -37,18 +41,22 @@ class TestPositions(unittest.TestCase):
         data_dict = {
             "_id": {"sat": "", "site": "North"},
             "t": [t0, t0+datetime.timedelta(seconds=1)],
-            "x": [[0, 0, 1], [0, 0, 1]],
+            "x_0": [0, 0],
+            "x_1": [0, 0],
+            "x_2": [1, 1],
         }
         reference.append(Measurements.from_dictionary(data_dict))
         data_dict = {
             "_id": {"sat": "", "site": "North"},
             "t": [t0, t0+datetime.timedelta(seconds=1)],
-            "x": [[1,1,2], [1,1,3]],
+            "x_0": [1,1],
+            "x_1": [1, 1],
+            "x_2": [2, 3],
         }
         data.append(Measurements.from_dictionary(data_dict))
         p = Position(data=data, base=reference)
         p.rotate_enu()
-        self.assertTrue(np.alltrue(p.data.arr[0].data["x"][:,2] == [1,2]))
+        self.assertTrue(np.alltrue(p.data.arr[0].data["x_2"] == [1,2]))
 
     def test_rotate_lat0lon0(self):
         """
@@ -60,21 +68,26 @@ class TestPositions(unittest.TestCase):
         data_dict = {
             "_id": {"sat": "", "site": "North"},
             "t": [t0, t0+datetime.timedelta(seconds=1)],
-            "x": [[1, 0, 0], [1, 0, 0]],
+            "x_0": [1,1],
+            "x_1": [0, 0],
+            "x_2": [0, 0],
         }
         reference.append(Measurements.from_dictionary(data_dict))
         data_dict = {
             "_id": {"sat": "", "site": "North"},
             "t": [t0, t0+datetime.timedelta(seconds=1)],
-            "x": [[1.1,0.2,0.3], [1.1,0.2,0.3]],
+            "x_0": [1.1,1.1],
+            "x_1": [0.2, 0.2],
+            "x_2": [0.3, 0.3],
+            
         }
         data.append(Measurements.from_dictionary(data_dict))
         p = Position(data=data, base=reference)
         p.rotate_enu()
         
-        self.assertTrue(np.allclose(p.data.arr[0].data["x"][:,2] , [0.1,0.1], atol=1e-15))
-        self.assertTrue(np.allclose(p.data.arr[0].data["x"][:,1] , [0.3,0.3], atol=1e-15))
-        self.assertTrue(np.allclose(p.data.arr[0].data["x"][:,0] , [0.2,0.2], atol=1e-15))
+        self.assertTrue(np.allclose(p.data.arr[0].data["x_2"] , [0.1,0.1], atol=1e-15))
+        self.assertTrue(np.allclose(p.data.arr[0].data["x_1"] , [0.3,0.3], atol=1e-15))
+        self.assertTrue(np.allclose(p.data.arr[0].data["x_0"] , [0.2,0.2], atol=1e-15))
         
         
     def test_rotate_lat0lon90(self):
@@ -87,18 +100,22 @@ class TestPositions(unittest.TestCase):
         data_dict = {
             "_id": {"sat": "", "site": "North"},
             "t": [t0, t0+datetime.timedelta(seconds=1)],
-            "x": [[0, 1, 0], [0, 1, 0]],
+            "x_0": [0, 0],
+            "x_1": [1,1],
+            "x_2": [0, 0],
         }
         reference.append(Measurements.from_dictionary(data_dict))
         data_dict = {
             "_id": {"sat": "", "site": "North"},
             "t": [t0, t0+datetime.timedelta(seconds=1)],
-            "x": [[0.1,1.2,0.3], [0.1,1.2,0.3]],
+            "x_0": [0.1, 0.1],
+            "x_1": [1.2, 1.2],
+            "x_2": [0.3, 0.3],
         }
         data.append(Measurements.from_dictionary(data_dict))
         p = Position(data=data, base=reference)
         p.rotate_enu()
         
-        self.assertTrue(np.allclose(p.data.arr[0].data["x"][:,2] , [0.2,0.2], atol=1e-15))
-        self.assertTrue(np.allclose(p.data.arr[0].data["x"][:,1] , [0.3,0.3], atol=1e-15))
-        self.assertTrue(np.allclose(p.data.arr[0].data["x"][:,0] , [-0.1,-0.1], atol=1e-15))
+        self.assertTrue(np.allclose(p.data.arr[0].data["x_2"] , [0.2,0.2], atol=1e-15))
+        self.assertTrue(np.allclose(p.data.arr[0].data["x_1"] , [0.3,0.3], atol=1e-15))
+        self.assertTrue(np.allclose(p.data.arr[0].data["x_0"] , [-0.1,-0.1], atol=1e-15))

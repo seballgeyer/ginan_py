@@ -1,17 +1,14 @@
 import numpy as np
-import plotly.graph_objs as go
-import plotly.io as pio
 
 from flask import Blueprint, current_app, render_template, request, session
+import plotly.graph_objs as go
+
 
 from sateda.dbconnector.mongo import MongoDB
 from sateda.data.measurements import MeasurementArray, Measurements
-from ..utilities import init_page, extra
+from ..utilities import init_page, extra, generate_fig, aggregate_stats, get_data
 from . import eda_bp
 
-# eda_bp = Blueprint('eda', __name__)
-
-measurements_bp = Blueprint("measurements", __name__)
 
 
 @eda_bp.route("/measurements", methods=["GET", "POST"])
@@ -20,24 +17,6 @@ def measurements():
         return handle_post_request()
     else:
         return init_page(template="measurements.jinja")
-
-
-pio.templates["draft"] = go.layout.Template(
-    layout_annotations=[
-        dict(
-            name="draft watermark",
-            text="DRAFT",
-            textangle=-30,
-            opacity=0.1,
-            font=dict(color="black", size=10),
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-        )
-    ]
-)
 
 
 def handle_post_request():
@@ -57,132 +36,98 @@ def handle_post_request():
     current_app.logger.info(
         f"GET {form['plot']}, {form['series']}, {form['sat']}, {form['site']}, {form['xaxis']}, {form['yaxis']}, {form['yaxis']+[form['xaxis']]}, exclude {form['exclude']} mintues"
     )
+    
     current_app.logger.info("Getting Connection")
     data = MeasurementArray()
     data2 = MeasurementArray()
-    print("------")
     for series in form["series"] :
-        print(series)
         db_, series_ = series.split("\\")
-        with MongoDB(session["mongo_ip"], data_base=db_, port=session["mongo_port"]) as client:
-            try:
-                for req in client.get_data(
-                    "Measurements",
-                    None,
-                    form["site"],
-                    form["sat"],
-                    [series_],
-                    form["yaxis"] + [form["xaxis"]],
-                ):
-                    try:
-                        data.append(Measurements.from_dictionary(req, database=db_))
-                    except ValueError as err:
-                        current_app.logger.warning(err)
-                        continue   
-            except ValueError as err:
-                current_app.logger.warning(err)
-                continue
-            
-            try:
-                for req in client.get_data(
-                    "Geometry",
-                    None,
-                    form["site"],
-                    form["sat"],
-                    [""],
-                    form["yaxis"] + [form["xaxis"]],
-                ):
-                    try:
-                        data2.append(Measurements.from_dictionary(req))
-                    except ValueError as err:
-                        current_app.logger.warning(err)
-                        continue   
-            except ValueError as err:
-                current_app.logger.warning(err)
-                continue                   
+        get_data(db_, "Measurements", None, form["site"], form["sat"], [series_], form["yaxis"] + [form["xaxis"]], data)
+        if any([yaxis in session["list_geometry"] for yaxis in form["yaxis"]+[form["xaxis"]]]):
+            get_data(db_, "Geometry", None, form["site"], form["sat"], [""], form["yaxis"] + [form["xaxis"]], data2)
+
     if len(data.arr) == 0:
         return render_template(
             "measurements.jinja",
-            content=client.mongo_content,
+            # content=client.mongo_content,
             extra=extra,
-            message=f"Error getting data: No data",
+            message="Error getting data: No data",
         )
-    try:
-        data.merge(data2)
-    except:
-        pass
+
+    # try:
+    data.merge(data2)
+    # except Exception as e:
+        # current_app.logger.warning(f"Merging error data {e}")
+        # pass
+    
+    # exit(0)
+
     data.sort()
     data.find_minmax()
     data.adjust_slice(minutes_min=form["exclude"], minutes_max=None)
     for data_ in data:
         data_.find_gaps()
     data.get_stats()
-    trace = []
     mode = "markers" if form["plot"] == "Scatter" else "lines"
+    if form["plot"] == "QQ":
+        data.compute_qq()
+        mode = "markers"
+    trace = []
     table = {}
+    current_app.logger.warning("starting plots")
     for _data in data:
         for _yaxis in form["yaxis"]:
+            # try:
+            #     if np.isnan(_data.data[_yaxis][_data.subset]).any():
+            #         current_app.logger.warning(f"Nan detected for {_data.id}")
+            # except:
+            #     current_app.logger.debug(f"{_data.id} is not numbers")
+            #     pass
             try:
-                if np.isnan(_data.data[_yaxis][_data.subset]).any():
-                    current_app.logger.warning(f"Nan detected for {_data.id}")
-                    current_app.logger.warning(np.argwhere(np.isnan(_data.data[_yaxis][_data.subset])))
-            except:
-                current_app.logger.debug(f"{_data.id} is not numbers")
-                pass
-            if form['xaxis'] == 'Epoch':
-                _x = _data.epoch[_data.subset]
-            else:
-                _x = _data.data[form['xaxis']][_data.subset]
+                if form['xaxis'] == 'Epoch':
+                    _x = _data.epoch[_data.subset]
+                    x_hover_template = "%{x|%Y-%m-%d %H:%M:%S}<br>"
+                else:
+                    _x = _data.data[form['xaxis']][_data.subset]
+                    x_hover_template = "%{x}<br>"
+                if _yaxis in _data.data:
+                    if form['plot'] == 'QQ':
+                        _x = _data.info[_yaxis]['qq'][1]
+                        _y = _data.info[_yaxis]['qq'][0]        
+                        x_hover_template = "%{x}<br>"                
+                    else:
+                        _y = _data.data[_yaxis][_data.subset]
+                    legend = _data.id
+                    legend['yaxis'] = _yaxis
+                    trace.append(
+                        go.Scatter(
+                            x=_x,
+                            y=_y,
+                            mode=mode,
+                            name=f"{legend}",
+                            hovertemplate=x_hover_template + "%{y:.4e%}<br>" + f"{legend}",
+                        )
+                    )
+                    try:
+                        table[f"{legend}"] = {"mean": _data.info[_yaxis]["mean"],
+                                                "RMS": _data.info[_yaxis]["rms"]}
+                    except:
+                        pass
+            except Exception as e:
+                current_app.logger.warning(f"Error plotting {_data.id} {form['xaxis']}{_yaxis} {e}")
                 
-            trace.append(
-                go.Scatter(
-                    x=_x,
-                    y=_data.data[_yaxis][_data.subset],
-                    mode=mode,
-                    name=f"{_data.id}{_yaxis}",
-                    hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_data.id}{_yaxis}",
-                )
-            )
-            try:
-                table[f"{_data.id} {_yaxis}"] = {"mean": _data.info[_yaxis]["mean"],
-                                        "RMS": _data.info[_yaxis]["rms"]}
-            except:
-                pass
-            
-    table_agg = {}
-    try:
-        for _data in data :
-            series_ = _data.id["series"]
-            db_ = _data.id["db"]
-            for _yaxis in form["yaxis"]:
-                name = f"{db_} {series_} {_yaxis}"
-                if name not in table_agg:
-                    table_agg[name] = {"mean": 0, "RMS": 0, "len": 0, "count": 0}
-                    table_agg[name]["mean"] += _data.info[_yaxis]["mean"]
-                    table_agg[name]["RMS"] += _data.info[_yaxis]["sumsqr"]
-                    table_agg[name]["len"] += _data.info[_yaxis]["len"]
-                    table_agg[name]["count"] += 1
-    
-        for _name, _tab in table_agg.items():
-            _tab["mean"] /= _tab["count"]
-            _tab["RMS"] = np.sqrt(_tab["RMS"] / _tab["len"])
-    except:
-        current_app.logger.debug('not number operations')
-        pass
-            
+    current_app.logger.warning("end plots")
 
-    fig = go.Figure(data=trace)
-    fig.update_layout(
-        xaxis=dict(rangeslider=dict(visible=False)),
-        yaxis=dict(fixedrange=False, tickformat=".3e"),
-        height=800,
-    )
-    fig.layout.autosize = True
+    table_agg = aggregate_stats(data)
+     
+           
+
+
     return render_template(
         "measurements.jinja",
-        content=client.mongo_content,
+        # content=client.mongo_content,
         extra=extra,
-        graphJSON=pio.to_html(fig),
+        graphJSON=generate_fig(trace),
         mode="plotly",
         selection=form,
         table_data=table,

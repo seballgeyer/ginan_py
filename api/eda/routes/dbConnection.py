@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, request, session
+from flask import  render_template, request, session
 from flask import current_app
-from sateda.dbconnector.mongo import MongoDB
+
 from pymongo.errors import ServerSelectionTimeoutError
-from . import eda_bp  # eda_bp = Blueprint('eda', __name__)
+
+from sateda.dbconnector.mongo import MongoDB
+from . import eda_bp
 
 
 @eda_bp.route("/", methods=["GET", "POST"])
@@ -36,12 +38,10 @@ def handle_post_request():
     db_ip = getattr(session, "mongo_ip", "127.0.0.1")
     db_port = getattr(session, "mongo_port", "27017")
     if "connect" in form_data:
-        # TODO: need to raise exception (DB connection failed)
         return handle_connect_request(form_data)
     elif "load" in form_data:
         return handle_load_request(form_data)
     else:
-        # Handle other POST requests if needed
         return render_template("connect.jinja", db_ip=db_ip, db_port=db_port)
 
 
@@ -115,12 +115,16 @@ def handle_load_request(form_data):
                 mesurements += client.mongo_content["Measurements"]
             geometry += client.mongo_content["Geometry"]
             state += client.mongo_content["State"]
-    print(site, sat, series)
-    print("\n".join(message))
+    current_app.logger.debug(site, sat, series)
+    current_app.logger.debug("\n".join(message))
     session["list_sat"] = sorted(set(sat))
     session["list_site"] = sorted(set(site))
     session["list_series"] = sorted(set(series))
+    session["list_generic"] = ["Epoch", "Sat", "Site", "Series"]
     session["list_geometry"] = sorted(set(geometry)) 
+    #remove list_generic from list_geometry
+    session["list_geometry"] = [item for item in session["list_geometry"] if item not in session["list_generic"]]
+    
     if client.mongo_content["Has_measurements"]:
         session["list_measurements"] = sorted(set(mesurements))
 

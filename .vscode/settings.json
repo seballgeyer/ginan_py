@@ -12,5 +12,15 @@
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
-    "python.formatting.provider": "none"
+    "python.formatting.provider": "none",
+
+
+    "sync-rsync.sites": 
+    [
+        {
+            "name": "SimonEc2",
+            "remotePath": "ubuntu@ec2-54-252-19-3.ap-southeast-2.compute.amazonaws.com:/home/ubuntu/.",
+            "localPath": "${workspaceRoot}"
+        }
+    ]
 }

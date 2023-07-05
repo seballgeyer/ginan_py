@@ -1,14 +1,13 @@
 import numpy as np
 import plotly.graph_objs as go
-import plotly.io as pio
-from flask import Blueprint, current_app, render_template, request, session
+from flask import current_app, render_template, request, session
 
 from sateda.dbconnector.mongo import MongoDB
 from sateda.data.clocks import Clocks
-from ..utilities import init_page, extra
+from sateda.data.measurements import MeasurementArray, Measurements
+from ..utilities import init_page, extra, generate_fig, aggregate_stats, get_data
 from . import eda_bp
 
-# clocks_bp = Blueprint("clocks", __name__)
 
 
 @eda_bp.route("/clocks", methods=["GET", "POST"])
@@ -25,6 +24,7 @@ def handle_post_request():
     form = {}
     form["series"] = form_data.get("series")
     form["series_base"] = form_data.get("series_base")
+    form["subset"] = form_data.getlist("subset")
     form["exclude"] = form_data.get("exclude")
     if form["exclude"] == "":
         form["exclude"] = 0
@@ -41,32 +41,24 @@ def handle_post_request():
             extra=extra,
             message=f"Error getting data: Can only compare series from the same database",
         )
-    with MongoDB(session["mongo_ip"], data_base=db_, port=session["mongo_port"]) as client:
-        try:
-            sat_list = client.mongo_content["Sat"]
-            site_list = client.mongo_content["Site"]
-            if form["clockType"] == "Satellite":
-                state = ["SAT_CLOCK"]
-                site_list = [""]
-            elif form["clockType"] == "Site":
-                state = ["REC_CLOCK"]
-                sat_list = ["", "G--"]
-            data = client.get_data_to_measurement(
-                "States",
-                state,
-                site_list,
-                sat_list,
-                [series_] + [series_2],
-                ["x"],
-            )
-        except Exception as err:
-            current_app.logger.error(err)
-            return render_template(
-                "clocks.jinja",
-                content=client.mongo_content,
-                extra=extra,
-                message=f"Error getting data: {str(err)}",
-            )
+    if form["clockType"] == "Satellite":
+        state = ["SAT_CLOCK"]
+        site_list = [""]
+        sat_list = form["subset"]
+    elif form["clockType"] == "Site":
+        state = ["REC_CLOCK"]
+        sat_list = ["", "G--"]
+        site_list = form["subset"]
+    data = MeasurementArray()
+    try:
+        get_data(db_, "States", state, site_list, sat_list, [series_] + [series_2], ["x"], data)
+    except Exception as err:
+        current_app.logger.error(err)
+        return render_template(
+            "clocks.jinja",
+            extra=extra,
+            message=f"Error getting data: {str(err)}",
+        )
     if form["clockType"] == "Satellite":
         clocks = Clocks(data, satlist=sat_list, series=series_, series_base=series_2)
     else:
@@ -88,40 +80,18 @@ def handle_post_request():
                 hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_clock.id}",
             )
         )
-        print(_clock.info)
+        current_app.logger.debug(_clock.info)
         table[f"{_clock.id}"] = {"mean": _clock.info['x']["mean"],
                             "RMS": _clock.info['x']["rms"]}
-        
-    table_agg = {}
-    for _data in result :
-        series_ = _data.id["series"]
-        db_ = _data.id["db"]
-        name = f" "
-        if name not in table_agg:
-            table_agg[name] = {"mean": 0, "RMS": 0, "len": 0, "count": 0}
-            print(_data.info)
-            table_agg[name]["mean"] += _data.info['x']["mean"]
-            table_agg[name]["RMS"] += _data.info['x']["sumsqr"]
-            table_agg[name]["len"] += _data.info['x']["len"]
-            table_agg[name]["count"] += 1
+  
+    table_agg = aggregate_stats(result)
+ 
 
-    for _name, _tab in table_agg.items():
-        _tab["mean"] /= _tab["count"]
-        _tab["RMS"] = np.sqrt(_tab["RMS"] / _tab["len"])
-
-
-    fig = go.Figure(data=trace)
-    fig.update_layout(
-        xaxis=dict(rangeslider=dict(visible=True)),
-        yaxis=dict(fixedrange=False, tickformat=".3e"),
-        height=600,
-    )
 
     return render_template(
         "clocks.jinja",
-        content=client.mongo_content,
         extra=extra,
-        graphJSON=pio.to_html(fig),
+        graphJSON=generate_fig(trace),
         mode="plotly",
         selection=form,
         table_data= table, 

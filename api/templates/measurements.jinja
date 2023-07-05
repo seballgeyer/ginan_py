@@ -57,7 +57,7 @@ Measurements
     <label for="site" class="form-label">Site:</label>
     <br>
     <select multiple class="selectpicker form-control" name="site" id="site" data-container="body"
-      data-live-search="true" title="Select site" data-hide-disabled="true" data-actions-box="true"
+      data-live-search="true" title="Select Site" data-hide-disabled="true" data-actions-box="true"
       data-virtual-scroll="false">
       {% for site_ in session['list_site'] %}
       {% if selection is defined and selection['site']|length and site_ in selection['site']%}
@@ -74,6 +74,14 @@ Measurements
     <br>
     <select  class="selectpicker form-control" name="xaxis" id="xaxis" data-hide-disabled="true"
       data-live-search="true">
+      {% for key_ in session['list_generic'] %}
+      {% if selection is defined and selection['xaxis']|length and key_ in selection['xaxis']%}
+      <option value="{{key_}}" SELECTED>{{key_}}</option>"
+      {%else%}
+      <option value="{{key_}}">{{key_}}</option>"
+      {%endif%}
+      {% endfor %}
+      <option data-divider="true"></option> <!-- Virtual separator -->
       {% for key_ in session['list_geometry'] %}
       {% if selection is defined and selection['xaxis']|length and key_ in selection['xaxis']%}
       <option value="{{key_}}" SELECTED>{{key_}}</option>"
@@ -98,6 +106,14 @@ Measurements
     <select multiple class="selectpicker form-control" name="yaxis" id="yaxis" data-container="body"
       data-live-search="true" title="Select series" data-hide-disabled="true" data-actions-box="true"
       data-virtual-scroll="false">
+      {% for key_ in session['list_generic'] %}
+      {% if selection is defined and selection['yaxis']|length and key_ in selection['yaxis']%}
+      <option value="{{key_}}" SELECTED>{{key_}}</option>"
+      {%else%}
+      <option value="{{key_}}">{{key_}}</option>"
+      {%endif%}
+      {% endfor %}
+      <option data-divider="true"></option> <!-- Virtual separator -->
       {% for key_ in session['list_geometry'] %}
       {% if selection is defined and selection['yaxis']|length and key_ in selection['yaxis']%}
       <option value="{{key_}}" SELECTED>{{key_}}</option>"
