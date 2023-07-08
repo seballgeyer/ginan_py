@@ -1,19 +1,25 @@
 """
 Testing set for measurements
 """
+import datetime
 import unittest
 
 import numpy as np
-import datetime
 
 from sateda.data.measurements import MeasurementArray, Measurements
 
 
+class TestsMeasurementArray(unittest.TestCase):
+    """
+    TestsMeasurementArray _summary_
 
-class tests_measurementArray(unittest.TestCase):
+    :param _type_ unittest: _description_
+    """
     def test_substract(self):
-        #Generate 2 set of MeasurementsArray with the same epoch containing 3 id (satellite, site) different
-        #The first set is the reference
+        """
+        test_substract Testing the substraction between 2 dataset.
+        The substraction should be donne on common epochs and identical sat / site combination
+        """
         reference = MeasurementArray()
         data  = MeasurementArray()
         t0 = datetime.datetime(2021, 1, 1, 0, 0, 0)
