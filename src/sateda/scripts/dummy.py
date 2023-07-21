@@ -21,7 +21,12 @@ def main():
         add_help=False,
     )
 
-    main_parser.add_argument("--db", default="127.0.0.1", type=str, help="Mongo database url [default 127.0.0.1]")
+    main_parser.add_argument(
+        "--db",
+        default="127.0.0.1",
+        type=str,
+        help="Mongo database url [default 127.0.0.1]",
+    )
     main_parser.add_argument("--coll", type=str, required=True, help="Mongo collection to plot")
     main_parser.add_argument("--sat", type=str, nargs="+", required=True, help="Satellite name")
     main_parser.add_argument("--site", type=str, nargs="+", required=True, help="Site name")

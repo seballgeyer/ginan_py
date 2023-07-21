@@ -36,5 +36,7 @@ class GraceSCA:
         data_lines = contents.split("# End of YAML header")[1].strip()
         self.yaml_dict = yaml.safe_load(yaml_lines)
         self.data = np.loadtxt(
-            StringIO(data_lines), dtype=sca_dtype, converters={0: gracetime_converter, 8: binary_to_int}
+            StringIO(data_lines),
+            dtype=sca_dtype,
+            converters={0: gracetime_converter, 8: binary_to_int},
         )

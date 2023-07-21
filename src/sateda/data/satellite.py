@@ -37,10 +37,20 @@ class satellite:
 
     def get_state(self):
         data = self.mongodb.get_data(
-            collection="States", state="SAT_POS", sat=[self.sat], site=[""], series=self.series, keys=["x"]
+            collection="States",
+            state="SAT_POS",
+            sat=[self.sat],
+            site=[""],
+            series=self.series,
+            keys=["x"],
         )
         data_rate = self.mongodb.get_data(
-            collection="States", state="SAT_POS_RATE", sat=[self.sat], site=[""], series=self.series, keys=["x"]
+            collection="States",
+            state="SAT_POS_RATE",
+            sat=[self.sat],
+            site=[""],
+            series=self.series,
+            keys=["x"],
         )
         self.pos = np.empty((3, len(data[0]["t"])))
         self.vel = np.empty((3, len(data[0]["t"])))
