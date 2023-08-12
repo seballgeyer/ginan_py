@@ -48,7 +48,7 @@ class TestSp3(unittest.TestCase):
     def setUp(self) -> None:
         print("In method", self._testMethodName)
         self.sp3_data = sp3()
-        self.sp3_data.read(file_or_string=input_data)
+        self.sp3_data = sp3.read(file_or_string=input_data)
     def test_headerNsat(self):
         print(self.sp3_data.header)
         self.assertEqual(self.sp3_data.header['nsat'], 2)  # add assertion here
