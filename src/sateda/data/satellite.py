@@ -26,30 +26,30 @@ class satellite:
             state=None,
             sat=[self.sat],
             site=[""],
-            series=self.series,
-            keys=["PseudoPos0-Postfit", "PseudoPos1-Postfit", "PseudoPos2-Postfit"],
+            series=[self.series],
+            keys=["ECI PseudoPos0-Prefit", "ECI PseudoPos1-Prefit", "ECI PseudoPos2-Prefit"],
         )
         self.time = np.asarray(data[0]["t"], dtype="datetime64[us]")
         self.residual = np.empty((len(data[0]["t"]), 3))
-        self.residual[:, 0] = data[0]["PseudoPos0-Postfit"]
-        self.residual[:, 1] = data[0]["PseudoPos1-Postfit"]
-        self.residual[:, 2] = data[0]["PseudoPos2-Postfit"]
+        self.residual[:, 0] = data[0]["ECI PseudoPos0-Prefit"]
+        self.residual[:, 1] = data[0]["ECI PseudoPos1-Prefit"]
+        self.residual[:, 2] = data[0]["ECI PseudoPos2-Prefit"]
 
     def get_state(self):
         data = self.mongodb.get_data(
             collection="States",
-            state="SAT_POS",
+            state=["SAT_POS"],
             sat=[self.sat],
             site=[""],
-            series=self.series,
+            series=[self.series],
             keys=["x"],
         )
         data_rate = self.mongodb.get_data(
             collection="States",
-            state="SAT_POS_RATE",
+            state=["SAT_POS_RATE"],
             sat=[self.sat],
             site=[""],
-            series=self.series,
+            series=[self.series],
             keys=["x"],
         )
         self.pos = np.empty((3, len(data[0]["t"])))
