@@ -9,14 +9,10 @@ description = "satEDA"
 authors = [
     { name = "Sebastien Allgeyer", email = "sebastien.allgeyer@gmail.com" }
 ]
-dependencies = [
-    "numpy",
-    "scipy",
-    "pymongo",
-    "matplotlib",
-    "PyYAML"
-]
-dynamic = ["version"]
+dynamic = ["version", "dependencies"]
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
 
 [project.scripts]
 "ginan_mq" = "sateda.scripts.ginan_mq:main"
