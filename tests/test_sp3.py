@@ -101,8 +101,11 @@ class TestSp3(unittest.TestCase):
         """
         Testing the merge functions.
         """
-        s1 = copy.deepcopy(self.sp3_data)
-        s2 = copy.deepcopy(self.sp3_data2)
+        print("reading data")
+        input_data.seek(0)
+        input_data2.seek(0)
+        s1 = sp3().read(file_or_string=input_data)
+        s2 = sp3().read(file_or_string=input_data2)
         s1.merge(self.sp3_data2)
         s2.merge(self.sp3_data)
         # check if the x values are the same
