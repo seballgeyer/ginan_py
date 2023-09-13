@@ -40,6 +40,19 @@ class Time:
         gps_time = np.datetime64(f"{year:04d}-{month:02d}-{day:02d}T{hour:02d}:{minute:02d}:{second:02d}.{microsecond:06d}")
         return cls(gps_time, timesystem)
 
+    #define operator less than
+    def __lt__(self, other):
+        if isinstance(other, Time):
+            return self.time < other.time
+        else:
+            return self.time < other
+
+    def __eq__(self, other):
+        if isinstance(other, Time):
+            return self.time == other.time
+        else:
+            return self.time == other
+
     def __str__(self):
         return f"{self.time} {self.timesystem.value}"
 

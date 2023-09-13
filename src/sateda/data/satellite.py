@@ -14,7 +14,7 @@ class satellite:
         self.series: str = series
         self.mongodb: mongo.MongoDB = mongodb
 
-        self.time: npt.ArrayLike = np.empty(0)
+        self.time: npt.ArrayLike = np.empty(0, dtype="datetime64[us]")
         self.pos: npt.ArrayLike = np.empty(0)
         self.vel: npt.ArrayLike = np.empty(0)
         self.residual: npt.ArrayLike = np.empty(0)

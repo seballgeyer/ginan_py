@@ -228,11 +228,11 @@ class Measurements:
             if field in self.id and field in other.id:
                 if self.id[field] < other.id[field]:
                     return True
-                elif self.id[field] > other.id[field]:
+                if self.id[field] > other.id[field]:
                     return False
-            elif field in self.id:
+            if field in self.id:
                 return False
-            elif field in other.id:
+            if field in other.id:
                 return True
         return False
 
@@ -408,6 +408,7 @@ class MeasurementArray:
             except:
                 logger.info("skyping this one")
         return temporary_loader
+
 
     def find_minmax(self):
         """

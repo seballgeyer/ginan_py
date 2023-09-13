@@ -10,6 +10,8 @@ import re
 import numpy as np
 import numpy.typing as npt
 
+from sateda.core.time import Time
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 class sp3:
@@ -28,15 +30,37 @@ class sp3:
 
         header_, data_ = instance._split_header_data(contents)
         instance._read_header(header_)
-        instance._read_data(data_)
+        instance._parse_data_block(data_)
         return instance
+
+    def merge(self, other: "sp3") -> None:
+        """
+        Merge two sp3 classes.
+        Need to have a loop on data dictionary and merge each satellite together making sure that the time is increasing.
+        """
+        for sat in other.data.keys():
+            if sat not in self.data:
+                self.data[sat] = {}
+                self.data[sat]["time"] = []
+                self.data[sat]["x"] = []
+                self.data[sat]["y"] = []
+                self.data[sat]["z"] = []
+            self.data[sat]["time"].extend(other.data[sat]["time"])
+            self.data[sat]["x"].extend(other.data[sat]["x"])
+            self.data[sat]["y"].extend(other.data[sat]["y"])
+            self.data[sat]["z"].extend(other.data[sat]["z"])
+            #sort the data along the time value
+            sort_idx = np.argsort(self.data[sat]["time"])
+            self.data[sat]["time"] = np.asarray(self.data[sat]["time"])[sort_idx]
+            self.data[sat]["x"] = np.asarray(self.data[sat]["x"])[sort_idx]
+            self.data[sat]["y"] = np.asarray(self.data[sat]["y"])[sort_idx]
+            self.data[sat]["z"] = np.asarray(self.data[sat]["z"])[sort_idx]
 
 
     def _split_header_data(self, contents: str) -> [str, str]:
         # Use a regular expression to find the first line starting with "*"
         try:
             match = re.search(r'^\*', contents, re.MULTILINE)
-
             header = contents[:match.start()]
             data = contents[match.start():]
         except:
@@ -59,7 +83,7 @@ class sp3:
 
     def _read_data(self, data: str) -> None:
         #split the string into blocks, all start with "*"
-        blocks = re.split(r'^\*', data)
+        blocks = re.split(r'\n\*', data)
         # Remove empty blocks and add "*" back to the start of each block
         blocks = ['*'+block for block in blocks if block.strip()]
         for block in blocks:
@@ -84,21 +108,20 @@ class sp3:
         """
         #split the block into lines
         lines = block.splitlines()
-        #parse the first line
-        year = int(lines[0][3:7])
-        month = int(lines[0][8:10])
-        day = int(lines[0][11:13])
-        hour = int(lines[0][14:16])
-        minute = int(lines[0][17:19])
-        seconds = float(lines[0][20:31])
-        microseconds = int(seconds * 1e6)
-        seconds = int(seconds)
-        microseconds = int(microseconds % 1e6)
-        time = np.datetime64(f"{year}-{month:02d}-{day:02d}T{hour:02d}:{minute:02d}:{seconds:02d}.{microseconds:06d}" )
         #parse other lines
-        for line in lines[1:]:
+        for line in lines[0:]:
             if line[0] == "*":
-                continue
+                year = int(line[3:7])
+                month = int(line[8:10])
+                day = int(line[11:13])
+                hour = int(line[14:16])
+                minute = int(line[17:19])
+                seconds = float(line[20:31])
+                microseconds = int(seconds * 1e6)
+                seconds = int(seconds)
+                microseconds = int(microseconds % 1e6)
+                time = Time.from_string(
+                    f"{year}-{month:02d}-{day:02d}T{hour:02d}:{minute:02d}:{seconds:02d}.{microseconds:06d}")
             else:
                 type = line[0]
                 if type == "P":
