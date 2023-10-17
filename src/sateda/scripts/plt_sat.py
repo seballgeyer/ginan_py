@@ -1,3 +1,7 @@
+"""
+script to plot satellite residual
+More infos to add at a later stage
+"""
 import argparse
 import logging
 import sys
@@ -10,11 +14,14 @@ from sateda.dbconnector import mongo
 
 
 class CustomFormatter(logging.Formatter):
+    """
+    reformating logging class
+    @todo move to the possible __init__.py
+    """
     def format(self, record):
         if record.levelno == logging.INFO:
             return record.getMessage()
-        else:
-            return f"{record.levelname} > {record.getMessage()}"
+        return f"{record.levelname} > {record.getMessage()}"
 
 
 logger = logging.getLogger("main")
@@ -25,18 +32,21 @@ stdout_handler.setFormatter(formatter)
 logger.addHandler(stdout_handler)
 
 
-def read(args):
-    db = mongo.MongoDB(url=args.db, data_base=args.coll, port=27018)
-    db.connect()
-    print(db)
-    sat = satellite(db, sat=args.sat)
+def read(arg):
+    """
+    function to read the data from mongo
+    """
+    database = mongo.MongoDB(url=arg.db, data_base=arg.coll, port=27018)
+    database.connect()
+    print(database)
+    sat = satellite(database, sat=arg.sat)
     sat.get_postfit()
     sat.get_state()
     rms = sat.get_rms()
     logger.info(
-        f"{args.coll} {arg.sat}   {np.array2string(rms[:3], precision=6, floatmode='fixed')}   "
+        f"{arg.coll} {arg.sat}   {np.array2string(rms[:3], precision=6, floatmode='fixed')}   "
     )
-    if args.to_rac:
+    if arg.to_rac:
         rms_rac = sat.get_rac()
         logger.info(f"{np.array2string(rms_rac[:3], precision=6, floatmode='fixed')}")
     logger.info(f"=> {rms[3]:.6f}")
@@ -44,24 +54,23 @@ def read(args):
     return sat
 
 
-def plot(args, sat):
-    fig, ax = plt.subplots(nrows=3)
-    if args.to_rac:
-        r = sat.rac.transpose()
+def plot(arg, sat):
+    """
+    function to plot the data
+    """
+    _, axes = plt.subplots(nrows=3)
+    if arg.to_rac:
+        residuals = sat.rac.transpose()
         y_label = ["r", "a", "c"]
     else:
-        r = sat.residual.transpose()
+        residuals = sat.residual.transpose()
         y_label = ["x", "y", "z"]
 
-    for a, d in zip(ax, r):
-        a.plot(sat.time, d)
-    for a, l in zip(ax, y_label):
-        a.set_ylabel(l)
-    for d in r:
-        print(np.sqrt(np.mean(np.square(d))))
-    res3d2 = np.square(r).sum(axis=0)
-    print("3d RMS", np.sqrt(np.mean(res3d2)))
-    plt.savefig(f"plt_{args.coll}_{args.sat}.pdf", bbox_inches="tight")
+    for axis, data in zip(axes, residuals):
+        axis.plot(sat.time, data)
+    for axis, label in zip(axes, y_label):
+        axis.set_ylabel(label)
+    plt.savefig(f"plt_{arg.coll}_{arg.sat}.pdf", bbox_inches="tight")
 
 
 def main_residuals(arg):
@@ -70,7 +79,6 @@ def main_residuals(arg):
 
 
 def main_states(arg):
-    print(arg)
     print("not implemented yet")
 
 
@@ -101,6 +109,6 @@ if __name__ == "__main__":
     parser_state_option.add_argument("state", help="which state to plot?", type=str, nargs="+")
     parser_state_option.set_defaults(func=main_states)
 
-    arg = parser.parse_args()
-    print(arg)
-    arg.func(arg)
+    args = parser.parse_args()
+    print(args)
+    args.func(args)
