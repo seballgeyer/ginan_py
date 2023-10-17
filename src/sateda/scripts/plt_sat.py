@@ -26,18 +26,19 @@ logger.addHandler(stdout_handler)
 
 
 def read(args):
-    db = mongo.MongoDB(url=args.db, data_base=args.coll)
+    db = mongo.MongoDB(url=args.db, data_base=args.coll, port=27018)
+    db.connect()
+    print(db)
     sat = satellite(db, sat=args.sat)
     sat.get_postfit()
     sat.get_state()
     rms = sat.get_rms()
     logger.info(
-        f"{args.coll} {arg.sat}   {np.array2string(rms[:3], precision=6, floatmode='fixed')}   ",
-        end="",
+        f"{args.coll} {arg.sat}   {np.array2string(rms[:3], precision=6, floatmode='fixed')}   "
     )
     if args.to_rac:
         rms_rac = sat.get_rac()
-        logger.info(f"{np.array2string(rms_rac[:3], precision=6, floatmode='fixed')}", end=" ")
+        logger.info(f"{np.array2string(rms_rac[:3], precision=6, floatmode='fixed')}")
     logger.info(f"=> {rms[3]:.6f}")
     sat.get_state()
     return sat
@@ -101,4 +102,5 @@ if __name__ == "__main__":
     parser_state_option.set_defaults(func=main_states)
 
     arg = parser.parse_args()
+    print(arg)
     arg.func(arg)
