@@ -27,26 +27,18 @@ class satellite:
             sat=[self.sat],
             site=[""],
             series=[self.series],
-            keys=["ECI PseudoPos0-Prefit", "ECI PseudoPos1-Prefit", "ECI PseudoPos2-Prefit"],
+            keys=["ECI PseudoPos-0-Postfit", "ECI PseudoPos-1-Postfit", "ECI PseudoPos-2-Postfit"],
         )
         self.time = np.asarray(data[0]["t"], dtype="datetime64[us]")
         self.residual = np.empty((len(data[0]["t"]), 3))
-        self.residual[:, 0] = data[0]["ECI PseudoPos0-Prefit"]
-        self.residual[:, 1] = data[0]["ECI PseudoPos1-Prefit"]
-        self.residual[:, 2] = data[0]["ECI PseudoPos2-Prefit"]
+        self.residual[:, 0] = data[0]["ECI PseudoPos-0-Postfit"]
+        self.residual[:, 1] = data[0]["ECI PseudoPos-1-Postfit"]
+        self.residual[:, 2] = data[0]["ECI PseudoPos-2-Postfit"]
 
     def get_state(self):
         data = self.mongodb.get_data(
             collection="States",
-            state=["SAT_POS"],
-            sat=[self.sat],
-            site=[""],
-            series=[self.series],
-            keys=["x"],
-        )
-        data_rate = self.mongodb.get_data(
-            collection="States",
-            state=["SAT_POS_RATE"],
+            state=["ORBIT"],
             sat=[self.sat],
             site=[""],
             series=[self.series],
@@ -54,8 +46,8 @@ class satellite:
         )
         self.pos = np.empty((3, len(data[0]["t"])))
         self.vel = np.empty((3, len(data[0]["t"])))
-        self.pos = np.asarray(data[0]["x"])
-        self.vel = np.asarray(data_rate[0]["x"])
+        self.pos = np.asarray(data[0]["x"])[:, :3]
+        self.vel = np.asarray(data[0]["x"])[:, 3:]
 
     def get_rms(self, use_rac=False):
         data = self.residual if not use_rac else self.rac
