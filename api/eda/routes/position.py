@@ -43,7 +43,7 @@ def handle_post_request() -> str:
         db_, series_ = series.split("\\")
         try:
             get_data(db_, "States", ["REC_POS"], form["site"], [""], [series_], ["x"]+ ["Epoch", "Num"], data, reshape_on="Num")
-            get_data(db_, "States", ["REC_POS"], form["site"], [""], [suffix_series_base], ["x"]+ ["Epoch", "Num"], base, reshape_on="Num")
+            get_data(db_, "States", ["REC_POS"], form["site"], [""], [series_+suffix_series_base], ["x"]+ ["Epoch", "Num"], base, reshape_on="Num")
         except Exception as err:
             current_app.logger.error(err)
             return render_template(
