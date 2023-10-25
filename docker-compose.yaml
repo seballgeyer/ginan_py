@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      args:
+        INSTALL_DEV: true
+        INSTALL_JUPYTER: true
+    ports:
+      - 5000:5000
+      - 8888:8888
+      - 27018:27017
+    volumes:
+      - .:/app
+    environment:
+      - JUPYTER=jupyter lab --ip=0.0.0.0 --allow-root --NotebookApp.allow_origin='http://127.0.0.1:8888'
+#    network_mode: "host"
+
+  react:
+    image: busybox
+
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
