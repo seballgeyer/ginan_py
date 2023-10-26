@@ -5,7 +5,8 @@ import sys
 
 import numpy as np
 
-from sateda.io.sp3 import sp3
+from sateda.io.sp3 import sp3, sp3_align
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 stdout_handler = logging.StreamHandler(sys.stdout)
@@ -77,24 +78,40 @@ def main():
     args = parse_args()
     data1 = sp3.read(file_or_string=args.input1)
     data2 = sp3.read(file_or_string=args.input2)
-    # data1 and data2 are sp3 objects assumed to have the same data. data1.data is a dictionary mapping a vector.
-    # stack all data1 information into a single vector. data1.data[satellite_name].time is a numpy vector
+
+    data1, data2 = sp3_align(data1, data2)
     time = np.hstack([data1.data[satellite_name]['time'] for satellite_name in data1.data.keys()])
-    #create a vector 3 * len(time)  for data 1 and data2. first comulmn is "x", second is "y", third is "z"
-    satellite_names = list(data1.data.keys())  # Assuming data1 and data2 have the same keys
-    data1 = np.hstack([
+
+    satellite_names = list(set(data1.data.keys()).intersection(set(data2.data.keys())))
+    stats = {}
+    for satellite_name in satellite_names:
+        data1_ = np.vstack([data1.data[satellite_name]["x"],
+                       data1.data[satellite_name]["y"],
+                       data1.data[satellite_name]["z"]]).transpose()
+
+        data2_ =  np.vstack([data2.data[satellite_name]["x"],
+                       data2.data[satellite_name]["y"],
+                       data2.data[satellite_name]["z"]]).transpose()
+
+        loss = data1_ - data2_
+        stats[satellite_name] = {}
+        stats[satellite_name]["pre_x"] = np.sqrt(np.mean(loss[:,0] ** 2))
+        stats[satellite_name]["pre_y"] = np.sqrt(np.mean(loss[:,1] ** 2))
+        stats[satellite_name]["pre_z"] = np.sqrt(np.mean(loss[:,2] ** 2))
+        stats[satellite_name]["pre_3d"] = np.sqrt(np.mean(np.linalg.norm(loss, axis=1) ** 2))
+
+    data1_ = np.hstack([
         np.vstack([data1.data[satellite_name]["x"],
                    data1.data[satellite_name]["y"],
                    data1.data[satellite_name]["z"]])
         for satellite_name in satellite_names
     ]).transpose()
-    data2 = np.hstack([
+    data2_ = np.hstack([
         np.vstack([data2.data[satellite_name]["x"],
                    data2.data[satellite_name]["y"],
                    data2.data[satellite_name]["z"]])
         for satellite_name in satellite_names
     ]).transpose()
-    print(data1.shape, data2.shape, time.shape)
     # split data1 and data2 in a train and test set (80, 20%), same index for both
     idx = np.random.permutation(len(time))
     idx_train = idx[:int(0.8*len(time))]
@@ -104,10 +121,10 @@ def main():
     model = np.zeros(7)
     converged = False
     logger.info("Starting the minibatch")
-    logger.info("train size: % 4d test size: % 4d", len(idx_train), len(idx_test))
+    logger.debug("train size: % 4d test size: % 4d", len(idx_train), len(idx_test))
     i = 1
 
-    loss = data1[idx_test, :] - data2[idx_test, :]
+    loss = data1_[idx_test, :] - data2_[idx_test, :]
     logger.info("INIT-> residual %e",  np.sqrt(np.mean(np.linalg.norm(loss, axis=1) ** 2)))
     # while not converged:
     while i < 50:
@@ -115,8 +132,8 @@ def main():
         np.random.shuffle(idx_train)
         for batch in np.array_split(idx_train, len(idx_train)//256):
             #create the design matrix
-            design_matrix = helmert_jac(model, data1[batch,:])
-            residual = helmert_residuals(model, data1[batch,:], data2[batch,:])
+            design_matrix = helmert_jac(model, data1_[batch,:])
+            residual = helmert_residuals(model, data1_[batch,:], data2_[batch,:])
             #solve the least square problem
             delta = np.linalg.inv(design_matrix.transpose() @ design_matrix) @ design_matrix.transpose() @ residual
             #update the model
@@ -126,8 +143,8 @@ def main():
         # residual = helmert_residuals(model, data1[idx_test, :], data2[idx_test, :])
 
         # logger.info('model %s', np.array2string(model))
-        loss = helmert(model, data1[idx_test, :]) - data2[idx_test, :]
-        logger.info("iteration: % 4d -> residual %e", i, np.sqrt(np.mean(np.linalg.norm(loss, axis=1)**2)))
+        loss = helmert(model, data1_[idx_test, :]) - data2_[idx_test, :]
+        logger.debug("iteration: % 4d -> residual %e", i, np.sqrt(np.mean(np.linalg.norm(loss, axis=1)**2)))
         # print(np.sqrt(np.mean(np.linalg.norm(loss, axis=1)**2)))
         # logging.info('residual: %e', np.sqrt(np.mean(np.linalg.norm(loss, axis=1)**2)))
         # loss = helmert(model*0.0, data1[idx_test, :]) - data2[idx_test, :]
@@ -137,14 +154,36 @@ def main():
         converged=True
         i+=1
 
+    loss = helmert(model, data1_[:, :]) - data2_[:, :]
+    logger.info("FINAL-> residual %e", np.sqrt(np.mean(np.linalg.norm(loss, axis=1) ** 2)))
+    for satellite_name in satellite_names:
+        data1_ = np.vstack([data1.data[satellite_name]["x"],
+                       data1.data[satellite_name]["y"],
+                       data1.data[satellite_name]["z"]]).transpose()
 
+        data2_ =  np.vstack([data2.data[satellite_name]["x"],
+                       data2.data[satellite_name]["y"],
+                       data2.data[satellite_name]["z"]]).transpose()
 
+        loss = helmert(model, data1_) - data2_
+        stats[satellite_name]["post_x"] = np.sqrt(np.mean(loss[:,0] ** 2))
+        stats[satellite_name]["post_y"] = np.sqrt(np.mean(loss[:,1] ** 2))
+        stats[satellite_name]["post_z"] = np.sqrt(np.mean(loss[:,2] ** 2))
+        stats[satellite_name]["post_3d"] = np.sqrt(np.mean(np.linalg.norm(loss, axis=1) ** 2))
 
-
-
-
-
+    satellite_names.sort()
+    print("       pre_x     pre_y     pre_z    pre_3d     post_x    post_y    post_z   post_3d")
+    for d in satellite_names:
+        data=stats[d]
+        print(f"{d}: "
+              f"{data['pre_x']: .6f} {data['pre_y']: .6f} {data['pre_z']: .6f} {data['pre_3d']: .6f} "
+              f"{data['post_x']: .6f} {data['post_y']: .6f} {data['post_z']: .6f} {data['post_3d']: .6f} ")
+    print(f" Estimated parameters:\n"
+          f"   T: {model[:3]}\n"
+          f"   R: {model[4:]}\n"
+          f"   S: {model[3]}")
     pass
+
 
 if __name__ == "__main__":
     main()

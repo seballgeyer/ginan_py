@@ -88,6 +88,13 @@ class sp3:
         blocks = ['*'+block for block in blocks if block.strip()]
         for block in blocks:
             self._parse_data_block(block)
+        print("......")
+        for data in self.data:
+            self.data[data]["time"] = np.array(self.data[data]["time"])
+            self.data[data]["x"] = np.array(self.data[data]["x"])
+            self.data[data]["y"] = np.array(self.data[data]["y"])
+            self.data[data]["z"] = np.array(self.data[data]["z"])
+            print(type(self.data[data]['x']))
 
     def _parse_data_block(self, block: str) -> None:
         """
@@ -137,6 +144,11 @@ class sp3:
                     self.data[temp_satellite]["y"].append(float(line[18:32])*1000)
                     self.data[temp_satellite]["z"].append(float(line[32:46])*1000)
 
+        for data in self.data:
+            self.data[data]["time"] = np.array(self.data[data]["time"])
+            self.data[data]["x"] = np.array(self.data[data]["x"])
+            self.data[data]["y"] = np.array(self.data[data]["y"])
+            self.data[data]["z"] = np.array(self.data[data]["z"])
     def _parse_header_line1(self, line: str) -> None:
         """
         parse the first line of the header
@@ -216,3 +228,31 @@ class sp3:
             else:
                 self.header["satellite"].append(temp_name)
 
+
+
+def sp3_align(data1: sp3, data2: sp3) -> (sp3, sp3):
+    """
+    function to align 2 sp3 structure together
+    it will loop to get all common satellite name, for each of them extract the common time and associated data
+    """
+    #find the common name in data1.data.keys() and data2.data.keys()
+    satellite_names = list(set(data1.data.keys()).intersection(set(data2.data.keys())))
+    output_data1 = sp3()
+    output_data2 = sp3()
+    for sat_name in satellite_names:
+        common_time, in_data1, in_data2 = np.intersect1d(data1.data[sat_name]["time"], data2.data[sat_name]["time"], return_indices=True)
+        output_data1.data[sat_name] = \
+            {
+                "time": common_time,
+                "x": data1.data[sat_name]["x"][in_data1],
+                "y": data1.data[sat_name]["y"][in_data1],
+                "z": data1.data[sat_name]["z"][in_data1],
+            }
+        output_data2.data[sat_name] = \
+            {
+                "time": common_time,
+                "x": data2.data[sat_name]["x"][in_data2],
+                "y": data2.data[sat_name]["y"][in_data2],
+                "z": data2.data[sat_name]["z"][in_data2],
+            }
+    return output_data1, output_data2
