@@ -50,10 +50,10 @@ def helmert_jac(coeffs, vector):
     return jac
 
 def helmert_residuals(coeffs, vector, target):
-    loss = target - helmert(coeffs, vector)
-    loss2 = np.zeros(loss.shape[0]*loss.shape[1])
-    for idx, l in enumerate(loss):
-        loss2[idx*loss.shape[1]:(idx+1)*loss.shape[1]] = l
+    losses = target - helmert(coeffs, vector)
+    loss2 = np.zeros(losses.shape[0]*losses.shape[1])
+    for idx, loss in enumerate(losses):
+        loss2[idx*loss.shape[1]:(idx+1)*loss.shape[1]] = loss
     return loss2
 
 

@@ -40,21 +40,18 @@ class sp3:
         """
         for sat in other.data.keys():
             if sat not in self.data:
-                self.data[sat] = {}
-                self.data[sat]["time"] = []
-                self.data[sat]["x"] = []
-                self.data[sat]["y"] = []
-                self.data[sat]["z"] = []
-            self.data[sat]["time"].extend(other.data[sat]["time"])
-            self.data[sat]["x"].extend(other.data[sat]["x"])
-            self.data[sat]["y"].extend(other.data[sat]["y"])
-            self.data[sat]["z"].extend(other.data[sat]["z"])
+                self.data[sat] = {
+                    "time": [],
+                    "x": [],
+                    "y": [],
+                    "z": [],
+                }
+            for label in ["time", "x", "y", "z"]:
+                self.data[sat][label] = np.concatenate((self.data[sat][label], other.data[sat][label]))
             #sort the data along the time value
             sort_idx = np.argsort(self.data[sat]["time"])
-            self.data[sat]["time"] = np.asarray(self.data[sat]["time"])[sort_idx]
-            self.data[sat]["x"] = np.asarray(self.data[sat]["x"])[sort_idx]
-            self.data[sat]["y"] = np.asarray(self.data[sat]["y"])[sort_idx]
-            self.data[sat]["z"] = np.asarray(self.data[sat]["z"])[sort_idx]
+            for label in ["time", "x", "y", "z"]:
+                self.data[sat][label] = self.data[sat][label][sort_idx]
 
 
     def _split_header_data(self, contents: str) -> [str, str]:
