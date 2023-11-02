@@ -6,7 +6,7 @@ from pymongo.errors import ServerSelectionTimeoutError
 from sateda.data.measurements import MeasurementArray
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.DEBUG)
 
 class MongoDB:
     """
@@ -120,8 +120,7 @@ class MongoDB:
                     ]
                 }
             }
-        logger.info(agg_pipeline)
-        print(self.mongo_db, collection, self.mongo_client)
+        logger.debug(agg_pipeline)
         cursor = self.mongo_client[self.mongo_db][collection].aggregate(agg_pipeline)
         # check if cursor is empty
         if not cursor.alive:

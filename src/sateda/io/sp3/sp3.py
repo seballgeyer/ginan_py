@@ -9,6 +9,7 @@ from typing import Union
 import re
 import numpy as np
 import numpy.typing as npt
+import gzip
 
 from sateda.core.time import Time
 
@@ -22,12 +23,20 @@ class sp3:
     @classmethod
     def read(cls, file_or_string: Union[str, StringIO], *args, **kwargs) -> "sp3":
         instance = cls(*args, **kwargs)  # Create an instance of the class
+        # Determine if the input is a string path or a StringIO object
         if isinstance(file_or_string, str):
-            with open(file_or_string) as f:
-                contents = f.read()
-        else:
-            contents = file_or_string.read()
+            # Check if the file has a .gz extension to detect compressed files
+            is_compressed = file_or_string.endswith('.gz')
 
+            if is_compressed:
+                with gzip.open(file_or_string, 'rt') as f:
+                    contents = f.read()
+            else:
+                with open(file_or_string) as f:
+                    contents = f.read()
+        else:
+            # Read from the provided StringIO object
+            contents = file_or_string.read()
         header_, data_ = instance._split_header_data(contents)
         instance._read_header(header_)
         instance._parse_data_block(data_)

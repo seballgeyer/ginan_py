@@ -64,7 +64,7 @@ class satellite:
         a = np.cross(c, self.pos)
         a = a / np.linalg.norm(a, axis=1)[:, np.newaxis]
         self.rac = np.empty_like(self.residual)
-        self.rac[:, 0] = (r * self.residual).sum(axis=1)
-        self.rac[:, 1] = (a * self.residual).sum(axis=1)
-        self.rac[:, 2] = (c * self.residual).sum(axis=1)
+        self.rac[:, 0] = (r[:-1:3] * self.residual).sum(axis=1)
+        self.rac[:, 1] = (a[:-1:3] * self.residual).sum(axis=1)
+        self.rac[:, 2] = (c[:-1:3] * self.residual).sum(axis=1)
         return self.get_rms(use_rac=True)

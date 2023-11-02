@@ -115,7 +115,7 @@ def handle_load_request(form_data):
                 mesurements += client.mongo_content["Measurements"]
             geometry += client.mongo_content["Geometry"]
             state += client.mongo_content["State"]
-    current_app.logger.debug(site, sat, series)
+    # current_app.logger.debug(site, sat, series)
     current_app.logger.debug("\n".join(message))
     session["list_sat"] = sorted(set(sat))
     session["list_site"] = sorted(set(site))
