@@ -3,9 +3,11 @@ import os
 import logging
 import sys
 
+import json
 import numpy as np
 
 from sateda.io.sp3 import sp3, sp3_align
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -49,12 +51,12 @@ def helmert_jac(coeffs, vector):
         ]) * (1+scale)
     return jac
 
-def helmert_residuals(coeffs, vector, target):
+def helmert_residuals(coeffs, vector, target, flatten=True):
     losses = target - helmert(coeffs, vector)
-    loss2 = np.zeros(losses.shape[0]*losses.shape[1])
-    for idx, loss in enumerate(losses):
-        loss2[idx*loss.shape[1]:(idx+1)*loss.shape[1]] = loss
-    return loss2
+    if flatten:
+        return losses.flatten()
+    return losses
+
 
 
 def parse_args():
@@ -66,8 +68,18 @@ def parse_args():
     args.add_argument("-v", "--verbose", action="store_true", help="Increase output verbosity")
     args.add_argument("-r", "--rotate", action="store_true", help="Rotate the data")
     args.add_argument("-o", "--output", help="Output file")
+    args.add_argument("-c", "--config", help="JSON config file")
 
     args = args.parse_args()
+    if args.config:
+        with open(args.config, 'r') as f:
+            config = json.load(f)
+        if 'verbose' in config:
+            args.verbose = config['verbose']
+        if 'rotate' in config:
+            args.rotate = config['rotate']
+        if 'output' in config:
+            args.output = config['output']
     if args.verbose:
         logger.setLevel(logging.DEBUG)
     else:
@@ -113,19 +125,15 @@ def main():
         for satellite_name in satellite_names
     ]).transpose()
     # split data1 and data2 in a train and test set (80, 20%), same index for both
-    idx = np.random.permutation(len(time))
-    idx_train = idx[:int(0.8*len(time))]
-    idx_test = idx[int(0.8*len(time)):]
-    # data1_train = data1[idx_train,:]
-    # data2_train = data2[idx_train,:]
+    idx_train, idx_test = split_train_test(time, ratio=0.8)
     model = np.zeros(7)
     converged = False
     logger.info("Starting the minibatch")
-    logger.debug("train size: % 4d test size: % 4d", len(idx_train), len(idx_test))
+    logger.info("train size: % 4d test size: % 4d", len(idx_train), len(idx_test))
     i = 1
 
     loss = data1_[idx_test, :] - data2_[idx_test, :]
-    logger.info("INIT-> residual %e",  np.sqrt(np.mean(np.linalg.norm(loss, axis=1) ** 2)))
+    logger.info("INIT -> residual %e",  np.sqrt(np.mean(np.linalg.norm(loss, axis=1) ** 2)))
     # while not converged:
     while i < 50:
         #shuffle the train data
@@ -172,17 +180,25 @@ def main():
         stats[satellite_name]["post_3d"] = np.sqrt(np.mean(np.linalg.norm(loss, axis=1) ** 2))
 
     satellite_names.sort()
-    print("       pre_x     pre_y     pre_z    pre_3d     post_x    post_y    post_z   post_3d")
+    logger.info("       pre_x     pre_y     pre_z    pre_3d     post_x    post_y    post_z   post_3d")
     for d in satellite_names:
         data=stats[d]
-        print(f"{d}: "
+        logger.info(f"{d}: "
               f"{data['pre_x']: .6f} {data['pre_y']: .6f} {data['pre_z']: .6f} {data['pre_3d']: .6f} "
               f"{data['post_x']: .6f} {data['post_y']: .6f} {data['post_z']: .6f} {data['post_3d']: .6f} ")
-    print(f" Estimated parameters:\n"
+    logger.info(f" Estimated parameters:\n"
           f"   T: {model[:3]}\n"
           f"   R: {model[4:]}\n"
           f"   S: {model[3]}")
     pass
+
+def split_train_test(time, ratio=0.8):
+    data_length = len(time)
+    split = int(ratio*data_length)
+    idx = np.random.permutation(data_length)
+    idx_train = idx[:split]
+    idx_test = idx[split:]
+    return idx_train,idx_test
 
 
 if __name__ == "__main__":
