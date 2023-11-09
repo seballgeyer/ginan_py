@@ -1,27 +1,37 @@
 {
-	"name": "Alpine",
-	"build": {
-		"context": "..",
-		"dockerfile": "Dockerfile"
-	},
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"customizations": {
-		"vscode": {
-			"extensions": [
+    "name": "Alpine",
+    "build": {
+        "context": "../",
+        "dockerfile": "../Dockerfile"
+    },
+    // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+    "customizations": {
+        "vscode": {
+            "extensions": [
 				"donjayamanne.python-extension-pack",
 				"ms-python.black-formatter",
-				"ms-python.pylint"
+				"ms-python.pylint",
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
+				"GitHub.copilot-labs"
 			]
-		}
-	},
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "pip install pytest",
-	// Configure tool-specific properties.
-	// "customizations": {},
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+        }
+    },
+    // "mounts": [
+    //     "source=..,target=/workspace"
+    // ]
+    // Features to add to the dev container. More info: https://containers.dev/features.
+    // "features": {},
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    // "forwardPorts": [],
+    // Use 'postCreateCommand' to run commands after the container is created.
+    "postCreateCommand": "echo  \"/workspaces/sateda/src/\" > /usr/local/lib/python3.12/site-packages/libextra.pth",
+    "mounts": [
+        // "source=${localEnv:HOME}${localEnv:USERPROFILE},target=/host-home-folder,type=bind,consistency=cached",
+        "source=${localWorkspaceFolder},target=/workspaces/,type=bind,consistency=cached"
+    ]
+    // Configure tool-specific properties.
+    // "customizations": {},
+    // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+    // "remoteUser": "root"
 }

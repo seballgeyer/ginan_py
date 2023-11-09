@@ -2,7 +2,7 @@
 FROM python:3.12-alpine3.18
 LABEL authors="sebastien"
 
-RUN apk add gcc libc-dev linux-headers
+RUN apk add gcc libc-dev linux-headers git
 
 COPY requirements.txt .
 COPY requirements_dev.txt .
