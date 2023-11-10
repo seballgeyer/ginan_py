@@ -10,7 +10,6 @@ from ..utilities import init_page, extra, generate_fig, aggregate_stats, get_dat
 from . import eda_bp
 
 
-
 @eda_bp.route("/position", methods=["GET", "POST"])
 def position() -> str:
     """
@@ -22,6 +21,7 @@ def position() -> str:
         return handle_post_request()
     else:
         return init_page(template="position.jinja")
+
 
 def handle_post_request() -> str:
     current_app.logger.info("Entering request")
@@ -39,11 +39,31 @@ def handle_post_request() -> str:
     suffix_series_base = "_apriori"
     data = MeasurementArray()
     base = MeasurementArray()
-    for series  in form["series"] :
+    for series in form["series"]:
         db_, series_ = series.split("\\")
         try:
-            get_data(db_, "States", ["REC_POS"], form["site"], [""], [series_], ["x"]+ ["Epoch", "Num"], data, reshape_on="Num")
-            get_data(db_, "States", ["REC_POS"], form["site"], [""], [series_+suffix_series_base], ["x"]+ ["Epoch", "Num"], base, reshape_on="Num")
+            get_data(
+                db_,
+                "States",
+                ["REC_POS"],
+                form["site"],
+                [""],
+                [series_],
+                ["x"] + ["Epoch", "Num"],
+                data,
+                reshape_on="Num",
+            )
+            get_data(
+                db_,
+                "States",
+                ["REC_POS"],
+                form["site"],
+                [""],
+                [series_ + suffix_series_base],
+                ["x"] + ["Epoch", "Num"],
+                base,
+                reshape_on="Num",
+            )
         except Exception as err:
             current_app.logger.error(err)
             return render_template(
@@ -75,8 +95,7 @@ def handle_post_request() -> str:
                     hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_data.id}",
                 )
             )
-            table[f"{_data.id}"] =  {"mean": _data.info[_yaxis]["mean"],
-                                        "RMS": _data.info[_yaxis]["rms"]}
+            table[f"{_data.id}"] = {"mean": _data.info[_yaxis]["mean"], "RMS": _data.info[_yaxis]["rms"]}
     fig = go.Figure(data=trace)
     fig.update_layout(
         xaxis=dict(rangeslider={"visible": True}),
@@ -92,7 +111,7 @@ def handle_post_request() -> str:
         graphJSON=generate_fig(trace),
         mode="plotly",
         selection=form,
-        table_data= table, 
+        table_data=table,
         table_headers=["RMS", "mean"],
         tableagg_data=table_agg,
         tableagg_headers=["RMS", "mean"],

@@ -13,7 +13,8 @@ extra["posMode"] = ["XYZ", "ENU"]
 extra["clockType"] = ["Site", "Satellite"]
 extra["stateField"] = ["x", "dx", "P"]
 extra["preprocess"] = ["None", "Fit", "Detrend"]
-extra['degree'] = ["0", "1", "2"]
+extra["degree"] = ["0", "1", "2"]
+
 
 def init_page(template: str) -> str:
     """
@@ -25,12 +26,11 @@ def init_page(template: str) -> str:
     return render_template(template, content=content, extra=extra, exlcude=0)
 
 
-
 def generate_fig(trace):
     fig = go.Figure(data=trace)
     fig.update_layout(
-        xaxis={"rangeslider":{"visible":True}, "showgrid":current_app.config["EDA_GRID"]},
-        yaxis={"fixedrange":False, "tickformat":".3e", "showgrid":current_app.config["EDA_GRID"]},
+        xaxis={"rangeslider": {"visible": True}, "showgrid": current_app.config["EDA_GRID"]},
+        yaxis={"fixedrange": False, "tickformat": ".3e", "showgrid": current_app.config["EDA_GRID"]},
         height=800,
         template=current_app.config["EDA_THEME"],
     )
@@ -41,7 +41,7 @@ def generate_fig(trace):
 def aggregate_stats(data: dict) -> dict:
     table_agg = {}
     try:
-        for _data in data :
+        for _data in data:
             series_ = _data.id["series"]
             db_ = _data.id["db"]
             for _yaxis in _data.data:
@@ -57,7 +57,7 @@ def aggregate_stats(data: dict) -> dict:
             _tab["mean"] /= _tab["count"]
             _tab["RMS"] = np.sqrt(_tab["RMS"] / _tab["len"])
     except:
-        current_app.logger.debug('not number operations')
+        current_app.logger.debug("not number operations")
         pass
     return table_agg
 
@@ -89,7 +89,7 @@ def get_data(db, collection, state, site, sat, series, yaxis, data, reshape_on=N
                     data.append(Measurements.from_dictionary(req, reshape_on=reshape_on, database=db))
                 except ValueError as err:
                     current_app.logger.warning(err)
-                    continue   
+                    continue
         except ValueError as err:
             current_app.logger.warning(err)
             pass

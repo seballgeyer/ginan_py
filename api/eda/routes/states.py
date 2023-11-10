@@ -45,12 +45,22 @@ def handle_post_request() -> str:
         f"GET {form['type']}, {form['series']}, {form['sat']}, {form['site']}, {form['state']}, {form['xaxis']}, {form['yaxis']}, "
         f"{form['yaxis']+[form['xaxis']]}, exclude {form['exclude']} mintues"
     )
-    
+
     data = MeasurementArray()
 
-    for series in form["series"] :
+    for series in form["series"]:
         db_, series_ = series.split("\\")
-        get_data(db_, "States", form["state"], form["site"], form["sat"], [series_], form["yaxis"] + [form["xaxis"]] + ["Num"], data, reshape_on="Num")
+        get_data(
+            db_,
+            "States",
+            form["state"],
+            form["site"],
+            form["sat"],
+            [series_],
+            form["yaxis"] + [form["xaxis"]] + ["Num"],
+            data,
+            reshape_on="Num",
+        )
         # with MongoDB(session["mongo_ip"], data_base=db_, port=session["mongo_port"]) as client:
         #     try:
         #         for req in client.get_data(
@@ -60,12 +70,12 @@ def handle_post_request() -> str:
         #         form["sat"],
         #         [series_],
         #         form["yaxis"] + [form["xaxis"]] + ["Num"],
-        #         ): 
+        #         ):
         #             try:
-        #                 data.append(Measurements.from_dictionary(req, reshape_on="Num", database=db_))     
+        #                 data.append(Measurements.from_dictionary(req, reshape_on="Num", database=db_))
         #             except ValueError as err:
         #                 current_app.logger.warning(err)
-        #                 continue   
+        #                 continue
         #     except ValueError as err:
         #         current_app.logger.error(err)
         #         continue
@@ -88,7 +98,7 @@ def handle_post_request() -> str:
     if form["process"] == "Fit":
         for _data in data:
             _data.polyfit(degree=int(form["degree"]))
-    
+
     data.get_stats()
     for _data in data:
         for _yaxis in _data.data:
@@ -105,13 +115,14 @@ def handle_post_request() -> str:
                     hovertemplate="%{x|%Y-%m-%d %H:%M:%S}<br>" + "%{y:.4e%}<br>" + f"{_data.id}",
                 )
             )
-            table[f"{_data.id}"] =  {"mean": _data.info[_yaxis]["mean"],
-                                        "RMS": _data.info[_yaxis]["rms"]}
+            table[f"{_data.id}"] = {"mean": _data.info[_yaxis]["mean"], "RMS": _data.info[_yaxis]["rms"]}
             if any(keyword in form["process"] for keyword in ["Detrend", "Fit"]):
-                table[f"{_data.id}"]["Fit"] = np.array2string(_data.info["Fit"][_yaxis][::-1], precision=2, separator=", ")
-                
+                table[f"{_data.id}"]["Fit"] = np.array2string(
+                    _data.info["Fit"][_yaxis][::-1], precision=2, separator=", "
+                )
+
     table_agg = aggregate_stats(data)
-     
+
     return render_template(
         "states.jinja",
         # content=client.mongo_content,

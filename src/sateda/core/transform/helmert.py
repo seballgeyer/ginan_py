@@ -30,9 +30,11 @@ class HelmertTransform:
 
     def __str__(self) -> str:
         np.set_printoptions(precision=4, suppress=True, formatter={"float": "{:0.4e}".format})
-        return f"HelmertTransform(scale={self.scale/self.scaling_factor:.4e}, " \
-               f"rotation={np.rad2deg(self.rotation)}, translation={self.translation})"
-    
+        return (
+            f"HelmertTransform(scale={self.scale/self.scaling_factor:.4e}, "
+            f"rotation={np.rad2deg(self.rotation)}, translation={self.translation})"
+        )
+
     def get_params(self) -> np.array:
         """
         Return the transformation parameters as a numpy array of shape (7,).

@@ -15,13 +15,14 @@ class TestsMeasurementArray(unittest.TestCase):
 
     :param _type_ unittest: _description_
     """
+
     def test_substract(self):
         """
         test_substract Testing the substraction between 2 dataset.
         The substraction should be donne on common epochs and identical sat / site combination
         """
         reference = MeasurementArray()
-        data  = MeasurementArray()
+        data = MeasurementArray()
         t0 = datetime.datetime(2021, 1, 1, 0, 0, 0)
         # generate an array deltat of 12 elements being 5 second apart, with a gap of 60 seconds between the 3rd and 4th element, 60 seconds between the 6th and 7th element, 400 seconds between the 9th and 10th element
         deltatt = np.array([i for i in range(12)])
@@ -37,20 +38,20 @@ class TestsMeasurementArray(unittest.TestCase):
         }
         reference.append(Measurements.from_dictionary(data_dict))
         data_dict = {
-            "_id": {"sat": "G01", "site": "TONG"   },
+            "_id": {"sat": "G01", "site": "TONG"},
             "t": [t0 + datetime.timedelta(seconds=int(t)) for t in deltatt],
             "x": [3.0] * len(deltatt),
         }
         reference.append(Measurements.from_dictionary(data_dict))
         data_dict = {
-            "_id": {"sat": "G01", "site": "TONG"   },
+            "_id": {"sat": "G01", "site": "TONG"},
             "t": [t0 + datetime.timedelta(seconds=int(t)) for t in deltatt],
             "x": [1.0] * len(deltatt),
         }
         data.append(Measurements.from_dictionary(data_dict))
-        res = reference-data
-        self.assertEqual(len(res.arr),1)
-        
-        
+        res = reference - data
+        self.assertEqual(len(res.arr), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

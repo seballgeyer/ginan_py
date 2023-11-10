@@ -8,6 +8,7 @@ from sateda.data.measurements import MeasurementArray
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+
 class MongoDB:
     """
     Main class to connect to Mongo
@@ -44,10 +45,10 @@ class MongoDB:
         self.mongo_content["Geometry"] = []
         geom = self.mongo_client[self.mongo_db]["Geometry"].find_one({})
         if "Measurements" in self.mongo_client[self.mongo_db].list_collection_names():
-            self.mongo_content["Has_measurements"]=  True 
+            self.mongo_content["Has_measurements"] = True
         else:
-            self.mongo_content["Has_measurements"] =  False
-            
+            self.mongo_content["Has_measurements"] = False
+
         if geom is None:
             logger.debug("Geometry not available")
             self.mongo_content["Geometry"] = ["Site", "Sat", "Epoch"]
@@ -55,7 +56,7 @@ class MongoDB:
             for i in geom:
                 if i != "_id":
                     self.mongo_content["Geometry"].append(i)
-                        
+
         self.mongo_content["states_fields"] = ["x", "dx", "P"]
 
     def get_list_db(self) -> List[str]:
@@ -112,13 +113,7 @@ class MongoDB:
         #    agg_pipeline[-1]["$group"][key] = {"$push": f"${key}"}
         for key in keys:
             agg_pipeline[-1]["$group"][key] = {
-                "$push": {
-                    "$cond": [
-                        {"$eq": [{"$ifNull": [f"${key}", None]}, None]},
-                        float('nan'),
-                        f"${key}"
-                    ]
-                }
+                "$push": {"$cond": [{"$eq": [{"$ifNull": [f"${key}", None]}, None]}, float("nan"), f"${key}"]}
             }
         logger.debug(agg_pipeline)
         cursor = self.mongo_client[self.mongo_db][collection].aggregate(agg_pipeline)

@@ -15,6 +15,8 @@ from sateda.core.time import Time
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+
 class sp3:
     def __init__(self) -> None:
         self.data = {}
@@ -26,10 +28,10 @@ class sp3:
         # Determine if the input is a string path or a StringIO object
         if isinstance(file_or_string, str):
             # Check if the file has a .gz extension to detect compressed files
-            is_compressed = file_or_string.endswith('.gz')
+            is_compressed = file_or_string.endswith(".gz")
 
             if is_compressed:
-                with gzip.open(file_or_string, 'rt') as f:
+                with gzip.open(file_or_string, "rt") as f:
                     contents = f.read()
             else:
                 with open(file_or_string) as f:
@@ -57,41 +59,39 @@ class sp3:
                 }
             for label in ["time", "x", "y", "z"]:
                 self.data[sat][label] = np.concatenate((self.data[sat][label], other.data[sat][label]))
-            #sort the data along the time value
+            # sort the data along the time value
             sort_idx = np.argsort(self.data[sat]["time"])
             for label in ["time", "x", "y", "z"]:
                 self.data[sat][label] = self.data[sat][label][sort_idx]
 
-
     def _split_header_data(self, contents: str) -> [str, str]:
         # Use a regular expression to find the first line starting with "*"
         try:
-            match = re.search(r'^\*', contents, re.MULTILINE)
-            header = contents[:match.start()]
-            data = contents[match.start():]
+            match = re.search(r"^\*", contents, re.MULTILINE)
+            header = contents[: match.start()]
+            data = contents[match.start() :]
         except:
             logger.error("No header found in sp3 file")
             raise ValueError("No header found in sp3 file")
         return header, data
-
 
     def _read_header(self, header: str) -> None:
         # Split the header into lines
         lines = header.splitlines()
         self._parse_header_line1(lines[0])
         self._parse_header_line2(lines[1])
-        #find all lines starting with "+ " and parse them
+        # find all lines starting with "+ " and parse them
         idx = 2
         while lines[idx].startswith("+ "):
             self._parse_header_line_satellite(lines[idx])
             idx += 1
-        #parse the first line
+        # parse the first line
 
     def _read_data(self, data: str) -> None:
-        #split the string into blocks, all start with "*"
-        blocks = re.split(r'\n\*', data)
+        # split the string into blocks, all start with "*"
+        blocks = re.split(r"\n\*", data)
         # Remove empty blocks and add "*" back to the start of each block
-        blocks = ['*'+block for block in blocks if block.strip()]
+        blocks = ["*" + block for block in blocks if block.strip()]
         for block in blocks:
             self._parse_data_block(block)
         print("......")
@@ -100,7 +100,7 @@ class sp3:
             self.data[data]["x"] = np.array(self.data[data]["x"])
             self.data[data]["y"] = np.array(self.data[data]["y"])
             self.data[data]["z"] = np.array(self.data[data]["z"])
-            print(type(self.data[data]['x']))
+            print(type(self.data[data]["x"]))
 
     def _parse_data_block(self, block: str) -> None:
         """
@@ -119,9 +119,9 @@ class sp3:
         column 19-32: y (float)
         column 33-46: z (float)
         """
-        #split the block into lines
+        # split the block into lines
         lines = block.splitlines()
-        #parse other lines
+        # parse other lines
         for line in lines[0:]:
             if line[0] == "*":
                 year = int(line[3:7])
@@ -134,7 +134,8 @@ class sp3:
                 seconds = int(seconds)
                 microseconds = int(microseconds % 1e6)
                 time = Time.from_string(
-                    f"{year}-{month:02d}-{day:02d}T{hour:02d}:{minute:02d}:{seconds:02d}.{microseconds:06d}")
+                    f"{year}-{month:02d}-{day:02d}T{hour:02d}:{minute:02d}:{seconds:02d}.{microseconds:06d}"
+                )
             else:
                 type = line[0]
                 if type == "P":
@@ -146,15 +147,16 @@ class sp3:
                         self.data[temp_satellite]["y"] = []
                         self.data[temp_satellite]["z"] = []
                     self.data[temp_satellite]["time"].append(time)
-                    self.data[temp_satellite]["x"].append(float(line[4:18])*1000)
-                    self.data[temp_satellite]["y"].append(float(line[18:32])*1000)
-                    self.data[temp_satellite]["z"].append(float(line[32:46])*1000)
+                    self.data[temp_satellite]["x"].append(float(line[4:18]) * 1000)
+                    self.data[temp_satellite]["y"].append(float(line[18:32]) * 1000)
+                    self.data[temp_satellite]["z"].append(float(line[32:46]) * 1000)
 
         for data in self.data:
             self.data[data]["time"] = np.array(self.data[data]["time"])
             self.data[data]["x"] = np.array(self.data[data]["x"])
             self.data[data]["y"] = np.array(self.data[data]["y"])
             self.data[data]["z"] = np.array(self.data[data]["z"])
+
     def _parse_header_line1(self, line: str) -> None:
         """
         parse the first line of the header
@@ -186,7 +188,9 @@ class sp3:
         microseconds = int(seconds * 1e6)
         seconds = int(seconds)
         microseconds = int(microseconds % 1e6)
-        self.header["start_time"] = np.datetime64(f"{year}-{month:02d}-{day:02d}T{hour:02d}:{minute:02d}:{seconds:02d}.{microseconds:06d}" )
+        self.header["start_time"] = np.datetime64(
+            f"{year}-{month:02d}-{day:02d}T{hour:02d}:{minute:02d}:{seconds:02d}.{microseconds:06d}"
+        )
         self.header["num_epochs"] = int(line[32:39])
         self.header["data_used"] = line[40:45]
         self.header["coordinate_system"] = line[46:51]
@@ -227,7 +231,7 @@ class sp3:
         if "satellite" not in self.header:
             self.header["satellite"] = []
         for i in range(17):
-            temp_name = line[9+i*3:12+i*3]
+            temp_name = line[9 + i * 3 : 12 + i * 3]
             temp_name = temp_name.strip()
             if temp_name == "0":
                 break
@@ -235,30 +239,29 @@ class sp3:
                 self.header["satellite"].append(temp_name)
 
 
-
 def sp3_align(data1: sp3, data2: sp3) -> (sp3, sp3):
     """
     function to align 2 sp3 structure together
     it will loop to get all common satellite name, for each of them extract the common time and associated data
     """
-    #find the common name in data1.data.keys() and data2.data.keys()
+    # find the common name in data1.data.keys() and data2.data.keys()
     satellite_names = list(set(data1.data.keys()).intersection(set(data2.data.keys())))
     output_data1 = sp3()
     output_data2 = sp3()
     for sat_name in satellite_names:
-        common_time, in_data1, in_data2 = np.intersect1d(data1.data[sat_name]["time"], data2.data[sat_name]["time"], return_indices=True)
-        output_data1.data[sat_name] = \
-            {
-                "time": common_time,
-                "x": data1.data[sat_name]["x"][in_data1],
-                "y": data1.data[sat_name]["y"][in_data1],
-                "z": data1.data[sat_name]["z"][in_data1],
-            }
-        output_data2.data[sat_name] = \
-            {
-                "time": common_time,
-                "x": data2.data[sat_name]["x"][in_data2],
-                "y": data2.data[sat_name]["y"][in_data2],
-                "z": data2.data[sat_name]["z"][in_data2],
-            }
+        common_time, in_data1, in_data2 = np.intersect1d(
+            data1.data[sat_name]["time"], data2.data[sat_name]["time"], return_indices=True
+        )
+        output_data1.data[sat_name] = {
+            "time": common_time,
+            "x": data1.data[sat_name]["x"][in_data1],
+            "y": data1.data[sat_name]["y"][in_data1],
+            "z": data1.data[sat_name]["z"][in_data1],
+        }
+        output_data2.data[sat_name] = {
+            "time": common_time,
+            "x": data2.data[sat_name]["x"][in_data2],
+            "y": data2.data[sat_name]["y"][in_data2],
+            "z": data2.data[sat_name]["z"][in_data2],
+        }
     return output_data1, output_data2

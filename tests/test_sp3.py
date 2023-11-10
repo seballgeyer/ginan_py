@@ -6,8 +6,7 @@ import numpy as np
 
 from sateda.io.sp3.sp3 import sp3
 
-input_data = \
-"""#dV2007  4 12  0  0  0.00000000     289 ORBIT IGS14 BHN ESOC        
+input_data = """#dV2007  4 12  0  0  0.00000000     289 ORBIT IGS14 BHN ESOC        
 ## 1422 345600.00000000   900.00000000 54202 0.0000000000000        
 +    2   G01G02  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0           
 +          0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0           
@@ -46,8 +45,7 @@ PG02  11149.555664  21314.099837  11331.977499 999999.999999
 VG02 -12578.915944  -7977.396362  26581.116225 999999.999999 """
 
 
-input_data2 = \
-"""#dV2007  4 11  0  0  0.00000000     289 ORBIT IGS14 BHN ESOC
+input_data2 = """#dV2007  4 11  0  0  0.00000000     289 ORBIT IGS14 BHN ESOC
 ## 1422 345600.00000000   900.00000000 54202 0.0000000000000         
 +    2   G01G02  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0           
 +          0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0           
@@ -85,6 +83,7 @@ VG01  26855.435366  -6704.236117  -3062.394499 999999.999999
 PG02  11149.555664  21314.099837  11331.977499 999999.999999          
 VG02 -12578.915944  -7977.396362  26581.116225 999999.999999"""
 
+
 class TestSp3(unittest.TestCase):
     def setUp(self) -> None:
         print("In method", self._testMethodName)
@@ -95,7 +94,7 @@ class TestSp3(unittest.TestCase):
 
     def test_headerNsat(self):
         print(self.sp3_data.header)
-        self.assertEqual(self.sp3_data.header['nsat'], 2)  # add assertion here
+        self.assertEqual(self.sp3_data.header["nsat"], 2)  # add assertion here
 
     def test_merge1(self):
         """
@@ -107,17 +106,15 @@ class TestSp3(unittest.TestCase):
         s1.merge(self.sp3_data2)
         s2.merge(self.sp3_data)
         # check if the x values are the same
-        self.assertTrue(np.all(s1.data['G01']['time'] == s2.data['G01']['time']))
-        self.assertTrue(np.all(s1.data['G02']['time'] == s2.data['G02']['time']))
-        self.assertTrue(np.all(s1.data['G01']['x'] == s2.data['G01']['x']))
-        self.assertTrue(np.all(s1.data['G02']['x'] == s2.data['G02']['x']))
-        self.assertTrue(np.all(s1.data['G01']['y'] == s2.data['G01']['y']))
-        self.assertTrue(np.all(s1.data['G02']['y'] == s2.data['G02']['y']))
-        self.assertTrue(np.all(s1.data['G01']['z'] == s2.data['G01']['z']))
-        self.assertTrue(np.all(s1.data['G02']['z'] == s2.data['G02']['z']))
+        self.assertTrue(np.all(s1.data["G01"]["time"] == s2.data["G01"]["time"]))
+        self.assertTrue(np.all(s1.data["G02"]["time"] == s2.data["G02"]["time"]))
+        self.assertTrue(np.all(s1.data["G01"]["x"] == s2.data["G01"]["x"]))
+        self.assertTrue(np.all(s1.data["G02"]["x"] == s2.data["G02"]["x"]))
+        self.assertTrue(np.all(s1.data["G01"]["y"] == s2.data["G01"]["y"]))
+        self.assertTrue(np.all(s1.data["G02"]["y"] == s2.data["G02"]["y"]))
+        self.assertTrue(np.all(s1.data["G01"]["z"] == s2.data["G01"]["z"]))
+        self.assertTrue(np.all(s1.data["G02"]["z"] == s2.data["G02"]["z"]))
 
 
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

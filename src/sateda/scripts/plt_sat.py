@@ -18,6 +18,7 @@ class CustomFormatter(logging.Formatter):
     reformating logging class
     @todo move to the possible __init__.py
     """
+
     def format(self, record):
         if record.levelno == logging.INFO:
             return record.getMessage()
@@ -43,9 +44,7 @@ def read(arg):
     sat.get_postfit()
     sat.get_state()
     rms = sat.get_rms()
-    logger.info(
-        f"{arg.coll} {arg.sat}   {np.array2string(rms[:3], precision=6, floatmode='fixed')}   "
-    )
+    logger.info(f"{arg.coll} {arg.sat}   {np.array2string(rms[:3], precision=6, floatmode='fixed')}   ")
     if arg.to_rac:
         rms_rac = sat.get_rac()
         logger.info(f"{np.array2string(rms_rac[:3], precision=6, floatmode='fixed')}")

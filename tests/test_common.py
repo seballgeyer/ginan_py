@@ -38,20 +38,15 @@ class Testcommon(unittest.TestCase):
         self.assertListEqual(common, [(1, 0), (2, 1)])
         self.assertListEqual(not_in_dataset2, [0])
         self.assertListEqual(not_in_dataset1, [2])
-        
+
     def test_comparedict(self) -> None:
-        dict1 = {'a': 1, 'b': 2, 'c': None, 'd': 4}
-        dict1_b = {'a': 1, 'b': 2,'d': 4} #without the None value
-        dict2 = {'b': 2, 'c': 3, 'a': 1, 'd': 4}
-        dict3 = {'b': 2, 'c': 3, 'a': 1, 'd': 5, 'e': 6}
+        dict1 = {"a": 1, "b": 2, "c": None, "d": 4}
+        dict1_b = {"a": 1, "b": 2, "d": 4}  # without the None value
+        dict2 = {"b": 2, "c": 3, "a": 1, "d": 4}
+        dict3 = {"b": 2, "c": 3, "a": 1, "d": 5, "e": 6}
         self.assertFalse(compare_dict(dict1, dict2, all_keys=False))
         self.assertTrue(compare_dict(dict1_b, dict2, all_keys=False))
         self.assertFalse(compare_dict(dict1, dict3, all_keys=False))
-        self.assertTrue(compare_dict(dict1, dict3, comparison_keys=['a', 'b'], all_keys=False))
-        self.assertFalse(compare_dict(dict1, dict3, comparison_keys=['a', 'b','x'], all_keys=False))
+        self.assertTrue(compare_dict(dict1, dict3, comparison_keys=["a", "b"], all_keys=False))
+        self.assertFalse(compare_dict(dict1, dict3, comparison_keys=["a", "b", "x"], all_keys=False))
         self.assertFalse(compare_dict(dict1, dict3, all_keys=True))
-
-        
-
-
-        

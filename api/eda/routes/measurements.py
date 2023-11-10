@@ -10,7 +10,6 @@ from ..utilities import init_page, extra, generate_fig, aggregate_stats, get_dat
 from . import eda_bp
 
 
-
 @eda_bp.route("/measurements", methods=["GET", "POST"])
 def measurements():
     if request.method == "POST":
@@ -36,14 +35,14 @@ def handle_post_request():
     current_app.logger.info(
         f"GET {form['plot']}, {form['series']}, {form['sat']}, {form['site']}, {form['xaxis']}, {form['yaxis']}, {form['yaxis']+[form['xaxis']]}, exclude {form['exclude']} mintues"
     )
-    
+
     current_app.logger.info("Getting Connection")
     data = MeasurementArray()
     data2 = MeasurementArray()
-    for series in form["series"] :
+    for series in form["series"]:
         db_, series_ = series.split("\\")
         get_data(db_, "Measurements", None, form["site"], form["sat"], [series_], form["yaxis"] + [form["xaxis"]], data)
-        if any([yaxis in session["list_geometry"] for yaxis in form["yaxis"]+[form["xaxis"]]]):
+        if any([yaxis in session["list_geometry"] for yaxis in form["yaxis"] + [form["xaxis"]]]):
             get_data(db_, "Geometry", None, form["site"], form["sat"], [""], form["yaxis"] + [form["xaxis"]], data2)
 
     if len(data.arr) == 0:
@@ -57,9 +56,9 @@ def handle_post_request():
     # try:
     data.merge(data2)
     # except Exception as e:
-        # current_app.logger.warning(f"Merging error data {e}")
-        # pass
-    
+    # current_app.logger.warning(f"Merging error data {e}")
+    # pass
+
     # exit(0)
 
     data.sort()
@@ -84,21 +83,21 @@ def handle_post_request():
             #     current_app.logger.debug(f"{_data.id} is not numbers")
             #     pass
             try:
-                if form['xaxis'] == 'Epoch':
+                if form["xaxis"] == "Epoch":
                     _x = _data.epoch[_data.subset]
                     x_hover_template = "%{x|%Y-%m-%d %H:%M:%S}<br>"
                 else:
-                    _x = _data.data[form['xaxis']][_data.subset]
+                    _x = _data.data[form["xaxis"]][_data.subset]
                     x_hover_template = "%{x}<br>"
                 if _yaxis in _data.data:
-                    if form['plot'] == 'QQ':
-                        _x = _data.info[_yaxis]['qq'][1]
-                        _y = _data.info[_yaxis]['qq'][0]        
-                        x_hover_template = "%{x}<br>"                
+                    if form["plot"] == "QQ":
+                        _x = _data.info[_yaxis]["qq"][1]
+                        _y = _data.info[_yaxis]["qq"][0]
+                        x_hover_template = "%{x}<br>"
                     else:
                         _y = _data.data[_yaxis][_data.subset]
                     legend = _data.id
-                    legend['yaxis'] = _yaxis
+                    legend["yaxis"] = _yaxis
                     trace.append(
                         go.Scatter(
                             x=_x,
@@ -109,19 +108,15 @@ def handle_post_request():
                         )
                     )
                     try:
-                        table[f"{legend}"] = {"mean": _data.info[_yaxis]["mean"],
-                                                "RMS": _data.info[_yaxis]["rms"]}
+                        table[f"{legend}"] = {"mean": _data.info[_yaxis]["mean"], "RMS": _data.info[_yaxis]["rms"]}
                     except:
                         pass
             except Exception as e:
                 current_app.logger.warning(f"Error plotting {_data.id} {form['xaxis']}{_yaxis} {e}")
-                
+
     current_app.logger.warning("end plots")
 
     table_agg = aggregate_stats(data)
-     
-           
-
 
     return render_template(
         "measurements.jinja",
