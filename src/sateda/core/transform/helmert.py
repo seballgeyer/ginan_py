@@ -1,6 +1,109 @@
 from typing import List
+import logging
+import warnings
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+
+class ResidualCheck:
+    """
+    Class for checking residuals during Helmert transformation iterations.
+
+    Args:
+        previous (float): The previous residual value.
+        new (float): The new residual value.
+        iteration_params (dict): A dictionary containing the iteration parameters.
+
+    Attributes:
+        previous (float): The previous residual value.
+        new (float): The new residual value.
+        iteration_params (dict): A dictionary containing the iteration parameters.
+        what (str): A string describing what was checked during the residual check.
+
+    Returns:
+        bool: True if any of the residual checks pass, False otherwise.
+    """
+
+    def __init__(self, previous: float, new: float, iteration_params: dict) -> None:
+        """
+        Initializes a ResidualCheck object.
+
+        Args:
+            previous (float): The previous residual value.
+            new (float): The new residual value.
+            iteration_params (dict): A dictionary containing the iteration parameters.
+        """
+        self.previous = previous
+        self.new = new
+        self.iteration_params = iteration_params
+        self.what = "nothing checked"
+
+    def __call__(self) -> bool:
+        """
+        Checks the residuals and returns True if any of the checks pass, False otherwise.
+
+        Returns:
+            bool: True if any of the residual checks pass, False otherwise.
+        """
+        # Minimum residuals norm
+        if self._check_min_residuals_norm():
+            return True
+        # Absolute difference in residuals
+        if self._check_min_delta_residuals():
+            return True
+        # Relative difference in residuals
+        if self._check_min_relative_residuals():
+            return True
+        return False
+
+    def _check_min_residuals_norm(self) -> bool:
+        """
+        Checks if the new residual value is less than the minimum residuals norm.
+
+        Returns:
+            bool: True if condition is meet, False otherwise.
+        """
+        if self.new < self.iteration_params["min_residuals_norm"]:
+            self.what = (
+                f"Minimum residuals norm ({self.iteration_params['min_residuals_norm']}) reached. (val. {self.new})"
+            )
+            return True
+        return False
+
+    def _check_min_delta_residuals(self) -> bool:
+        """
+        Checks if the absolute difference between residual values is less than the minimum delta residuals.
+
+        Returns:
+            bool: True if condition is meet, False otherwise.
+        """
+        if abs(self.new - self.previous) < self.iteration_params["min_delta_residuals"]:
+            self.what = (
+                f"Minimum delta residuals ({self.iteration_params['min_delta_residuals']}) "
+                f"reached. (val. {abs(self.new - self.previous)})"
+            )
+            return True
+        return False
+
+    def _check_min_relative_residuals(self) -> bool:
+        """
+        Checks if the relative difference between residual values is less than the minimum relative residuals.
+
+        Returns:
+            bool: True if condition is meet, False otherwise.
+        """
+        try:
+            if abs((self.previous - self.new) / self.previous) < self.iteration_params["min_relative_residuals"]:
+                self.what = (
+                    f"Minimum relative residuals norm ({self.iteration_params['min_relative_residuals']}) reached."
+                )
+                return True
+        except ZeroDivisionError:
+            pass
+        return False
 
 
 class HelmertTransform:
@@ -53,9 +156,17 @@ class HelmertTransform:
         """
         cos_angle = np.cos(self.rotation)
         sin_angle = np.sin(self.rotation)
-        rot_x = np.array([[1, 0, 0], [0, cos_angle[0], -sin_angle[0]], [0, sin_angle[0], cos_angle[0]]])
-        rot_y = np.array([[cos_angle[1], 0, sin_angle[1]], [0, 1, 0], [-sin_angle[1], 0, cos_angle[1]]])
-        rot_z = np.array([[cos_angle[2], -sin_angle[2], 0], [sin_angle[2], cos_angle[2], 0], [0, 0, 1]])
+        # fmt: off
+        rot_x = np.array([[1, 0, 0], 
+                          [0, cos_angle[0], -sin_angle[0]], 
+                          [0, sin_angle[0], cos_angle[0]]])
+        rot_y = np.array([[cos_angle[1], 0, sin_angle[1]],
+                          [0, 1, 0], 
+                          [-sin_angle[1], 0, cos_angle[1]]])
+        rot_z = np.array([[cos_angle[2], -sin_angle[2], 0], 
+                          [sin_angle[2], cos_angle[2], 0], 
+                          [0, 0, 1]])
+        # fmt: on
         return rot_z @ rot_y @ rot_x
 
     def jac_rotation(self) -> (np.array, np.array, np.array):
@@ -64,12 +175,26 @@ class HelmertTransform:
         """
         cos_angle = np.cos(self.rotation)
         sin_angle = np.sin(self.rotation)
-        rot_x = np.array([[1, 0, 0], [0, cos_angle[0], sin_angle[0]], [0, -sin_angle[0], cos_angle[0]]])
-        rot_y = np.array([[cos_angle[1], 0, -sin_angle[1]], [0, 1, 0], [sin_angle[1], 0, cos_angle[1]]])
-        rot_z = np.array([[cos_angle[2], sin_angle[2], 0], [-sin_angle[2], cos_angle[2], 0], [0, 0, 1]])
-        rot_x_jac = np.array([[0, 0, 0], [0, -sin_angle[0], cos_angle[0]], [0, -cos_angle[0], -sin_angle[0]]])
-        rot_y_jac = np.array([[-sin_angle[1], 0, -cos_angle[1]], [0, 0, 0], [cos_angle[1], 0, sin_angle[1]]])
-        rot_z_jac = np.array([[-sin_angle[2], cos_angle[2], 0], [-cos_angle[2], -sin_angle[2], 0], [0, 0, 0]])
+        # fmt: off
+        rot_x = np.array([[1, 0, 0], 
+                          [0, cos_angle[0], sin_angle[0]], 
+                          [0, -sin_angle[0], cos_angle[0]]])
+        rot_y = np.array([[cos_angle[1], 0, -sin_angle[1]], 
+                          [0, 1, 0], 
+                          [sin_angle[1], 0, cos_angle[1]]])
+        rot_z = np.array([[cos_angle[2], sin_angle[2], 0], 
+                          [-sin_angle[2], cos_angle[2], 0], 
+                          [0, 0, 1]])
+        rot_x_jac = np.array([[0, 0, 0], 
+                              [0, -sin_angle[0], cos_angle[0]], 
+                              [0, -cos_angle[0], -sin_angle[0]]])
+        rot_y_jac = np.array([[-sin_angle[1], 0, -cos_angle[1]], 
+                              [0, 0, 0], 
+                              [cos_angle[1], 0, sin_angle[1]]])
+        rot_z_jac = np.array([[-sin_angle[2], cos_angle[2], 0], 
+                              [-cos_angle[2], -sin_angle[2], 0],
+                              [0, 0, 0]])
+        # fmt: on
         return rot_z @ rot_y @ rot_x_jac, rot_z @ rot_y_jac @ rot_x, rot_z_jac @ rot_y @ rot_x
 
     def apply(self, data: np.array) -> np.array:
@@ -121,7 +246,7 @@ class HelmertTransform:
             jacobian[:, :, idx + 2] = data @ rot_jac[2] * (1 + self.scale)
         return jacobian
 
-    def fit(self, data: np.array, target: np.array, params: dict = None) -> np.array:
+    def fit_single_step(self, data: np.array, target: np.array, params: dict = None) -> None:
         """
         Fit the Helmert transformation to a set of coordinates.
 
@@ -129,7 +254,8 @@ class HelmertTransform:
         :type data: numpy.array
         :param target: The target coordinates, as a numpy array of shape (n, 3).
         :type target: numpy.array
-        :param params: A dictionary containing the parameters to fit. Default is {'translation': True, 'rotation': True, 'scale': True}.
+        :param params: A dictionary containing the parameters to fit.
+                        Default is {'translation': True, 'rotation': True, 'scale': True}.
         :type params: dict
         :return: The fitted transformation parameters, as a numpy array of shape (7,).
         :rtype: numpy.array
@@ -150,3 +276,49 @@ class HelmertTransform:
             idx += 1
         if params["rotation"]:
             self.rotation -= delta[idx:]
+
+    def fit(self, data: np.array, target: np.array, params: dict = None, iteration_params: dict = None) -> None:
+        """
+        Fit the Helmert transformation to a set of coordinates using a non-linear least squares approach.
+
+        :param data: The coordinates to transform, as a numpy array of shape (n, 3).
+        :type data: numpy.array
+        :param target: The target coordinates, as a numpy array of shape (n, 3).
+        :type target: numpy.array
+        :param params: A dictionary containing the parameters to fit.
+            Default is {'translation': True, 'rotation': True, 'scale': True}.
+        :type params: dict
+        :param iteration_params: A dictionary containing the iteration parameters.
+            Default is {'max_iter': 100,
+                        'min_residuals_norm': 1e-6,
+                        'min_delta_residuals': 1e-9,
+                        'min_relative_residuals': 1e-9}.
+        :type iteration_params: dict
+        :return: None
+        """
+        if params is None:
+            params = {"translation": True, "rotation": True, "scale": True}
+        if iteration_params is None:
+            iteration_params = {
+                "max_iter": 100,
+                "min_residuals_norm": 1e-16,
+                "min_delta_residuals": 1e-16,
+                "min_relative_residuals": 1e-16,
+            }
+        residuals_norm = np.inf
+        previous_residuals_norm = np.inf
+        iteration = 0
+        while iteration < iteration_params["max_iter"]:
+            self.fit_single_step(data, target, params)
+            residuals = self.apply(data) - target
+            residuals_norm = np.linalg.norm(residuals)
+            residual_check = ResidualCheck(residuals_norm, previous_residuals_norm, iteration_params)
+            if residual_check():
+                logger.info(residual_check.what)
+                break
+            previous_residuals_norm = residuals_norm
+            iteration += 1
+        else:
+            warnings.warn(f"Maximum number of iterations ({iteration_params['max_iter']}) reached.")
+            return
+        logger.info(f"converged after {iteration} iterations")

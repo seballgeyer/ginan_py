@@ -48,8 +48,7 @@ class TestHelmert(unittest.TestCase):
         vector = np.random.rand(100, 3)
         target = helmert.apply(vector)
         helmert2 = HelmertTransform()
-        for _i in range(10):
-            helmert2.fit(vector, target, params={"translation": True, "rotation": False, "scale": False})
+        helmert2.fit(vector, target, params={"translation": True, "rotation": False, "scale": False})
         self.assertTrue(np.all(helmert.get_params() - helmert2.get_params() < 1e-16))
 
     def test_fit_scale(self):
@@ -57,8 +56,7 @@ class TestHelmert(unittest.TestCase):
         vector = np.random.rand(100, 3)
         target = helmert.apply(vector)
         helmert2 = HelmertTransform()
-        for _i in range(10):
-            helmert2.fit(vector, target, params={"translation": False, "rotation": False, "scale": True})
+        helmert2.fit(vector, target, params={"translation": False, "rotation": False, "scale": True})
         self.assertTrue(np.all(helmert.get_params() - helmert2.get_params() < 1e-16))
 
     def test_fit_rot(self):
@@ -69,21 +67,19 @@ class TestHelmert(unittest.TestCase):
         vector = np.random.rand(100, 3)
         target = helmert.apply(vector)
         helmert2 = HelmertTransform()
-        for _i in range(10):
-            helmert2.fit(vector, target, params={"translation": False, "rotation": True, "scale": False})
+        helmert2.fit(vector, target, params={"translation": False, "rotation": True, "scale": False})
         self.assertTrue(np.all(helmert.get_params() - helmert2.get_params() < 1e-16))
 
     def test_fit_combined(self):
         helmert = HelmertTransform(
             translation=[1e-3, 1e-4, 2e-3],
-            rotation=[1 / 3600.0, 2 / 3600.0, 4 / 3600.0],
+            rotation=[1 / 3600.0, 2 / 3600.0, 25 / 3600.0],
             scale=1e-6,
             config={"degrees": True},
         )
         vector = np.random.rand(100, 3)
         target = helmert.apply(vector)
         helmert2 = HelmertTransform()
-        for _i in range(10):
-            helmert2.fit(vector, target)
+        helmert2.fit(vector, target)
         print(helmert.get_params() - helmert2.get_params())
         self.assertTrue(np.all(helmert.get_params() - helmert2.get_params() < 1e-15))
