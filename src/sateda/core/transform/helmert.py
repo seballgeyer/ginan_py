@@ -94,19 +94,19 @@ class HelmertTransform:
             n_param += 3
         if scale:
             n_param += 1
-        jacobian = np.zeros((n_param, data.shape[0], 3))
+        jacobian = np.zeros(( data.shape[0], 3, n_param))
         for i in range(data.shape[0]):
             idx = 0
             if translation:
-                jacobian[:3, i, :] = translation_jac
+                jacobian[i, :, :3] = translation_jac
                 idx += 3
             if scale:
-                jacobian[idx, i, :] = data[i] @ rot.T
+                jacobian[i, :, idx] = data[i] @ rot.T
                 idx += 1
             if angle:
-                jacobian[idx, i, :] = data[i] @ rot_jac[0].T * (1+self.scale)
-                jacobian[idx+1, i, :] = data[i] @ rot_jac[1].T * (1+self.scale)
-                jacobian[idx+2, i, :] = data[i] @ rot_jac[2].T * (1+self.scale)
+                jacobian[i, :, idx] = data[i] @ rot_jac[0].T * (1+self.scale)
+                jacobian[i, :, idx+1] = data[i] @ rot_jac[1].T * (1+self.scale)
+                jacobian[i, :, idx+2] = data[i] @ rot_jac[2].T * (1+self.scale)
         return jacobian
     
     def fit(self, data: np.array, target: np.array, translation:bool=True, angle: bool=True, scale: bool=True) -> np.array:
@@ -126,7 +126,9 @@ class HelmertTransform:
         residuals = self.apply(data) - target
         design = self.jacobian(data, translation=translation, angle=angle, scale=scale)
         residuals = residuals.reshape(-1)
-        design = design.reshape((design.shape[0], -1)).transpose()
+        print(design.shape)
+        design = design.reshape((design.shape[0]*design.shape[1], -1))
+        print(design.shape)
         delta = np.linalg.inv(design.transpose() @ design) @ design.transpose() @ residuals
         idx = 0
         if translation:
