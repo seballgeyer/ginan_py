@@ -95,18 +95,19 @@ class HelmertTransform:
         if scale:
             n_param += 1
         jacobian = np.zeros(( data.shape[0], 3, n_param))
-        for i in range(data.shape[0]):
-            idx = 0
-            if translation:
-                jacobian[i, :, :3] = translation_jac
-                idx += 3
-            if scale:
-                jacobian[i, :, idx] = data[i] @ rot.T
-                idx += 1
-            if angle:
-                jacobian[i, :, idx] = data[i] @ rot_jac[0].T * (1+self.scale)
-                jacobian[i, :, idx+1] = data[i] @ rot_jac[1].T * (1+self.scale)
-                jacobian[i, :, idx+2] = data[i] @ rot_jac[2].T * (1+self.scale)
+        print(jacobian.shape)
+        idx=0
+        if translation:
+            jacobian[:,:,:3] = np.tile(translation_jac, (data.shape[0], 1, 1))
+            idx+=3
+        if scale:
+            jacobian[:,:,idx] = data @ rot.T
+            idx+=1
+    
+        if angle:
+            jacobian[:, :, idx] = data @ rot_jac[0].T * (1+self.scale)
+            jacobian[:, :, idx+1] = data @ rot_jac[1].T * (1+self.scale)
+            jacobian[:, :, idx+2] = data @ rot_jac[2].T * (1+self.scale)
         return jacobian
     
     def fit(self, data: np.array, target: np.array, translation:bool=True, angle: bool=True, scale: bool=True) -> np.array:
