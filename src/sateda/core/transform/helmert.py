@@ -1,3 +1,7 @@
+"""
+This module contains classes for performing Helmert transformations on sets of coordinates.
+"""
+
 from typing import List
 import logging
 import warnings
@@ -157,14 +161,14 @@ class HelmertTransform:
         cos_angle = np.cos(self.rotation)
         sin_angle = np.sin(self.rotation)
         # fmt: off
-        rot_x = np.array([[1, 0, 0], 
-                          [0, cos_angle[0], -sin_angle[0]], 
+        rot_x = np.array([[1, 0, 0],
+                          [0, cos_angle[0], -sin_angle[0]],
                           [0, sin_angle[0], cos_angle[0]]])
         rot_y = np.array([[cos_angle[1], 0, sin_angle[1]],
-                          [0, 1, 0], 
+                          [0, 1, 0],
                           [-sin_angle[1], 0, cos_angle[1]]])
-        rot_z = np.array([[cos_angle[2], -sin_angle[2], 0], 
-                          [sin_angle[2], cos_angle[2], 0], 
+        rot_z = np.array([[cos_angle[2], -sin_angle[2], 0],
+                          [sin_angle[2], cos_angle[2], 0],
                           [0, 0, 1]])
         # fmt: on
         return rot_z @ rot_y @ rot_x
@@ -176,22 +180,22 @@ class HelmertTransform:
         cos_angle = np.cos(self.rotation)
         sin_angle = np.sin(self.rotation)
         # fmt: off
-        rot_x = np.array([[1, 0, 0], 
-                          [0, cos_angle[0], sin_angle[0]], 
+        rot_x = np.array([[1, 0, 0],
+                          [0, cos_angle[0], sin_angle[0]],
                           [0, -sin_angle[0], cos_angle[0]]])
-        rot_y = np.array([[cos_angle[1], 0, -sin_angle[1]], 
-                          [0, 1, 0], 
+        rot_y = np.array([[cos_angle[1], 0, -sin_angle[1]],
+                          [0, 1, 0],
                           [sin_angle[1], 0, cos_angle[1]]])
-        rot_z = np.array([[cos_angle[2], sin_angle[2], 0], 
-                          [-sin_angle[2], cos_angle[2], 0], 
+        rot_z = np.array([[cos_angle[2], sin_angle[2], 0],
+                          [-sin_angle[2], cos_angle[2], 0],
                           [0, 0, 1]])
-        rot_x_jac = np.array([[0, 0, 0], 
-                              [0, -sin_angle[0], cos_angle[0]], 
+        rot_x_jac = np.array([[0, 0, 0],
+                              [0, -sin_angle[0], cos_angle[0]],
                               [0, -cos_angle[0], -sin_angle[0]]])
-        rot_y_jac = np.array([[-sin_angle[1], 0, -cos_angle[1]], 
-                              [0, 0, 0], 
+        rot_y_jac = np.array([[-sin_angle[1], 0, -cos_angle[1]],
+                              [0, 0, 0],
                               [cos_angle[1], 0, sin_angle[1]]])
-        rot_z_jac = np.array([[-sin_angle[2], cos_angle[2], 0], 
+        rot_z_jac = np.array([[-sin_angle[2], cos_angle[2], 0],
                               [-cos_angle[2], -sin_angle[2], 0],
                               [0, 0, 0]])
         # fmt: on
