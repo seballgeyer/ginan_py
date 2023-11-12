@@ -43,7 +43,7 @@ class TestPositions(unittest.TestCase):
         self.assertEqual(len(pos.data.arr[0].data["x_2"]), 2)
         self.assertEqual(pos.data.arr[0].epoch[0], time0)
         self.assertEqual(pos.data.arr[0].epoch[1], time0 + datetime.timedelta(seconds=1))
-        self.assertTrue(np.alltrue(pos.data.arr[0].data["x_2"] == [2, 5]))
+        self.assertTrue(np.all(pos.data.arr[0].data["x_2"] == [2, 5]))
 
     def test_rotate_north(self):
         """
@@ -71,7 +71,7 @@ class TestPositions(unittest.TestCase):
         data.append(Measurements.from_dictionary(data_dict))
         pos = Position(data=data, base=reference)
         pos.rotate_enu()
-        self.assertTrue(np.alltrue(pos.data.arr[0].data["x_2"] == [1, 2]))
+        self.assertTrue(np.all(pos.data.arr[0].data["x_2"] == [1, 2]))
 
     def test_rotate_lat0lon0(self):
         """

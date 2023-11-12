@@ -23,11 +23,11 @@ def xyz2blh(x, y, z):
     # calculate latitude, in radians
     xy_hypot = np.hypot(x, y)
     lat0 = np.zeros_like(x)
-    latitude = np.arctan(z / xy_hypot)
+    latitude = np.arctan2(z , xy_hypot)
     while np.any(np.abs(latitude - lat0) > 1e-9):
         lat0 = latitude
         N = A / np.sqrt(1 - e**2 * np.sin(lat0) ** 2)
-        latitude = np.arctan((z + e**2 * N * np.sin(lat0)) / xy_hypot)
+        latitude = np.arctan2((z + e**2 * N * np.sin(lat0)) , xy_hypot)
     # calculate height, in meters
     N = A / np.sqrt(1 - e**2 * np.sin(latitude) ** 2)
     small_angle_indices = np.abs(latitude) < np.pi / 4
