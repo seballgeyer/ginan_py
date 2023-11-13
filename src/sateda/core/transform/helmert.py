@@ -264,7 +264,6 @@ class HelmertTransform:
         if params["scale"]:
             n_param += 1
         jacobian = np.zeros((data.shape[0], 3, n_param))
-        print(jacobian.shape)
         idx = 0
         if params["translation"]:
             jacobian[:, :, :3] = np.tile(translation_jac, (data.shape[0], 1, 1))
