@@ -7,6 +7,7 @@ import logging
 import warnings
 
 import numpy as np
+from sklearn.model_selection import train_test_split
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -108,6 +109,33 @@ class ResidualCheck:
         except ZeroDivisionError:
             pass
         return False
+
+    def get_previous_residual(self) -> float:
+        """
+        Returns the previous residual value.
+
+        Returns:
+            float: The previous residual value.
+        """
+        return self.previous
+
+    def get_new_residual(self) -> float:
+        """
+        Returns the new residual value.
+
+        Returns:
+            float: The new residual value.
+        """
+        return self.new
+
+    def get_iteration_params(self) -> dict:
+        """
+        Returns the iteration parameters.
+
+        Returns:
+            dict: A dictionary containing the iteration parameters.
+        """
+        return self.iteration_params
 
 
 class HelmertTransform:
@@ -308,13 +336,20 @@ class HelmertTransform:
                 "min_residuals_norm": 1e-16,
                 "min_delta_residuals": 1e-16,
                 "min_relative_residuals": 1e-16,
+                "test_size": 0.2,
+                "batch_size": 256,
             }
         residuals_norm = np.inf
         previous_residuals_norm = np.inf
         iteration = 0
+        data_train, data_test, target_train, target_test = train_test_split(
+            data, target, test_size=iteration_params["test_size"], random_state=42
+        )
         while iteration < iteration_params["max_iter"]:
-            self.fit_single_step(data, target, params)
-            residuals = self.apply(data) - target
+            for batch_start in range(0, data_train.shape[0], iteration_params["batch_size"]):
+                batch_end = batch_start + iteration_params["batch_size"]
+                self.fit_single_step(data_train[batch_start:batch_end], target_train[batch_start:batch_end], params)
+            residuals = self.apply(data_test) - target_test
             residuals_norm = np.linalg.norm(residuals)
             residual_check = ResidualCheck(residuals_norm, previous_residuals_norm, iteration_params)
             if residual_check():
