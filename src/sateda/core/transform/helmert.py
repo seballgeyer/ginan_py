@@ -339,18 +339,17 @@ class HelmertTransform:
                 "test_size": 0.2,
                 "batch_size": 256,
             }
-        residuals_norm = np.inf
-        previous_residuals_norm = np.inf
-        iteration = 0
         data_train, data_test, target_train, target_test = train_test_split(
             data, target, test_size=iteration_params["test_size"], random_state=42
         )
+        residuals_norm = np.inf
+        previous_residuals_norm = np.inf
+        iteration = 0
         while iteration < iteration_params["max_iter"]:
             for batch_start in range(0, data_train.shape[0], iteration_params["batch_size"]):
-                batch_end = batch_start + iteration_params["batch_size"]
+                batch_end = min(batch_start + iteration_params["batch_size"], data.shape[0])
                 self.fit_single_step(data_train[batch_start:batch_end], target_train[batch_start:batch_end], params)
-            residuals = self.apply(data_test) - target_test
-            residuals_norm = np.linalg.norm(residuals)
+            residuals_norm = np.linalg.norm(self.apply(data_test) - target_test)
             residual_check = ResidualCheck(residuals_norm, previous_residuals_norm, iteration_params)
             if residual_check():
                 logger.info(residual_check.what)
