@@ -8,7 +8,7 @@ from sateda.dbconnector import mongo
 logger = logging.getLogger(__name__)
 
 
-class satellite:
+class Satellite:
     def __init__(self, mongodb: mongo.MongoDB, sat: str = "", series: str = "") -> None:
         self.sat: str = sat
         self.series: str = series
@@ -44,8 +44,10 @@ class satellite:
             series=[self.series],
             keys=["x"],
         )
+        self.time = np.empty(len(data[0]["t"]), dtype="datetime64[us]")
         self.pos = np.empty((3, len(data[0]["t"])))
         self.vel = np.empty((3, len(data[0]["t"])))
+        self.time = np.asarray(data[0]["t"], dtype="datetime64[us]")
         self.pos = np.asarray(data[0]["x"])[:, :3]
         self.vel = np.asarray(data[0]["x"])[:, 3:]
 
