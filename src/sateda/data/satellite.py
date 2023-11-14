@@ -70,3 +70,11 @@ class Satellite:
         self.rac[:, 1] = (a[:-1:3] * self.residual).sum(axis=1)
         self.rac[:, 2] = (c[:-1:3] * self.residual).sum(axis=1)
         return self.get_rms(use_rac=True)
+
+def align_satellites(data1: "Satellite", data2: "Satellite"):
+    common_time, in_sat1, in_sat2 = np.intersect1d(data1.time, data2.time, return_indices=True)
+    data1.time = common_time
+    data2.time = common_time
+    data1.pos = data1.pos[in_sat1]
+    data2.pos = data2.pos[in_sat2]
+    

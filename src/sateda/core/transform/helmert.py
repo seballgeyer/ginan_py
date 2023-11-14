@@ -8,9 +8,11 @@ import warnings
 
 import numpy as np
 from sklearn.model_selection import train_test_split
+import sys 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
 class ResidualCheck:
@@ -352,10 +354,13 @@ class HelmertTransform:
             residual_check = ResidualCheck(residuals_norm, previous_residuals_norm, iteration_params)
             if residual_check():
                 logger.info(residual_check.what)
+                print(residual_check.what)
                 break
             previous_residuals_norm = residuals_norm
             iteration += 1
         else:
+            print("too many it")
             warnings.warn(f"Maximum number of iterations ({iteration_params['max_iter']}) reached.")
             return
         logger.info(f"converged after {iteration} iterations")
+        print(f"converged after {iteration} iterations")

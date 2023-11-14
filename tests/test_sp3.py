@@ -88,9 +88,9 @@ class TestSp3(unittest.TestCase):
     def setUp(self) -> None:
         print("In method", self._testMethodName)
         self.sp3_data = sp3()
-        self.sp3_data = sp3.read(file_or_string=StringIO(input_data))
+        self.sp3_data = sp3.read(file=StringIO(input_data))
 
-        self.sp3_data2 = sp3().read(file_or_string=StringIO(input_data2))
+        self.sp3_data2 = sp3().read(file=StringIO(input_data2))
 
     def test_headerNsat(self):
         print(self.sp3_data.header)
@@ -101,8 +101,8 @@ class TestSp3(unittest.TestCase):
         Testing the merge functions.
         """
         print("reading data")
-        s1 = sp3().read(file_or_string=StringIO(input_data))
-        s2 = sp3().read(file_or_string=StringIO(input_data2))
+        s1 = sp3().read(file=StringIO(input_data))
+        s2 = sp3().read(file=StringIO(input_data2))
         s1.merge(self.sp3_data2)
         s2.merge(self.sp3_data)
         # check if the x values are the same
