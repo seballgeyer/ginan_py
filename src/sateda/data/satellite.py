@@ -8,7 +8,7 @@ from sateda.dbconnector import mongo
 logger = logging.getLogger(__name__)
 
 
-class satellite:
+class Satellite:
     def __init__(self, mongodb: mongo.MongoDB, sat: str = "", series: str = "") -> None:
         self.sat: str = sat
         self.series: str = series
@@ -44,8 +44,10 @@ class satellite:
             series=[self.series],
             keys=["x"],
         )
+        self.time = np.empty(len(data[0]["t"]), dtype="datetime64[us]")
         self.pos = np.empty((3, len(data[0]["t"])))
         self.vel = np.empty((3, len(data[0]["t"])))
+        self.time = np.asarray(data[0]["t"], dtype="datetime64[us]")
         self.pos = np.asarray(data[0]["x"])[:, :3]
         self.vel = np.asarray(data[0]["x"])[:, 3:]
 
@@ -68,3 +70,11 @@ class satellite:
         self.rac[:, 1] = (a[:-1:3] * self.residual).sum(axis=1)
         self.rac[:, 2] = (c[:-1:3] * self.residual).sum(axis=1)
         return self.get_rms(use_rac=True)
+
+def align_satellites(data1: "Satellite", data2: "Satellite"):
+    common_time, in_sat1, in_sat2 = np.intersect1d(data1.time, data2.time, return_indices=True)
+    data1.time = common_time
+    data2.time = common_time
+    data1.pos = data1.pos[in_sat1]
+    data2.pos = data2.pos[in_sat2]
+    

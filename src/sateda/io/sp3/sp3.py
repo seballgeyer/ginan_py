@@ -7,11 +7,13 @@ import logging
 from io import StringIO
 from typing import Union
 import re
+from pathlib import Path
 import numpy as np
 import numpy.typing as npt
 import gzip
 
 from sateda.core.time import Time
+from sateda.data.satellite import Satellite
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -23,27 +25,50 @@ class sp3:
         self.header = {}
 
     @classmethod
-    def read(cls, file_or_string: Union[str, StringIO], *args, **kwargs) -> "sp3":
+    def read(cls, file: Union[Path, StringIO], *args, **kwargs) -> "sp3":
         instance = cls(*args, **kwargs)  # Create an instance of the class
         # Determine if the input is a string path or a StringIO object
-        if isinstance(file_or_string, str):
+        if isinstance(file, Path):
             # Check if the file has a .gz extension to detect compressed files
-            is_compressed = file_or_string.endswith(".gz")
-
+            is_compressed = file.suffix == ".gz"
             if is_compressed:
-                with gzip.open(file_or_string, "rt") as f:
+                with gzip.open(file, "rt") as f:
                     contents = f.read()
             else:
-                with open(file_or_string) as f:
+                with open(file) as f:
                     contents = f.read()
         else:
             # Read from the provided StringIO object
-            contents = file_or_string.read()
+            contents = file.read()
         header_, data_ = instance._split_header_data(contents)
         instance._read_header(header_)
         instance._parse_data_block(data_)
         return instance
 
+    @classmethod
+    def read_multiple(cls, files: [Path], *args, **kwargs) -> "sp3":
+        """
+        Read multiple sp3 files and merge them together
+        """
+        instance = cls(*args, **kwargs)
+        for file in files:
+            temp_sp3 = cls.read(file)
+            instance.merge(temp_sp3)
+        return instance
+    
+    def as_satellites(self) -> "Satellite":
+        """
+        Convert into satellite class
+        """
+        satellites = {}
+        for sat_name, data in self.data.items():
+            satellite = Satellite(None)
+            satellite.sat = sat_name
+            satellite.time = data["time"]
+            satellite.pos = np.stack((data["x"], data["y"], data["z"]), axis=1)
+            satellites[sat_name] = satellite
+        return satellites
+    
     def merge(self, other: "sp3") -> None:
         """
         Merge two sp3 classes.
@@ -151,11 +176,11 @@ class sp3:
                     self.data[temp_satellite]["y"].append(float(line[18:32]) * 1000)
                     self.data[temp_satellite]["z"].append(float(line[32:46]) * 1000)
 
-        for data in self.data:
-            self.data[data]["time"] = np.array(self.data[data]["time"])
-            self.data[data]["x"] = np.array(self.data[data]["x"])
-            self.data[data]["y"] = np.array(self.data[data]["y"])
-            self.data[data]["z"] = np.array(self.data[data]["z"])
+        for data_dict in self.data.values():
+            data_dict["time"] = np.array(data_dict["time"])
+            data_dict["x"] = np.array(data_dict["x"])
+            data_dict["y"] = np.array(data_dict["y"])
+            data_dict["z"] = np.array(data_dict["z"])
 
     def _parse_header_line1(self, line: str) -> None:
         """

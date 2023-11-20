@@ -9,7 +9,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-from sateda.data.satellite import satellite
+from sateda.data.satellite import Satellite
 from sateda.dbconnector import mongo
 
 
@@ -40,7 +40,7 @@ def read(arg):
     database = mongo.MongoDB(url=arg.db, data_base=arg.coll, port=27018)
     database.connect()
     print(database)
-    sat = satellite(database, sat=arg.sat)
+    sat = Satellite(database, sat=arg.sat)
     sat.get_postfit()
     sat.get_state()
     rms = sat.get_rms()
