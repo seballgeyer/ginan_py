@@ -64,19 +64,16 @@ class Position:
 
     def rotate_enu(self) -> None:
         """
-        rotate Rotate the position to the ENU frame from the base
+        Rotate the position to the ENU frame from the base
         """
         for data in self.data:
-            # locate the base with the same station id
+            # Locate the base with the same station id
             base = self.base.locate(site=data.id["site"])
             _common, in_base, in_data = np.intersect1d(base.epoch, data.epoch, return_indices=True)
-            base.epoch = base.epoch[in_base]
-            for k in base.data:
-                base.data[k] = base.data[k][in_base]
-            data.epoch = data.epoch[in_data]
-            for k in data.data:
-                data.data[k] = data.data[k][in_data]
-            lat, lon, height = xyz2blh(base.data["x_0"], base.data["x_1"], base.data["x_2"])
+            data.epoch = _common
+            data_matrix = np.column_stack([data.data[f"REC_POS_x_{i}"][in_data] for i in range(3)])
+            base_matrix = np.column_stack([base.data[f"REC_POS_x_{i}"][in_base] for i in range(3)])
+            lat, lon, _height = xyz2blh(base_matrix[:, 0], base_matrix[:, 1], base_matrix[:, 2])
             rot = np.zeros((3, 3, len(lat)))
             rot[0, 0] = -np.sin(lon)
             rot[0, 1] = -np.sin(lat) * np.cos(lon)
@@ -87,10 +84,9 @@ class Position:
             rot[2, 0] = 0
             rot[2, 1] = np.cos(lat)
             rot[2, 2] = np.sin(lat)
-            project = np.empty((len(data.data["x_0"]), 3))
+            project = np.matmul(rot.transpose(), data_matrix[:, :, np.newaxis])[:, :, 0]
             for i in range(3):
-                project[:, i] = data.data[f"x_{i}"]
-            print(rot.shape, project.shape)
-            enu = np.matmul(rot.transpose(), project[:, :, np.newaxis])[:, :, 0]
-            for i in range(3):
-                data.data[f"x_{i}"] = enu[:, i]
+                data.data[f"REC_POS_x_{i}"] = project[:, i]
+
+
+

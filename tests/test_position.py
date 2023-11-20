@@ -56,22 +56,22 @@ class TestPositions(unittest.TestCase):
         data_dict = {
             "_id": {"sat": "", "site": "North"},
             "t": [time0, time0 + datetime.timedelta(seconds=1)],
-            "x_0": [0, 0],
-            "x_1": [0, 0],
-            "x_2": [1, 1],
+            "REC_POS_x_0": [0, 0],
+            "REC_POS_x_1": [0, 0],
+            "REC_POS_x_2": [1, 1],
         }
         reference.append(Measurements.from_dictionary(data_dict))
         data_dict = {
             "_id": {"sat": "", "site": "North"},
             "t": [time0, time0 + datetime.timedelta(seconds=1)],
-            "x_0": [1, 1],
-            "x_1": [1, 1],
-            "x_2": [2, 3],
+            "REC_POS_x_0": [1, 1],
+            "REC_POS_x_1": [1, 1],
+            "REC_POS_x_2": [2, 3],
         }
         data.append(Measurements.from_dictionary(data_dict))
         pos = Position(data=data, base=reference)
         pos.rotate_enu()
-        self.assertTrue(np.all(pos.data.arr[0].data["x_2"] == [1, 2]))
+        self.assertTrue(np.all(pos.data.arr[0].data["REC_POS_x_2"] == [1, 2]))
 
     def test_rotate_lat0lon0(self):
         """
@@ -84,25 +84,25 @@ class TestPositions(unittest.TestCase):
         data_dict = {
             "_id": {"sat": "", "site": "Eq0"},
             "t": [time0, time0 + datetime.timedelta(seconds=1)],
-            "x_0": [1, 1],
-            "x_1": [0, 0],
-            "x_2": [0, 0],
+            "REC_POS_x_0": [1, 1],
+            "REC_POS_x_1": [0, 0],
+            "REC_POS_x_2": [0, 0],
         }
         reference.append(Measurements.from_dictionary(data_dict))
         data_dict = {
             "_id": {"sat": "", "site": "Eq0"},
             "t": [time0, time0 + datetime.timedelta(seconds=1)],
-            "x_0": [1.1, 1.1],
-            "x_1": [0.2, 0.2],
-            "x_2": [0.3, 0.3],
+            "REC_POS_x_0": [1.1, 1.1],
+            "REC_POS_x_1": [0.2, 0.2],
+            "REC_POS_x_2": [0.3, 0.3],
         }
         data.append(Measurements.from_dictionary(data_dict))
         pos = Position(data=data, base=reference)
         pos.rotate_enu()
 
-        self.assertTrue(np.allclose(pos.data.arr[0].data["x_2"], [0.1, 0.1], atol=1e-15))  # U
-        self.assertTrue(np.allclose(pos.data.arr[0].data["x_1"], [0.3, 0.3], atol=1e-15))  # N
-        self.assertTrue(np.allclose(pos.data.arr[0].data["x_0"], [0.2, 0.2], atol=1e-15))  # E
+        self.assertTrue(np.allclose(pos.data.arr[0].data["REC_POS_x_2"], [0.1, 0.1], atol=1e-15))  # U
+        self.assertTrue(np.allclose(pos.data.arr[0].data["REC_POS_x_1"], [0.3, 0.3], atol=1e-15))  # N
+        self.assertTrue(np.allclose(pos.data.arr[0].data["REC_POS_x_0"], [0.2, 0.2], atol=1e-15))  # E
 
     def test_rotate_lat0lon90(self):
         """
@@ -115,22 +115,22 @@ class TestPositions(unittest.TestCase):
         data_dict = {
             "_id": {"sat": "", "site": "Eq90"},
             "t": [time0, time0 + datetime.timedelta(seconds=1)],
-            "x_0": [0, 0],
-            "x_1": [1, 1],
-            "x_2": [0, 0],
+            "REC_POS_x_0": [0, 0],
+            "REC_POS_x_1": [1, 1],
+            "REC_POS_x_2": [0, 0],
         }
         reference.append(Measurements.from_dictionary(data_dict))
         data_dict = {
             "_id": {"sat": "", "site": "Eq90"},
             "t": [time0, time0 + datetime.timedelta(seconds=1)],
-            "x_0": [0.1, 0.1],
-            "x_1": [1.2, 1.2],
-            "x_2": [0.3, 0.3],
+            "REC_POS_x_0": [0.1, 0.1],
+            "REC_POS_x_1": [1.2, 1.2],
+            "REC_POS_x_2": [0.3, 0.3],
         }
         data.append(Measurements.from_dictionary(data_dict))
         pos = Position(data=data, base=reference)
         pos.rotate_enu()
 
-        self.assertTrue(np.allclose(pos.data.arr[0].data["x_2"], [0.2, 0.2], atol=1e-15))  # U
-        self.assertTrue(np.allclose(pos.data.arr[0].data["x_1"], [0.3, 0.3], atol=1e-15))  # N
-        self.assertTrue(np.allclose(pos.data.arr[0].data["x_0"], [-0.1, -0.1], atol=1e-15))  # E
+        self.assertTrue(np.allclose(pos.data.arr[0].data["REC_POS_x_2"], [0.2, 0.2], atol=1e-15))  # U
+        self.assertTrue(np.allclose(pos.data.arr[0].data["REC_POS_x_1"], [0.3, 0.3], atol=1e-15))  # N
+        self.assertTrue(np.allclose(pos.data.arr[0].data["REC_POS_x_0"], [-0.1, -0.1], atol=1e-15))  # E

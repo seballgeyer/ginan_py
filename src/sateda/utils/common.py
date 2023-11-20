@@ -30,7 +30,7 @@ def compare_dict(dict1: dict, dict2: dict, comparison_keys: List = None, all_key
     """
     if all_keys:
         return dict1 == dict2
-    else:
-        if comparison_keys is None:
-            comparison_keys = set(dict1.keys()).intersection(set(dict2.keys()))
-        return all(key in dict1 and key in dict2 and dict1[key] == dict2[key] for key in comparison_keys)
+    
+    if comparison_keys is None:
+        comparison_keys = set(dict1.keys()).intersection(set(dict2.keys()))
+    return all(key in dict1 and key in dict2 and dict1[key] == dict2[key] for key in comparison_keys)
