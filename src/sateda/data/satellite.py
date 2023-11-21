@@ -1,4 +1,5 @@
 import logging
+import copy
 
 import numpy as np
 import numpy.typing as npt
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class Satellite:
-    def __init__(self, mongodb: mongo.MongoDB, sat: str = "", series: str = "") -> None:
+    def __init__(self, mongodb: mongo.MongoDB = None, sat: str = "", series: str = "") -> None:
         self.sat: str = sat
         self.series: str = series
         self.mongodb: mongo.MongoDB = mongodb
@@ -19,6 +20,10 @@ class Satellite:
         self.vel: npt.ArrayLike = np.empty(0)
         self.residual: npt.ArrayLike = np.empty(0)
         self.rac: npt.ArrayLike = np.empty(0)
+    
+    def copy(self):
+        # Using copy.deepcopy() to create a deep copy
+        return copy.deepcopy(self)
 
     def get_postfit(self):
         data = self.mongodb.get_data(
