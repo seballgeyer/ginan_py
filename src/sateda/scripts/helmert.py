@@ -2,149 +2,237 @@ import argparse
 import os
 import logging
 import sys
+from pathlib import Path
+import json
+from typing import Dict, List, Tuple
 
 import numpy as np
+from sklearn.model_selection import train_test_split
 
-from sateda.io.sp3 import sp3
+from sateda.io.sp3 import sp3, sp3_align
+from sateda.core.transform.helmert import HelmertTransform
+from sateda.data.satellite import Satellite, align_satellites
+
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 stdout_handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(stdout_handler)
 
-def helmert(coeffs, vector):
-    translate = np.array(coeffs[:3])
-    scale = coeffs[3]
-    angle = np.array(coeffs[4:])
-    #convert angle from  micro arcseconds to radians
-    rotation_matrix = np.array([
-        [1, -angle[2], angle[1]],
-        [angle[2], 1, -angle[0]],
-        [-angle[1], angle[0], 1]
-    ])
-    # rotated = np.einsum('ijk,jk->ik', rotation_matrix[:, :, np.newaxis], vector)
-    rotated = np.zeros_like(vector)
-    for i in range(rotated.shape[0]):
-        rotated[i,:] = rotation_matrix @ vector[i,:] * (1+scale) + translate
-    # return translate[:,  np.newaxis] + (1+ scale) * rotated
-    return rotated
-
-def helmert_jac(coeffs, vector):
-    jac = np.zeros((vector.shape[0]*vector.shape[1], len(coeffs)))
-    translate = np.array(coeffs[:3])
-    scale = coeffs[3]
-    angle = np.array(coeffs[4:])
-    rotation_matrix = np.array([
-        [1, -angle[2], angle[1]],
-        [angle[2], 1, -angle[0]],
-        [-angle[1], angle[0], 1]
-    ])
-    for i in range(vector.shape[0]):
-        jac[i*vector.shape[1]:(i+1)*vector.shape[1],:3] = np.eye(3)
-        jac[i*vector.shape[1]:(i+1)*vector.shape[1],3] = rotation_matrix @ vector[i,:]
-        jac[i*vector.shape[1]:(i+1)*vector.shape[1],4:] = np.array([
-            [0, vector[i,2], -vector[i,1]],
-            [-vector[i,2], 0, vector[i,0]],
-            [vector[i,1], -vector[i,0], 0]
-        ]) * (1+scale)
-    return jac
-
-def helmert_residuals(coeffs, vector, target):
-    loss = target - helmert(coeffs, vector)
-    loss2 = np.zeros(loss.shape[0]*loss.shape[1])
-    for idx, l in enumerate(loss):
-        loss2[idx*loss.shape[1]:(idx+1)*loss.shape[1]] = l
-    return loss2
 
 
-def parse_args():
-    #print current directory
+def glob_files(paths):
+    paths = map(Path,paths)
+    return  [file_path for path in paths for file_path in path.parent.glob(path.name)]
+
+    # return chain.from_iterable(path.parent.glob(path.name) for path in paths)
+
+
+def parse_args() -> argparse.Namespace:
+    """
+    parse_args argument parser
+
+    :return argparse.Namespace: parsed arguments
+    """
+    # print current directory
     print(os.getcwd())
     args = argparse.ArgumentParser("Helmert transformation")
-    args.add_argument("input1", help="Input file")
-    args.add_argument("input2", help="Input file2")
+    args.add_argument("--src", nargs='+', help="Source file(s)", type=str)
+    args.add_argument("--target", nargs='+', help="Target file(s)", type=str)
     args.add_argument("-v", "--verbose", action="store_true", help="Increase output verbosity")
     args.add_argument("-r", "--rotate", action="store_true", help="Rotate the data")
     args.add_argument("-o", "--output", help="Output file")
+    args.add_argument("-m", "--mode", help="Mode of fitting, valid option per_sat, per_epoch, all", default="all")
+    args.add_argument("-x", '--exclude', nargs='+', help="Exclude satellites", type=str)
+    args.add_argument("-c", "--config", help="JSON config file")
 
     args = args.parse_args()
+    if args.config:
+        with open(args.config, "r", encoding="utf-8") as f:
+            config = json.load(f)
+        for key in config:
+            if hasattr(args, key):
+                setattr(args, key, config[key])
+
+    args.src = glob_files(args.src)
+    args.target = glob_files(args.target)
+    print(args.src)
     if args.verbose:
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
     return args
 
-def main():
+
+def run_helmert_transform():
+    """
+    Runs the Helmert transform based on the provided arguments.
+
+    This function reads satellite data from source and target files, aligns the satellites,
+    fits the transformation based on the specified mode, computes statistics, and logs the results.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
     args = parse_args()
-    data1 = sp3.read(file_or_string=args.input1)
-    data2 = sp3.read(file_or_string=args.input2)
-    # data1 and data2 are sp3 objects assumed to have the same data. data1.data is a dictionary mapping a vector.
-    # stack all data1 information into a single vector. data1.data[satellite_name].time is a numpy vector
-    time = np.hstack([data1.data[satellite_name]['time'] for satellite_name in data1.data.keys()])
-    #create a vector 3 * len(time)  for data 1 and data2. first comulmn is "x", second is "y", third is "z"
-    satellite_names = list(data1.data.keys())  # Assuming data1 and data2 have the same keys
-    data1 = np.hstack([
-        np.vstack([data1.data[satellite_name]["x"],
-                   data1.data[satellite_name]["y"],
-                   data1.data[satellite_name]["z"]])
-        for satellite_name in satellite_names
-    ]).transpose()
-    data2 = np.hstack([
-        np.vstack([data2.data[satellite_name]["x"],
-                   data2.data[satellite_name]["y"],
-                   data2.data[satellite_name]["z"]])
-        for satellite_name in satellite_names
-    ]).transpose()
-    print(data1.shape, data2.shape, time.shape)
-    # split data1 and data2 in a train and test set (80, 20%), same index for both
-    idx = np.random.permutation(len(time))
-    idx_train = idx[:int(0.8*len(time))]
-    idx_test = idx[int(0.8*len(time)):]
-    # data1_train = data1[idx_train,:]
-    # data2_train = data2[idx_train,:]
-    model = np.zeros(7)
-    converged = False
-    logger.info("Starting the minibatch")
-    logger.info("train size: % 4d test size: % 4d", len(idx_train), len(idx_test))
-    i = 1
-
-    loss = data1[idx_test, :] - data2[idx_test, :]
-    logger.info("INIT-> residual %e",  np.sqrt(np.mean(np.linalg.norm(loss, axis=1) ** 2)))
-    # while not converged:
-    while i < 50:
-        #shuffle the train data
-        np.random.shuffle(idx_train)
-        for batch in np.array_split(idx_train, len(idx_train)//256):
-            #create the design matrix
-            design_matrix = helmert_jac(model, data1[batch,:])
-            residual = helmert_residuals(model, data1[batch,:], data2[batch,:])
-            #solve the least square problem
-            delta = np.linalg.inv(design_matrix.transpose() @ design_matrix) @ design_matrix.transpose() @ residual
-            #update the model
-            model += delta
-            # logger.info("batch size: % 4d", len(batch))
-            # logger.info("model: %s", model)
-        # residual = helmert_residuals(model, data1[idx_test, :], data2[idx_test, :])
-
-        # logger.info('model %s', np.array2string(model))
-        loss = helmert(model, data1[idx_test, :]) - data2[idx_test, :]
-        logger.info("iteration: % 4d -> residual %e", i, np.sqrt(np.mean(np.linalg.norm(loss, axis=1)**2)))
-        # print(np.sqrt(np.mean(np.linalg.norm(loss, axis=1)**2)))
-        # logging.info('residual: %e', np.sqrt(np.mean(np.linalg.norm(loss, axis=1)**2)))
-        # loss = helmert(model*0.0, data1[idx_test, :]) - data2[idx_test, :]
-        # print(', ...., ', np.sqrt(np.mean(np.linalg.norm(loss, axis=1)**2)))
-        # break
-        # print("residual: ", np.linalg.norm(residual))
-        converged=True
-        i+=1
+    data1 = sp3.read_multiple(files=args.src).as_satellites()
+    data2 = sp3.read_multiple(files=args.target).as_satellites()
+    satellite_names = list(set(data1.keys()).intersection(set(data2.keys())))
+    print(args)
+    if args.exclude:
+        for sat in args.exclude:
+            satellite_names.remove(sat)
+       
+    for _sat in satellite_names:
+        align_satellites(data1[_sat], data2[_sat])
+   
+    if args.mode == "persat":
+        helmert, transformed = fit_persat(data1, data2, satellite_names)
+    elif args.mode == "perepoch":
+        # raise ValueError("Not implemented yet")
+        helmert, transformed = fit_perepoch(data1, data2, satellite_names)
+    elif args.mode == "all":
+        helmert, transformed = fit_all(data1, data2, satellite_names)
+    else:
+        raise ValueError("Invalid mode. Please choose 'persat', 'perepoch', or 'fit_all'.")
+   
+    stats = compute_stats(data1, data2, transformed, satellite_names)
+   
+    logger.info("       pre_x     pre_y     pre_z    pre_3d     post_x    post_y    post_z   post_3d")
+    for d in sorted(satellite_names):
+        data = stats[d]
+        logger.info(
+            f"{d}: "
+            f"{data['pre_x']: .6f} {data['pre_y']: .6f} {data['pre_z']: .6f} {data['pre_3d']: .6f} "
+            f"{data['post_x']: .6f} {data['post_y']: .6f} {data['post_z']: .6f} {data['post_3d']: .6f} "
+        )
+    logger.info(f" Estimated parameters:\n" f"   T: {helmert}")
 
 
+def fit_perepoch(data1: dict, data2: dict, satellite_names: List[str]) -> (HelmertTransform, dict):
+    """
+    Fits a Helmert transformation model per epoch for the given satellite data.
+
+    Args:
+        data1 (dict): Dictionary containing satellite data for the first set of satellites.
+        data2 (dict): Dictionary containing satellite data for the second set of satellites.
+        satellite_names (list): List of satellite names.
+
+    Returns:
+        tuple: A tuple containing the fitted Helmert transformation model and the transformed satellite data.
+    """
+    transformed = {}
+
+    times = np.unique(np.hstack([data1[satellite_name].time for satellite_name in satellite_names]))
+    for satellite_name in satellite_names:
+        transformed[satellite_name] = data1[satellite_name].copy()
+        transformed[satellite_name].pos[:] = np.nan
+
+    for time in times:
+        data1_ = np.vstack(
+            [
+                data1[satellite_name].pos[data1[satellite_name].time == time] for satellite_name in satellite_names
+            ]
+        )
+        data2_ = np.vstack(
+            [
+                data2[satellite_name].pos[data2[satellite_name].time == time] for satellite_name in satellite_names
+            ]
+        )
+        data_train, data_test, target_train, target_test = train_test_split(data1_, data2_, test_size=0.20, random_state=42)
+        loss = target_test - data_test
+        logger.info(" on validation dataset ")
+        logger.info("INIT  -> residual %e", np.sqrt(np.mean(np.linalg.norm(loss, axis=1) ** 2)))
+        helmert = HelmertTransform()
+        helmert.fit(data_train, target_train)
+        loss = target_test - helmert.apply(data_test)
+        logger.info("FINAL -> residual %e", np.sqrt(np.mean(np.linalg.norm(loss, axis=1) ** 2)))
+        for satellite_name in satellite_names:
+            if np.any(data1[satellite_name].time == time):
+                idx = np.where(data1[satellite_name].time == time)[0]
+                transformed[satellite_name].pos[idx] = helmert.apply(data1[satellite_name].pos[idx])
+
+    return helmert, transformed
+
+def fit_persat(data1: Dict[str, Satellite], data2: Dict[str, Satellite], satellite_names: List[str]) -> Tuple[HelmertTransform, Dict[str, Satellite]]:
+    """
+    Fits a Helmert transformation model to align satellite positions.
+
+    Args:
+        data1 (Dict[str, Satellite]): Dictionary of satellite data for the first dataset.
+        data2 (Dict[str, Satellite]): Dictionary of satellite data for the second dataset.
+        satellite_names (List[str]): List of satellite names to be processed.
+
+    Returns:
+        Tuple[HelmertTransform, Dict[str, Satellite]]: A tuple containing the fitted Helmert transformation model and the transformed satellite data.
+    """
+    transformed = {}
+    for satellite_name in satellite_names:
+        data1_ = data1[satellite_name].pos
+        data2_ = data2[satellite_name].pos
+        transformed[satellite_name] = Satellite(sat=satellite_name)
+        data_train, data_test, target_train, target_test = train_test_split(data1_, data2_, test_size=0.20, random_state=42)
+        loss = target_test - data_test
+        logger.info(" on validation dataset ")
+        logger.info("INIT  -> residual %e", np.sqrt(np.mean(np.linalg.norm(loss, axis=1) ** 2)))
+        helmert = HelmertTransform()
+        helmert.fit(data_train, target_train)
+        loss = target_test - helmert.apply(data_test)
+        logger.info("FINAL -> residual %e", np.sqrt(np.mean(np.linalg.norm(loss, axis=1) ** 2)))
+        transformed[satellite_name].time = data1[satellite_name].time
+        transformed[satellite_name].pos = helmert.apply(data1[satellite_name].pos)
+    return helmert, transformed
+ 
+def fit_all(data1, data2, satellite_names):
+    data1_ = np.vstack(
+        [
+            data1[satellite_name].pos for satellite_name in satellite_names
+        ]
+    )
+    data2_ = np.vstack(
+        [
+           data2[satellite_name].pos for satellite_name in satellite_names
+        ]
+    )
+  
+    data_train, data_test, target_train, target_test = train_test_split(data1_, data2_, test_size=0.20, random_state=42)
+  
+    loss = target_test - data_test
+    logger.info(" on validation dataset ")
+    logger.info("INIT  -> residual %e", np.sqrt(np.mean(np.linalg.norm(loss, axis=1) ** 2)))
+    helmert = HelmertTransform()
+    helmert.fit(data_train, target_train)
+    loss = target_test - helmert.apply(data_test)
+    logger.info("FINAL -> residual %e", np.sqrt(np.mean(np.linalg.norm(loss, axis=1) ** 2)))
+
+    transformed = {}
+    for satellite_name in satellite_names:
+        transformed[satellite_name] = Satellite(sat=satellite_name)
+        transformed[satellite_name].time = data1[satellite_name].time
+        transformed[satellite_name].pos = helmert.apply(data1[satellite_name].pos)
+
+    return helmert, transformed
 
 
+def compute_stats(source, target, transformed, satellite_names):
+    stats = {}
+    for satellite_name in satellite_names:
+        loss = source[satellite_name].pos - target[satellite_name].pos
+        stats[satellite_name] = {}
+        stats[satellite_name]["pre_x"] = np.sqrt(np.mean(loss[:, 0] ** 2))
+        stats[satellite_name]["pre_y"] = np.sqrt(np.mean(loss[:, 1] ** 2))
+        stats[satellite_name]["pre_z"] = np.sqrt(np.mean(loss[:, 2] ** 2))
+        stats[satellite_name]["pre_3d"] = np.sqrt(np.mean(np.linalg.norm(loss, axis=1) ** 2))
+        loss = transformed[satellite_name].pos - target[satellite_name].pos
+        stats[satellite_name]["post_x"] = np.sqrt(np.mean(loss[:, 0] ** 2))
+        stats[satellite_name]["post_y"] = np.sqrt(np.mean(loss[:, 1] ** 2))
+        stats[satellite_name]["post_z"] = np.sqrt(np.mean(loss[:, 2] ** 2))
+        stats[satellite_name]["post_3d"] = np.sqrt(np.mean(np.linalg.norm(loss, axis=1) ** 2))
+    return stats
 
-
-
-
-    pass
 
 if __name__ == "__main__":
-    main()
+    run_helmert_transform()

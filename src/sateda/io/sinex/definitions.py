@@ -96,7 +96,9 @@ def _read_sat_prn(f):
             _comment = trim_string(line[39:])
             if _svn not in block_data:
                 block_data[_svn] = {}
-            block_data[_svn].update({_startdate: {"endDate": _enddate, "prn": _prn, "comment": _comment}})
+            block_data[_svn].update(
+                {_startdate: {"startDate": _startdate, "endDate": _enddate, "prn": _prn, "comment": _comment}}
+            )
     return block_data
 
 

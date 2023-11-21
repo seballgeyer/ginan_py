@@ -9,7 +9,6 @@ from ..utilities import init_page, extra, generate_fig, aggregate_stats, get_dat
 from . import eda_bp
 
 
-
 @eda_bp.route("/clocks", methods=["GET", "POST"])
 def clocks():
     if request.method == "POST":
@@ -69,7 +68,7 @@ def handle_post_request():
     result.find_minmax()
     result.adjust_slice(minutes_min=form["exclude"], minutes_max=None)
     result.get_stats()
-    table={}
+    table = {}
     for _clock in result:
         trace.append(
             go.Scatter(
@@ -81,12 +80,9 @@ def handle_post_request():
             )
         )
         current_app.logger.debug(_clock.info)
-        table[f"{_clock.id}"] = {"mean": _clock.info['x']["mean"],
-                            "RMS": _clock.info['x']["rms"]}
-  
-    table_agg = aggregate_stats(result)
- 
+        table[f"{_clock.id}"] = {"mean": _clock.info["x"]["mean"], "RMS": _clock.info["x"]["rms"]}
 
+    table_agg = aggregate_stats(result)
 
     return render_template(
         "clocks.jinja",
@@ -94,7 +90,7 @@ def handle_post_request():
         graphJSON=generate_fig(trace),
         mode="plotly",
         selection=form,
-        table_data= table, 
+        table_data=table,
         table_headers=["RMS", "mean"],
         tableagg_data=table_agg,
         tableagg_headers=["RMS", "mean"],

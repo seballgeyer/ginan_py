@@ -4,9 +4,10 @@ import numpy as np
 
 from sateda.core.time import Time
 
+
 class TestTime(unittest.TestCase):
     def setUp(self) -> None:
-        self.time = Time.from_components(2007,1,1,0,0,0,0)
+        self.time = Time.from_components(2007, 1, 1, 0, 0, 0, 0)
 
     def test_time_system(self) -> None:
         """
@@ -22,6 +23,5 @@ class TestTime(unittest.TestCase):
         self.assertTrue(self.time.to_tai().time == np.datetime64("2007-01-01T00:00:19.0000000"))
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

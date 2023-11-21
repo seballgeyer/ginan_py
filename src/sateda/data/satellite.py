@@ -1,4 +1,5 @@
 import logging
+import copy
 
 import numpy as np
 import numpy.typing as npt
@@ -8,8 +9,8 @@ from sateda.dbconnector import mongo
 logger = logging.getLogger(__name__)
 
 
-class satellite:
-    def __init__(self, mongodb: mongo.MongoDB, sat: str = "", series: str = "") -> None:
+class Satellite:
+    def __init__(self, mongodb: mongo.MongoDB = None, sat: str = "", series: str = "") -> None:
         self.sat: str = sat
         self.series: str = series
         self.mongodb: mongo.MongoDB = mongodb
@@ -19,6 +20,10 @@ class satellite:
         self.vel: npt.ArrayLike = np.empty(0)
         self.residual: npt.ArrayLike = np.empty(0)
         self.rac: npt.ArrayLike = np.empty(0)
+    
+    def copy(self):
+        # Using copy.deepcopy() to create a deep copy
+        return copy.deepcopy(self)
 
     def get_postfit(self):
         data = self.mongodb.get_data(
@@ -44,8 +49,10 @@ class satellite:
             series=[self.series],
             keys=["x"],
         )
+        self.time = np.empty(len(data[0]["t"]), dtype="datetime64[us]")
         self.pos = np.empty((3, len(data[0]["t"])))
         self.vel = np.empty((3, len(data[0]["t"])))
+        self.time = np.asarray(data[0]["t"], dtype="datetime64[us]")
         self.pos = np.asarray(data[0]["x"])[:, :3]
         self.vel = np.asarray(data[0]["x"])[:, 3:]
 
@@ -64,7 +71,15 @@ class satellite:
         a = np.cross(c, self.pos)
         a = a / np.linalg.norm(a, axis=1)[:, np.newaxis]
         self.rac = np.empty_like(self.residual)
-        self.rac[:, 0] = (r * self.residual).sum(axis=1)
-        self.rac[:, 1] = (a * self.residual).sum(axis=1)
-        self.rac[:, 2] = (c * self.residual).sum(axis=1)
+        self.rac[:, 0] = (r[:-1:3] * self.residual).sum(axis=1)
+        self.rac[:, 1] = (a[:-1:3] * self.residual).sum(axis=1)
+        self.rac[:, 2] = (c[:-1:3] * self.residual).sum(axis=1)
         return self.get_rms(use_rac=True)
+
+def align_satellites(data1: "Satellite", data2: "Satellite"):
+    common_time, in_sat1, in_sat2 = np.intersect1d(data1.time, data2.time, return_indices=True)
+    data1.time = common_time
+    data2.time = common_time
+    data1.pos = data1.pos[in_sat1]
+    data2.pos = data2.pos[in_sat2]
+    

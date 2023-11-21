@@ -1,5 +1,5 @@
 import json
-import os 
+import os
 
 from eda.routes import register_routes
 from flask import Flask
@@ -10,6 +10,7 @@ app.secret_key = "secret"
 
 def dict_filter(value):
     return json.dumps(value)
+
 
 theme = os.getenv("EDA_THEME", "plotly")
 grid = os.getenv("EDA_GRID", "True")

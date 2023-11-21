@@ -13,7 +13,7 @@ class Sinex:
 
     def read(self, file_or_string: Union[str, StringIO]) -> None:
         if isinstance(file_or_string, str):
-            with open(file_or_string) as f:
+            with open(file_or_string, "r", encoding="ISO-8859-1") as f:
                 self.read_file(f)
         else:
             self.read_file(file_or_string)

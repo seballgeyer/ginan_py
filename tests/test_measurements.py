@@ -13,6 +13,7 @@ class TestMeasurements(unittest.TestCase):
     """
     Unit test for the Measurements class
     """
+
     def setUp(self) -> None:
         self.meas = Measurements()
         time_init = datetime.datetime(2023, 1, 1, 0, 0, 0)
@@ -21,7 +22,7 @@ class TestMeasurements(unittest.TestCase):
 
     def test_select_range_tmin(self):
         """
-        test the select_range function. 
+        test the select_range function.
         For a defined tmin , the subset should be equal to the slice of the epoch array
         """
         tmin = datetime.datetime(2023, 1, 1, 0, 5, 0)
@@ -31,7 +32,7 @@ class TestMeasurements(unittest.TestCase):
 
     def test_select_range_tmax(self):
         """
-        test the select_range function. 
+        test the select_range function.
         For a defined tmax, the subset should be equal to the slice of the epoch array
         """
         tmax = datetime.datetime(2023, 1, 1, 0, 55, 0)
@@ -41,7 +42,7 @@ class TestMeasurements(unittest.TestCase):
 
     def test_polyfit(self):
         """
-        test the polyfit function, fiting a polynomial and returnin the coeffiction. 
+        test the polyfit function, fiting a polynomial and returnin the coeffiction.
         """
         time_init = datetime.datetime(2021, 1, 1, 0, 0, 0)
         data_dict = {
@@ -56,7 +57,7 @@ class TestMeasurements(unittest.TestCase):
         }
         meas = Measurements.from_dictionary(data_dict)
         meas.polyfit()
-        fit = meas.info['Fit']
+        fit = meas.info["Fit"]
         self.assertAlmostEqual(fit["x"][0], 1)
         self.assertAlmostEqual(fit["y"][0], 1)
         self.assertAlmostEqual(fit["x"][1], 4)
@@ -88,7 +89,7 @@ class TestMeasurements(unittest.TestCase):
 
     def test_find_gaps(self):
         """
-        Test the find_gaps function. 
+        Test the find_gaps function.
         if the time between 2 points is more than delta defined in find_gaps function, insert a NaN
         """
         time_init = datetime.datetime(2021, 1, 1, 0, 0, 0)

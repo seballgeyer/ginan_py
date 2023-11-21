@@ -23,11 +23,13 @@ acc_dtype = np.dtype(
     ]
 )
 
+
 class GraceACC:
     """
     Class for reading GRACE-FO accelerometer data.
     @todo: Add reading GRACE data from a file.
     """
+
     def __init__(self):
         self.data = 0
         self.yaml_dict = 0

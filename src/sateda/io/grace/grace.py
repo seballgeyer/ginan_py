@@ -3,10 +3,10 @@ from typing import Union
 
 import numpy as np
 
-from sateda.data.satellite import satellite
+from sateda.data.satellite import Satellite
 
 
-class grace(satellite):
+class grace(Satellite):
     def __init__(self, date: Union[int, datetime, np.datetime64]):
         self.date: np.datetime64 = date
 

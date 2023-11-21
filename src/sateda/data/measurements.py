@@ -88,7 +88,7 @@ class Measurements:
         self.gaps = []
 
     @classmethod
-    def from_dictionary(cls, data_dict: dict, reshape_on:str = None, database:str = "") -> "Measurements":
+    def from_dictionary(cls, data_dict: dict, reshape_on: str = None, database: str = "") -> "Measurements":
         """
         Initializes a Measurements object.
 
@@ -101,7 +101,7 @@ class Measurements:
         """
         sat = data_dict["_id"]["sat"]
         identifier = data_dict["_id"]
-        identifier['db'] = database
+        identifier["db"] = database
         epoch = np.array([np.datetime64(t) for t in data_dict["t"]])
         if max(len(value) for key, value in data_dict.items() if key not in ["t", "_id", "Epoch"]) == 0:
             raise ValueError(f"No data for: {identifier}")
@@ -114,12 +114,12 @@ class Measurements:
                 if key in ["t", "_id", "Epoch", reshape_on]:
                     continue
                 for unique_value in unique:
-                    data[f"{key}_{unique_value}"] = np.empty_like((epoch), dtype='float64')
+                    data[f"{key}_{unique_value}"] = np.empty_like((epoch), dtype="float64")
                     for i, row in enumerate(data_dict[key]):
                         n = np.asarray(data_dict[reshape_on][i])
                         index = np.where(n == unique_value)[0]
                         if len(index) == 1:
-                            data[f"{key}_{unique_value}"][i] = row[index[0]]  
+                            data[f"{key}_{unique_value}"][i] = row[index[0]]
         else:
             missing_keys = []
             data = {}
@@ -131,7 +131,7 @@ class Measurements:
                         missing_keys.append(key)
             n = len(epoch)
             for key, value in data.items():
-                if n!= len(value):
+                if n != len(value):
                     logger.debug(f"Warning: data length not the same for all keys {identifier}")
             if len(missing_keys) != 0:
                 logger.info(f"Warning: keys missing in {identifier} are {missing_keys}")
@@ -171,7 +171,7 @@ class Measurements:
                 self.epoch[gap_index] + np.timedelta64(1, "ms"),
             )
             for key in self.data:
-                if self.data[key].dtype.type ==  np.str_:
+                if self.data[key].dtype.type == np.str_:
                     self.data[key] = np.insert(self.data[key], gap_index + 1, self.data[key][gap_index])
                 else:
                     self.data[key] = np.insert(self.data[key], gap_index + 1, np.nan)
@@ -253,10 +253,9 @@ class Measurements:
         :return: dictionary of coefficient and fit
         """
         epoch_ = (self.epoch - self.epoch[0]).astype("timedelta64[s]").astype("float64")
-        self.info['Fit'] = {}
+        self.info["Fit"] = {}
         for key in self.data:
-            self.info['Fit'][key] = np.polyfit(epoch_, self.data[key], degree)
-
+            self.info["Fit"][key] = np.polyfit(epoch_, self.data[key], degree)
 
     def detrend(self, degree=1):
         """
@@ -268,10 +267,10 @@ class Measurements:
         epoch_ = (self.epoch - self.epoch[0]).astype("timedelta64[s]").astype("float64")
         for key in self.data:
             if self.data[key].ndim == 1:
-                self.data[key] -= np.polyval(self.info['Fit'][key], epoch_)
+                self.data[key] -= np.polyval(self.info["Fit"][key], epoch_)
             else:
                 for i in range(self.data[key].shape[1]):
-                    self.data[key][:, i] -= np.polyval(self.info['Fit'][key][:, i], epoch_)
+                    self.data[key][:, i] -= np.polyval(self.info["Fit"][key][:, i], epoch_)
 
     def plot(self, axis: plt.Axes):
         """
@@ -297,17 +296,16 @@ class Measurements:
                 mask = ~np.isnan(self.data[key][self.subset])
                 if key not in self.info:
                     self.info[key] = {}
-                self.info[key]['mean'] = np.mean(self.data[key][self.subset][mask])
-                self.info[key]['len'] = len(self.data[key][self.subset][mask])
-                self.info[key]['rms'] = np.sqrt(np.mean(self.data[key][self.subset][mask]**2))
-                self.info[key]['sumsqr'] = np.sum(self.data[key][self.subset][mask]**2)
+                self.info[key]["mean"] = np.mean(self.data[key][self.subset][mask])
+                self.info[key]["len"] = len(self.data[key][self.subset][mask])
+                self.info[key]["rms"] = np.sqrt(np.mean(self.data[key][self.subset][mask] ** 2))
+                self.info[key]["sumsqr"] = np.sum(self.data[key][self.subset][mask] ** 2)
                 logger.debug(f"{self.id}: {self.info[key]}")
             except:
-                logger.debug('data not a number')
-            
-                
+                logger.debug("data not a number")
+
     def compute_qq(self):
-        #compute the qq plot
+        # compute the qq plot
         for key in self.data:
             mask = ~np.isnan(self.data[key][self.subset])
             if key not in self.info:
@@ -316,10 +314,10 @@ class Measurements:
             # Generate quantiles of a theoretical distribution (e.g., normal distribution)
             num_quantiles = len(qq)
             theoretical_quantiles = stats.norm.ppf(np.linspace(0, 1, num_quantiles))
-            self.info[key]['qq'] = [qq, theoretical_quantiles]
-            logger.debug(f"{self.id}: {self.info[key]}")            
+            self.info[key]["qq"] = [qq, theoretical_quantiles]
+            logger.debug(f"{self.id}: {self.info[key]}")
 
-    def select_range(self, tmin:int=None, tmax:int=None) -> None:
+    def select_range(self, tmin: int = None, tmax: int = None) -> None:
         """
         select_range generate the slice of data between the time requested.
 
@@ -336,7 +334,7 @@ class Measurements:
             last_index = np.argmin(self.epoch <= tmax) - 1
         self.subset = slice(first_index, last_index + 1)
 
-    def mask_outliers(self, sigma:int=10) -> bool:
+    def mask_outliers(self, sigma: int = 10) -> bool:
         """
         mask_outliers mask the outliers in the data based on the sigma value
 
@@ -352,7 +350,7 @@ class Measurements:
                 found = True
                 self.data[key][mask] = np.nan
         return found
-        
+
 
 class MeasurementArray:
     def __init__(self) -> None:
@@ -382,17 +380,22 @@ class MeasurementArray:
         for data in self.arr:
             for other_data in other.arr:
                 if data.id["sat"] == other_data.id["sat"] and data.id["site"] == other_data.id["site"]:
-                    logger.debug("Matching", data.id, other_data.id, data.id["sat"] == other_data.id["sat"] , data.id["site"] == other_data.id["site"])
+                    logger.debug(
+                        "Matching",
+                        data.id,
+                        other_data.id,
+                        data.id["sat"] == other_data.id["sat"],
+                        data.id["site"] == other_data.id["site"],
+                    )
                     if self.difference_check:
-                        #QnD fix for the postion difference (if diff > 100m, then it's an old v1 database and we don't do the difference)
-                        if abs(data.data['x_1'][0] - other_data.data['x_1'][0]) > 100:
+                        # QnD fix for the postion difference (if diff > 100m, then it's an old v1 database and we don't do the difference)
+                        if abs(data.data["x_1"][0] - other_data.data["x_1"][0]) > 100:
                             results.append(data)
                             break
                     results.append(data - other_data)
                     break
         return results
-        
-        
+
     @classmethod
     def from_mongolist(cls, data_lst: list) -> "MeasurementArray":
         """
@@ -408,7 +411,6 @@ class MeasurementArray:
             except:
                 logger.info("skyping this one")
         return temporary_loader
-
 
     def find_minmax(self):
         """
@@ -437,9 +439,9 @@ class MeasurementArray:
         tmin = None
         tmax = None
         if minutes_min:
-            tmin = self.tmin + np.timedelta64(minutes_min, 'm')
+            tmin = self.tmin + np.timedelta64(minutes_min, "m")
         if minutes_max:
-            tmax = self.tmax - np.timedelta64(minutes_max, 'm')
+            tmax = self.tmax - np.timedelta64(minutes_max, "m")
         for data in self.arr:
             data.select_range(tmin=tmin, tmax=tmax)
 
@@ -448,7 +450,7 @@ class MeasurementArray:
         Append a new time serie to the stack and update the minimum and maximum if required.
         """
         self.arr.append(foo_obj)
-        
+
     def locate(self, site: str = None, sat: str = None, series: str = None, state: str = None) -> Measurements:
         """
         locate Return the element in the self.arr that match the criteria
@@ -463,7 +465,7 @@ class MeasurementArray:
             if site is not None and data.id["site"] == site:
                 return data
         raise ValueError("Data not found")
-    
+
     def merge(self, other) -> None:
         """
         Merge data from one structure with another one.
@@ -486,11 +488,11 @@ class MeasurementArray:
                         data[name][np.isin(common_time, _other.epoch[mask])] = val[mask]
                     _data.epoch = common_time
                     _data.data = data
-      
-                
+
     def get_stats(self) -> None:
         def get_stats_worker(data):
             data.get_stats()
+
         with concurrent.futures.ThreadPoolExecutor() as executor:
             executor.map(get_stats_worker, self.arr)
 
@@ -498,13 +500,14 @@ class MeasurementArray:
         def compute_qq_worker(data):
             data.demean()
             data.compute_qq()
+
         with concurrent.futures.ThreadPoolExecutor() as executor:
             executor.map(compute_qq_worker, self.arr)
-        
+
     # def get_stats(self) -> None:
     #     for data in self.arr:
     #         data.get_stats()
-            
+
     # def compute_qq(self) -> None:
     #     for data in self.arr:
     #         data.compute_qq()
