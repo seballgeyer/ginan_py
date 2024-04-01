@@ -354,13 +354,10 @@ class HelmertTransform:
             residual_check = ResidualCheck(residuals_norm, previous_residuals_norm, iteration_params)
             if residual_check():
                 logger.info(residual_check.what)
-                print(residual_check.what)
                 break
             previous_residuals_norm = residuals_norm
             iteration += 1
         else:
-            print("too many it")
             warnings.warn(f"Maximum number of iterations ({iteration_params['max_iter']}) reached.")
             return
         logger.info(f"converged after {iteration} iterations")
-        print(f"converged after {iteration} iterations")
