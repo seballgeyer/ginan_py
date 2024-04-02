@@ -7,7 +7,7 @@ from sateda.io import rtcm
 
 def _form_request(credentials=None):
     request_str = 'GET /{} HTTP/1.0\r\nUser-Agent: NTRIP TEST\r\n'.format(
-        'ALIC00AUS0')
+        'STR100AUS0')
     if credentials is not None:
         request_str += 'Authorization: Basic {}\r\n'.format(
             credentials)
@@ -83,8 +83,11 @@ def main(args):
         uint12_1 = int.from_bytes(data[3:5], byteorder='big') >> 4
         data_type.append(uint12_1)
         print(f"RTCM: {uint12_1} length {data_length}")
-        datadecoder = rtcm.RTCM(uint12_1)
-        print(datadecoder.decode(data))
+        try:
+            datadecoder = rtcm.RTCM(uint12_1)
+            print(datadecoder.decode(data))
+        except:
+            continue
 
     #print unique data types
     # print(data_type)

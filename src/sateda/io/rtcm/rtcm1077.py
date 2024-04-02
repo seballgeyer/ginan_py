@@ -42,6 +42,9 @@ class Rtcm1077:
         #how many bit set to 1 in extract[5]
         nsat = bin(extracted[10]).count('1')
         nsig = bin(extracted[11]).count('1')
+        if nsat*nsig == 0:
+            print("No data in message 1077")
+            return
         cellmask = bs.unpack_from(f'u{nsat*nsig}', message, offset=169)
         #sat block:
         sat_data=[]
