@@ -1,6 +1,9 @@
 name: CICD2
 run-name: Unit Test (python2)
 on:
+  push:
+    tags:
+      - v*
   workflow_run:
     workflows:
       - CICD
