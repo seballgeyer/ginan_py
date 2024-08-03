@@ -1,9 +1,16 @@
-name: CICD
-run-name: Unit Test (python)
-on: [push]
+name: CICD2
+run-name: Unit Test (python2)
+on:
+  push:
+  workflow_run:
+    workflows:
+      - "CICD"
+    types:
+      - completed
 
 jobs:
   build:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-20.04
     strategy:
       matrix:

@@ -1,7 +1,18 @@
 {
-    "folders": [
-        {
-            "path": "."
-        }
-    ]
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"terminal.integrated.env.linux": {
+			"PYTHONPATH": "${FOLDER_NAME:workspaceFolder}/src"
+		},
+		"terminal.integrated.env.osx": {
+			"PYTHONPATH": "${FOLDER_NAME:workspaceFolder}/src"
+		},
+		"terminal.integrated.env.windows": {
+			"PYTHONPATH": "${FOLDER_NAME:workspaceFolder}/src"
+		}
+	}
 }

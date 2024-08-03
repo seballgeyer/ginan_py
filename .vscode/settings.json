@@ -20,5 +20,14 @@
             "remotePath": "ubuntu@ec2-54-252-19-3.ap-southeast-2.compute.amazonaws.com:/home/ubuntu/.",
             "localPath": "${workspaceRoot}"
         }
-    ]
+    ],
+    "terminal.integrated.env.linux": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+    },
+    "terminal.integrated.env.osx": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+    },
+    "terminal.integrated.env.windows": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+    }
 }
