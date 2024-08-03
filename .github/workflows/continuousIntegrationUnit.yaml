@@ -1,5 +1,5 @@
 name: CICD
-run-name: Unit Test (python)
+run-name: CICD
 on: [push]
 
 jobs:
