@@ -4,7 +4,7 @@ on:
   push:
   workflow_run:
     workflows:
-      - "CICD"
+      - CICD
     types:
       - completed
 
