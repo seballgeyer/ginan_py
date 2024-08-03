@@ -1,7 +1,6 @@
 name: CICD2
 run-name: Unit Test (python2)
 on:
-  push:
   workflow_run:
     workflows:
       - CICD
